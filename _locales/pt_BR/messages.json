@@ -299,13 +299,13 @@
     "message": "Jornada inválida",
     "description": "Estado quando a jornada não pôde ser lida"
   },
-  "contentNavbarTitle": {
-    "message": "Better Easy Dots",
-    "description": "Título do link na navbar"
+  "contentSidebarSettingsTitle": {
+    "message": "Configurações — Better Easy Dots",
+    "description": "Tooltip do item de configurações no menu lateral"
   },
-  "contentNavbarLabel": {
-    "message": "better easy dots",
-    "description": "Rótulo do link na navbar"
+  "contentSidebarSettingsLabel": {
+    "message": "Better Easy Dots",
+    "description": "Rótulo do item de configurações no menu lateral"
   },
   "contentSourceFallback": {
     "message": "Registro WEB",

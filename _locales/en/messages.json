@@ -299,13 +299,13 @@
     "message": "Invalid schedule",
     "description": "State when schedule could not be parsed"
   },
-  "contentNavbarTitle": {
-    "message": "Better Easy Dots",
-    "description": "Navbar link title"
+  "contentSidebarSettingsTitle": {
+    "message": "Settings — Better Easy Dots",
+    "description": "Sidebar settings item tooltip"
   },
-  "contentNavbarLabel": {
-    "message": "better easy dots",
-    "description": "Navbar link label"
+  "contentSidebarSettingsLabel": {
+    "message": "Better Easy Dots",
+    "description": "Sidebar settings item label"
   },
   "contentSourceFallback": {
     "message": "WEB entry",
