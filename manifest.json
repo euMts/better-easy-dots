@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "Better Easy Dots",
+  "version": "0.1.0",
+  "description": "Facilita o registro de ponto no Easydots",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": [
+    "http://127.0.0.1:5500/*",
+    "https://*.acspontodigital.com.br/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/favicon-16x16.png",
+      "32": "icons/favicon-32x32.png",
+      "48": "icons/android-chrome-192x192.png",
+      "128": "icons/android-chrome-512x512.png"
+    },
+    "default_title": "Better Easy Dots"
+  },
+  "icons": {
+    "16": "icons/favicon-16x16.png",
+    "32": "icons/favicon-32x32.png",
+    "48": "icons/android-chrome-192x192.png",
+    "128": "icons/android-chrome-512x512.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "settings.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "http://127.0.0.1:5500/website/*",
+        "https://*.acspontodigital.com.br/*"
+      ],
+      "js": ["config.js", "settings.js", "content.js"],
+      "css": ["eed-animations.css", "content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/easy-easy-dots.png"],
+      "matches": [
+        "http://127.0.0.1:5500/*",
+        "https://*.acspontodigital.com.br/*"
+      ]
+    }
+  ]
+}
