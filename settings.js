@@ -1,5 +1,12 @@
 const EED_SETTINGS_KEY = 'eed-settings';
 
+const EED_BUILTIN_HOST_SUFFIXES = ['acspontodigital.com.br', 'easydots.com.br'];
+
+const EED_LOCAL_DEV_WEBSITE_PREFIXES = [
+  'http://127.0.0.1:5500/website/',
+  'http://192.168.0.104:5500/website/',
+];
+
 const EED_DEFAULT_SETTINGS = {
   entrada: '08:00',
   saida: '18:00',
@@ -14,12 +21,17 @@ const EED_DEFAULT_SETTINGS = {
 };
 
 const EEDSettings = {
+  isLocalDevWebsiteUrl(url) {
+    if (!url) return false;
+    return EED_LOCAL_DEV_WEBSITE_PREFIXES.some((prefix) => url.startsWith(prefix));
+  },
+
   detectEasydotsUrl(href) {
     const parsed = new URL(href);
     parsed.hash = '';
     parsed.search = '';
 
-    if (parsed.href.startsWith('http://127.0.0.1:5500/website/')) {
+    if (this.isLocalDevWebsiteUrl(parsed.href)) {
       return parsed.href;
     }
 
@@ -51,13 +63,12 @@ const EEDSettings = {
   isBuiltinEasydotsHost(url) {
     try {
       const parsed = new URL(url);
-      if (parsed.href.startsWith('http://127.0.0.1:5500/website/')) {
+      if (this.isLocalDevWebsiteUrl(parsed.href)) {
         return true;
       }
 
-      return (
-        parsed.hostname === 'acspontodigital.com.br' ||
-        parsed.hostname.endsWith('.acspontodigital.com.br')
+      return EED_BUILTIN_HOST_SUFFIXES.some(
+        (suffix) => parsed.hostname === suffix || parsed.hostname.endsWith(`.${suffix}`)
       );
     } catch {
       return false;

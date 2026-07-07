@@ -8,8 +8,6 @@
   "permissions": ["storage"],
 
   "host_permissions": [
-    "http://127.0.0.1:5500/*",
-    "http://192.168.0.104:5500/*",
     "https://*.acspontodigital.com.br/*",
     "https://*.easydots.com.br/*"
   ],
@@ -41,8 +39,6 @@
   "content_scripts": [
     {
       "matches": [
-        "http://127.0.0.1:5500/website/*",
-        "http://192.168.0.104:5500/website/*",
         "https://*.acspontodigital.com.br/*",
         "https://*.easydots.com.br/*"
       ],
@@ -66,8 +62,6 @@
         "icons/easy-easy-dots.png"
       ],
       "matches": [
-        "http://127.0.0.1:5500/*",
-        "http://192.168.0.104:5500/*",
         "https://*.acspontodigital.com.br/*",
         "https://*.easydots.com.br/*"
       ]

@@ -1,8 +1,8 @@
-importScripts('config.js', 'settings.js');
+importScripts('config.js', 'settings.js', 'i18n.js');
 
 function isEasydotsUrl(url) {
   if (!url) return false;
-  if (url.startsWith('http://127.0.0.1:5500/website/')) return true;
+  if (EEDSettings.isLocalDevWebsiteUrl(url)) return true;
   return EEDSettings.isBuiltinEasydotsHost(url);
 }
 
@@ -23,7 +23,7 @@ async function findEasydotsTab() {
     tabs.find((tab) => {
       if (!tab.url) return false;
       if (tab.url.startsWith(configuredOrigin)) return true;
-      if (tab.url.startsWith('http://127.0.0.1:5500/website/')) return true;
+      if (EEDSettings.isLocalDevWebsiteUrl(tab.url)) return true;
       return EEDSettings.isBuiltinEasydotsHost(tab.url);
     }) || null
   );
@@ -33,13 +33,13 @@ async function sendToEasydots(action) {
   const tab = await findEasydotsTab();
 
   if (!tab?.id) {
-    return { success: false, error: 'Nenhuma aba do Easydots aberta.' };
+    return { success: false, error: t('backgroundErrorNoTab') };
   }
 
   try {
     return await chrome.tabs.sendMessage(tab.id, { action });
   } catch {
-    return { success: false, error: 'Recarregue a página do Easydots e tente novamente.' };
+    return { success: false, error: t('backgroundErrorReloadPage') };
   }
 }
 

@@ -22,32 +22,32 @@ const EEDSettingsUI = {
       ${showHeader ? `
         <div class="eed-settings-header fadeIn animated">
           <div class="eed-settings-header-text">
-            <h2>Better Easy Dots</h2>
-            <p>Configure seus horários de trabalho e intervalo</p>
+            <h2>${t('settingsHeaderTitle')}</h2>
+            <p>${t('settingsHeaderSubtitle')}</p>
           </div>
         </div>
       ` : ''}
 
       <form id="eed-settings-form" class="eed-settings-body" autocomplete="off">
         <div class="eed-settings-section fadeInUp animated">
-          <h3 class="eed-settings-section-title">Horário de trabalho</h3>
-          <p class="eed-settings-section-hint">Informe o horário de entrada e saída do seu trabalho.</p>
+          <h3 class="eed-settings-section-title">${t('settingsWorkHoursTitle')}</h3>
+          <p class="eed-settings-section-hint">${t('settingsWorkHoursHint')}</p>
           <div class="eed-settings-grid">
             <label class="eed-settings-field" data-field="entrada">
-              <span class="eed-settings-label">Entrada</span>
+              <span class="eed-settings-label">${t('settingsLabelEntry')}</span>
               <div class="eed-settings-time-input" data-time-id="entrada">
-                <input type="text" class="eed-settings-time-part" data-part="hours" inputmode="numeric" maxlength="2" aria-label="Horas de entrada" placeholder="08">
+                <input type="text" class="eed-settings-time-part" data-part="hours" inputmode="numeric" maxlength="2" aria-label="${t('settingsAriaEntryHours')}" placeholder="08">
                 <span class="eed-settings-time-sep">:</span>
-                <input type="text" class="eed-settings-time-part" data-part="minutes" inputmode="numeric" maxlength="2" aria-label="Minutos de entrada" placeholder="00">
+                <input type="text" class="eed-settings-time-part" data-part="minutes" inputmode="numeric" maxlength="2" aria-label="${t('settingsAriaEntryMinutes')}" placeholder="00">
               </div>
               <span class="eed-settings-error" data-error-for="entrada" role="alert" hidden></span>
             </label>
             <label class="eed-settings-field" data-field="saida">
-              <span class="eed-settings-label">Saída</span>
+              <span class="eed-settings-label">${t('settingsLabelExit')}</span>
               <div class="eed-settings-time-input" data-time-id="saida">
-                <input type="text" class="eed-settings-time-part" data-part="hours" inputmode="numeric" maxlength="2" aria-label="Horas de saída" placeholder="18">
+                <input type="text" class="eed-settings-time-part" data-part="hours" inputmode="numeric" maxlength="2" aria-label="${t('settingsAriaExitHours')}" placeholder="18">
                 <span class="eed-settings-time-sep">:</span>
-                <input type="text" class="eed-settings-time-part" data-part="minutes" inputmode="numeric" maxlength="2" aria-label="Minutos de saída" placeholder="00">
+                <input type="text" class="eed-settings-time-part" data-part="minutes" inputmode="numeric" maxlength="2" aria-label="${t('settingsAriaExitMinutes')}" placeholder="00">
               </div>
               <span class="eed-settings-error" data-error-for="saida" role="alert" hidden></span>
             </label>
@@ -55,24 +55,24 @@ const EEDSettingsUI = {
         </div>
 
         <div class="eed-settings-section fadeInUp animated eed-animate-delay-1">
-          <h3 class="eed-settings-section-title">Horário de intervalo</h3>
-          <p class="eed-settings-section-hint">Informe o horário de início e fim do seu intervalo no dia.</p>
+          <h3 class="eed-settings-section-title">${t('settingsBreakTitle')}</h3>
+          <p class="eed-settings-section-hint">${t('settingsBreakHint')}</p>
           <div class="eed-settings-grid">
             <label class="eed-settings-field" data-field="intervaloInicio">
-              <span class="eed-settings-label">Início</span>
+              <span class="eed-settings-label">${t('settingsLabelBreakStart')}</span>
               <div class="eed-settings-time-input" data-time-id="intervalo-inicio">
-                <input type="text" class="eed-settings-time-part" data-part="hours" inputmode="numeric" maxlength="2" aria-label="Horas de início do intervalo" placeholder="12">
+                <input type="text" class="eed-settings-time-part" data-part="hours" inputmode="numeric" maxlength="2" aria-label="${t('settingsAriaBreakStartHours')}" placeholder="12">
                 <span class="eed-settings-time-sep">:</span>
-                <input type="text" class="eed-settings-time-part" data-part="minutes" inputmode="numeric" maxlength="2" aria-label="Minutos de início do intervalo" placeholder="00">
+                <input type="text" class="eed-settings-time-part" data-part="minutes" inputmode="numeric" maxlength="2" aria-label="${t('settingsAriaBreakStartMinutes')}" placeholder="00">
               </div>
               <span class="eed-settings-error" data-error-for="intervaloInicio" role="alert" hidden></span>
             </label>
             <label class="eed-settings-field" data-field="intervaloFim">
-              <span class="eed-settings-label">Fim</span>
+              <span class="eed-settings-label">${t('settingsLabelBreakEnd')}</span>
               <div class="eed-settings-time-input" data-time-id="intervalo-fim">
-                <input type="text" class="eed-settings-time-part" data-part="hours" inputmode="numeric" maxlength="2" aria-label="Horas de fim do intervalo" placeholder="13">
+                <input type="text" class="eed-settings-time-part" data-part="hours" inputmode="numeric" maxlength="2" aria-label="${t('settingsAriaBreakEndHours')}" placeholder="13">
                 <span class="eed-settings-time-sep">:</span>
-                <input type="text" class="eed-settings-time-part" data-part="minutes" inputmode="numeric" maxlength="2" aria-label="Minutos de fim do intervalo" placeholder="00">
+                <input type="text" class="eed-settings-time-part" data-part="minutes" inputmode="numeric" maxlength="2" aria-label="${t('settingsAriaBreakEndMinutes')}" placeholder="00">
               </div>
               <span class="eed-settings-error" data-error-for="intervaloFim" role="alert" hidden></span>
             </label>
@@ -80,30 +80,30 @@ const EEDSettingsUI = {
         </div>
 
         <div class="eed-settings-section fadeInUp animated eed-animate-delay-2">
-          <h3 class="eed-settings-section-title">Tolerância de atraso</h3>
-          <p class="eed-settings-section-hint">Informe a tolerância você tem para atraso na entrada.</p>
+          <h3 class="eed-settings-section-title">${t('settingsToleranceTitle')}</h3>
+          <p class="eed-settings-section-hint">${t('settingsToleranceHint')}</p>
           <label class="eed-settings-field" data-field="toleranciaAtraso">
-            <span class="eed-settings-label">Minutos</span>
-            <input type="text" id="eed-input-tolerancia" class="eed-settings-input" inputmode="numeric" placeholder="5" maxlength="2" aria-label="Tolerância de atraso em minutos">
+            <span class="eed-settings-label">${t('settingsLabelMinutes')}</span>
+            <input type="text" id="eed-input-tolerancia" class="eed-settings-input" inputmode="numeric" placeholder="5" maxlength="2" aria-label="${t('settingsAriaTolerance')}">
             <span class="eed-settings-error" data-error-for="toleranciaAtraso" role="alert" hidden></span>
           </label>
         </div>
 
         <div class="eed-settings-section fadeInUp animated eed-animate-delay-3">
-          <h3 class="eed-settings-section-title">URL do Easydots</h3>
-          <p class="eed-settings-section-hint">Endereço de acesso da sua empresa. É detectado automaticamente pela página em que você usa o Easydots.</p>
+          <h3 class="eed-settings-section-title">${t('settingsUrlTitle')}</h3>
+          <p class="eed-settings-section-hint">${t('settingsUrlHint')}</p>
           <label class="eed-settings-field" data-field="easydotsUrl">
-            <span class="eed-settings-label">Endereço</span>
-            <input type="url" id="eed-input-easydots-url" class="eed-settings-input eed-settings-input-url" placeholder="https://sys.acspontodigital.com.br/..." aria-label="URL do Easydots">
+            <span class="eed-settings-label">${t('settingsLabelAddress')}</span>
+            <input type="url" id="eed-input-easydots-url" class="eed-settings-input eed-settings-input-url" placeholder="https://sys.acspontodigital.com.br/..." aria-label="${t('settingsAriaEasydotsUrl')}">
             <span class="eed-settings-error" data-error-for="easydotsUrl" role="alert" hidden></span>
           </label>
         </div>
       </form>
 
       <div class="eed-settings-footer fadeIn animated eed-animate-delay-4">
-        ${includeCancel ? '<button type="button" id="eed-settings-cancel" class="eed-settings-btn eed-settings-btn-ghost waves-effect">Cancelar</button>' : ''}
-        <button type="button" id="eed-settings-reset" class="eed-settings-btn eed-settings-btn-secondary waves-effect">Resetar</button>
-        <button type="button" id="eed-settings-save" class="eed-settings-btn eed-settings-btn-primary waves-effect waves-light">Salvar</button>
+        ${includeCancel ? `<button type="button" id="eed-settings-cancel" class="eed-settings-btn eed-settings-btn-ghost waves-effect">${t('settingsButtonCancel')}</button>` : ''}
+        <button type="button" id="eed-settings-reset" class="eed-settings-btn eed-settings-btn-secondary waves-effect">${t('settingsButtonReset')}</button>
+        <button type="button" id="eed-settings-save" class="eed-settings-btn eed-settings-btn-primary waves-effect waves-light">${t('settingsButtonSave')}</button>
       </div>
 
       <div id="eed-settings-toast" class="eed-settings-toast eed-settings-toast-hidden fadeInUp animated eed-animate-fast" aria-live="polite"></div>
@@ -257,7 +257,7 @@ const EEDSettingsUI = {
     summary.className = 'eed-settings-form-errors';
     summary.setAttribute('role', 'alert');
     summary.innerHTML = `
-      <p class="eed-settings-form-errors-title">Corrija os campos abaixo antes de salvar:</p>
+      <p class="eed-settings-form-errors-title">${t('settingsErrorSummaryTitle')}</p>
       <ul class="eed-settings-form-errors-list">
         ${entries.map(([, message]) => `<li>${message}</li>`).join('')}
       </ul>
@@ -346,44 +346,44 @@ const EEDSettingsUI = {
   validateForm(values) {
     const errors = {};
     const timeFields = [
-      { key: 'entrada', label: 'entrada do trabalho' },
-      { key: 'saida', label: 'saída do trabalho' },
-      { key: 'intervaloInicio', label: 'início do intervalo' },
-      { key: 'intervaloFim', label: 'fim do intervalo' },
+      { key: 'entrada', labelKey: 'settingsErrorFieldWorkEntry' },
+      { key: 'saida', labelKey: 'settingsErrorFieldWorkExit' },
+      { key: 'intervaloInicio', labelKey: 'settingsErrorFieldBreakStart' },
+      { key: 'intervaloFim', labelKey: 'settingsErrorFieldBreakEnd' },
     ];
 
     for (const field of timeFields) {
       if (!this.isValidTime(values[field.key])) {
-        errors[field.key] = `Informe um horário válido para a ${field.label}.`;
+        errors[field.key] = t('settingsErrorInvalidTime', [t(field.labelKey)]);
       }
     }
 
     if (this.isValidTime(values.entrada) && this.isValidTime(values.saida)) {
       if (this.timeToMinutes(values.entrada) >= this.timeToMinutes(values.saida)) {
-        errors.saida = 'A saída deve ser depois da entrada.';
+        errors.saida = t('settingsErrorExitAfterEntry');
       }
     }
 
     if (this.isValidTime(values.intervaloInicio) && this.isValidTime(values.intervaloFim)) {
       if (this.timeToMinutes(values.intervaloInicio) >= this.timeToMinutes(values.intervaloFim)) {
-        errors.intervaloFim = 'O fim do intervalo deve ser depois do início.';
+        errors.intervaloFim = t('settingsErrorBreakEndAfterStart');
       }
     }
 
     if (values.toleranciaAtraso < 1 || values.toleranciaAtraso > 60) {
-      errors.toleranciaAtraso = 'A tolerância de atraso deve ser entre 1 e 60 minutos.';
+      errors.toleranciaAtraso = t('settingsErrorToleranceRange');
     }
 
     if (!values.easydotsUrl) {
-      errors.easydotsUrl = 'Informe o endereço do Easydots.';
+      errors.easydotsUrl = t('settingsErrorUrlRequired');
     } else {
       try {
         const parsed = new URL(values.easydotsUrl);
         if (!['http:', 'https:'].includes(parsed.protocol)) {
-          errors.easydotsUrl = 'O endereço deve começar com http:// ou https://.';
+          errors.easydotsUrl = t('settingsErrorUrlProtocol');
         }
       } catch {
-        errors.easydotsUrl = 'Informe um endereço válido do Easydots.';
+        errors.easydotsUrl = t('settingsErrorUrlInvalid');
       }
     }
 
@@ -413,7 +413,7 @@ const EEDSettingsUI = {
     this.savedSettings = defaults;
     this.clearFormErrors();
     this.setFormValues(defaults);
-    this.showToast('Configurações restauradas ao padrão.', 'success');
+    this.showToast(t('settingsToastReset'), 'success');
   },
 
   async handleSave() {
@@ -430,7 +430,7 @@ const EEDSettingsUI = {
     await EEDSettings.save(values);
     this.savedSettings = values;
     this.setFormValues(values);
-    this.showToast('Configurações salvas!', 'success');
+    this.showToast(t('settingsToastSaved'), 'success');
 
     if (typeof this.options.onSave === 'function') {
       this.options.onSave(values);

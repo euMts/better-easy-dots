@@ -1,0 +1,280 @@
+{
+  "extensionName": {
+    "message": "Better Easy Dots",
+    "description": "Nome da extensão"
+  },
+  "extensionDescription": {
+    "message": "Extensão não oficial para Chrome que adiciona saldo diário, cores e sugestões de horários na página do Easydots",
+    "description": "Descrição da extensão"
+  },
+  "popupTitle": {
+    "message": "Better Easy Dots",
+    "description": "Título do popup"
+  },
+  "popupTagline": {
+    "message": "Seu ponto no Easydots, mais fácil",
+    "description": "Subtítulo do popup"
+  },
+  "popupSettingsTitle": {
+    "message": "Configurações",
+    "description": "Tooltip do botão de configurações"
+  },
+  "popupSettingsAriaLabel": {
+    "message": "Abrir configurações",
+    "description": "Aria-label do botão de configurações"
+  },
+  "popupReviewHeading": {
+    "message": "Gostou da extensão?",
+    "description": "Título da seção de avaliação"
+  },
+  "popupReviewBodyBefore": {
+    "message": "Deixe uma avaliação na",
+    "description": "Texto antes do link da loja"
+  },
+  "popupReviewStoreLink": {
+    "message": "Chrome Web Store",
+    "description": "Texto do link da loja"
+  },
+  "popupReviewBodyAfter": {
+    "message": ", leva menos de um minuto.",
+    "description": "Texto depois do link da loja"
+  },
+  "popupReviewButton": {
+    "message": "Avaliar na loja",
+    "description": "Botão de avaliação"
+  },
+  "settingsPageTitle": {
+    "message": "Configurações — Better Easy Dots",
+    "description": "Título da página de configurações"
+  },
+  "settingsHeaderTitle": {
+    "message": "Better Easy Dots",
+    "description": "Título do cabeçalho das configurações"
+  },
+  "settingsHeaderSubtitle": {
+    "message": "Configure seus horários de trabalho e intervalo",
+    "description": "Subtítulo do cabeçalho das configurações"
+  },
+  "settingsWorkHoursTitle": {
+    "message": "Horário de trabalho",
+    "description": "Título da seção de horário de trabalho"
+  },
+  "settingsWorkHoursHint": {
+    "message": "Informe o horário de entrada e saída do seu trabalho.",
+    "description": "Dica da seção de horário de trabalho"
+  },
+  "settingsBreakTitle": {
+    "message": "Horário de intervalo",
+    "description": "Título da seção de intervalo"
+  },
+  "settingsBreakHint": {
+    "message": "Informe o horário de início e fim do seu intervalo no dia.",
+    "description": "Dica da seção de intervalo"
+  },
+  "settingsToleranceTitle": {
+    "message": "Tolerância de atraso",
+    "description": "Título da seção de tolerância"
+  },
+  "settingsToleranceHint": {
+    "message": "Informe a tolerância você tem para atraso na entrada.",
+    "description": "Dica da seção de tolerância"
+  },
+  "settingsUrlTitle": {
+    "message": "URL do Easydots",
+    "description": "Título da seção de URL"
+  },
+  "settingsUrlHint": {
+    "message": "Endereço de acesso da sua empresa. É detectado automaticamente pela página em que você usa o Easydots.",
+    "description": "Dica da seção de URL"
+  },
+  "settingsLabelEntry": {
+    "message": "Entrada",
+    "description": "Rótulo do campo de entrada"
+  },
+  "settingsLabelExit": {
+    "message": "Saída",
+    "description": "Rótulo do campo de saída"
+  },
+  "settingsLabelBreakStart": {
+    "message": "Início",
+    "description": "Rótulo do início do intervalo"
+  },
+  "settingsLabelBreakEnd": {
+    "message": "Fim",
+    "description": "Rótulo do fim do intervalo"
+  },
+  "settingsLabelMinutes": {
+    "message": "Minutos",
+    "description": "Rótulo do campo de minutos"
+  },
+  "settingsLabelAddress": {
+    "message": "Endereço",
+    "description": "Rótulo do campo de endereço"
+  },
+  "settingsAriaEntryHours": {
+    "message": "Horas de entrada",
+    "description": "Aria-label das horas de entrada"
+  },
+  "settingsAriaEntryMinutes": {
+    "message": "Minutos de entrada",
+    "description": "Aria-label dos minutos de entrada"
+  },
+  "settingsAriaExitHours": {
+    "message": "Horas de saída",
+    "description": "Aria-label das horas de saída"
+  },
+  "settingsAriaExitMinutes": {
+    "message": "Minutos de saída",
+    "description": "Aria-label dos minutos de saída"
+  },
+  "settingsAriaBreakStartHours": {
+    "message": "Horas de início do intervalo",
+    "description": "Aria-label das horas de início do intervalo"
+  },
+  "settingsAriaBreakStartMinutes": {
+    "message": "Minutos de início do intervalo",
+    "description": "Aria-label dos minutos de início do intervalo"
+  },
+  "settingsAriaBreakEndHours": {
+    "message": "Horas de fim do intervalo",
+    "description": "Aria-label das horas de fim do intervalo"
+  },
+  "settingsAriaBreakEndMinutes": {
+    "message": "Minutos de fim do intervalo",
+    "description": "Aria-label dos minutos de fim do intervalo"
+  },
+  "settingsAriaTolerance": {
+    "message": "Tolerância de atraso em minutos",
+    "description": "Aria-label da tolerância de atraso"
+  },
+  "settingsAriaEasydotsUrl": {
+    "message": "URL do Easydots",
+    "description": "Aria-label da URL do Easydots"
+  },
+  "settingsButtonCancel": {
+    "message": "Cancelar",
+    "description": "Botão cancelar"
+  },
+  "settingsButtonReset": {
+    "message": "Resetar",
+    "description": "Botão resetar"
+  },
+  "settingsButtonSave": {
+    "message": "Salvar",
+    "description": "Botão salvar"
+  },
+  "settingsErrorSummaryTitle": {
+    "message": "Corrija os campos abaixo antes de salvar:",
+    "description": "Título do resumo de erros do formulário"
+  },
+  "settingsErrorFieldWorkEntry": {
+    "message": "entrada do trabalho",
+    "description": "Nome do campo entrada no erro"
+  },
+  "settingsErrorFieldWorkExit": {
+    "message": "saída do trabalho",
+    "description": "Nome do campo saída no erro"
+  },
+  "settingsErrorFieldBreakStart": {
+    "message": "início do intervalo",
+    "description": "Nome do campo início do intervalo no erro"
+  },
+  "settingsErrorFieldBreakEnd": {
+    "message": "fim do intervalo",
+    "description": "Nome do campo fim do intervalo no erro"
+  },
+  "settingsErrorInvalidTime": {
+    "message": "Informe um horário válido para a $FIELD$.",
+    "description": "Erro de horário inválido",
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "entrada do trabalho"
+      }
+    }
+  },
+  "settingsErrorExitAfterEntry": {
+    "message": "A saída deve ser depois da entrada.",
+    "description": "Erro quando saída é antes da entrada"
+  },
+  "settingsErrorBreakEndAfterStart": {
+    "message": "O fim do intervalo deve ser depois do início.",
+    "description": "Erro quando fim do intervalo é antes do início"
+  },
+  "settingsErrorToleranceRange": {
+    "message": "A tolerância de atraso deve ser entre 1 e 60 minutos.",
+    "description": "Erro de tolerância fora do intervalo"
+  },
+  "settingsErrorUrlRequired": {
+    "message": "Informe o endereço do Easydots.",
+    "description": "Erro de URL vazia"
+  },
+  "settingsErrorUrlProtocol": {
+    "message": "O endereço deve começar com http:// ou https://.",
+    "description": "Erro de protocolo inválido"
+  },
+  "settingsErrorUrlInvalid": {
+    "message": "Informe um endereço válido do Easydots.",
+    "description": "Erro de URL inválida"
+  },
+  "settingsToastReset": {
+    "message": "Configurações restauradas ao padrão.",
+    "description": "Toast após resetar configurações"
+  },
+  "settingsToastSaved": {
+    "message": "Configurações salvas!",
+    "description": "Toast após salvar configurações"
+  },
+  "contentRegisterButton": {
+    "message": "Registrar Horário",
+    "description": "Botão de registro de ponto"
+  },
+  "contentPunchEntry": {
+    "message": "Entrada",
+    "description": "Rótulo de entrada nas sugestões"
+  },
+  "contentPunchExit": {
+    "message": "Saída",
+    "description": "Rótulo de saída nas sugestões"
+  },
+  "contentSuggestionTag": {
+    "message": "Sugestão:",
+    "description": "Tag de sugestão de horário"
+  },
+  "contentDayBalanceLabel": {
+    "message": "Saldo do dia",
+    "description": "Rótulo do saldo diário"
+  },
+  "contentCreditByline": {
+    "message": "by better easy dots",
+    "description": "Crédito no card de saldo"
+  },
+  "contentScheduleHint": {
+    "message": "Configure entrada, saída e intervalo na engrenagem",
+    "description": "Dica quando horários não estão configurados"
+  },
+  "contentNavbarTitle": {
+    "message": "Better Easy Dots",
+    "description": "Título do link na navbar"
+  },
+  "contentNavbarLabel": {
+    "message": "better easy dots",
+    "description": "Rótulo do link na navbar"
+  },
+  "contentSourceFallback": {
+    "message": "Registro WEB",
+    "description": "Fonte padrão nas sugestões"
+  },
+  "contentErrorRegisterNotFound": {
+    "message": "Botão de registro não encontrado. Abra a página inicial do Easydots.",
+    "description": "Erro quando botão de registro não existe"
+  },
+  "backgroundErrorNoTab": {
+    "message": "Nenhuma aba do Easydots aberta.",
+    "description": "Erro quando não há aba do Easydots"
+  },
+  "backgroundErrorReloadPage": {
+    "message": "Recarregue a página do Easydots e tente novamente.",
+    "description": "Erro ao enviar mensagem para content script"
+  }
+}

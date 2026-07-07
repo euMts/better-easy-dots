@@ -1,0 +1,280 @@
+{
+  "extensionName": {
+    "message": "Better Easy Dots",
+    "description": "Extension name"
+  },
+  "extensionDescription": {
+    "message": "Unofficial Chrome extension that adds daily balance, colors, and schedule suggestions on the Easydots page",
+    "description": "Extension description"
+  },
+  "popupTitle": {
+    "message": "Better Easy Dots",
+    "description": "Popup title"
+  },
+  "popupTagline": {
+    "message": "Your Easydots time clock, made easier",
+    "description": "Popup tagline"
+  },
+  "popupSettingsTitle": {
+    "message": "Settings",
+    "description": "Settings button tooltip"
+  },
+  "popupSettingsAriaLabel": {
+    "message": "Open settings",
+    "description": "Settings button aria-label"
+  },
+  "popupReviewHeading": {
+    "message": "Enjoying the extension?",
+    "description": "Review section heading"
+  },
+  "popupReviewBodyBefore": {
+    "message": "Leave a review on the",
+    "description": "Text before store link"
+  },
+  "popupReviewStoreLink": {
+    "message": "Chrome Web Store",
+    "description": "Store link text"
+  },
+  "popupReviewBodyAfter": {
+    "message": "— it takes less than a minute.",
+    "description": "Text after store link"
+  },
+  "popupReviewButton": {
+    "message": "Rate in the store",
+    "description": "Review button"
+  },
+  "settingsPageTitle": {
+    "message": "Settings — Better Easy Dots",
+    "description": "Settings page title"
+  },
+  "settingsHeaderTitle": {
+    "message": "Better Easy Dots",
+    "description": "Settings header title"
+  },
+  "settingsHeaderSubtitle": {
+    "message": "Set your work hours and break times",
+    "description": "Settings header subtitle"
+  },
+  "settingsWorkHoursTitle": {
+    "message": "Work hours",
+    "description": "Work hours section title"
+  },
+  "settingsWorkHoursHint": {
+    "message": "Enter your work start and end times.",
+    "description": "Work hours section hint"
+  },
+  "settingsBreakTitle": {
+    "message": "Break time",
+    "description": "Break section title"
+  },
+  "settingsBreakHint": {
+    "message": "Enter your daily break start and end times.",
+    "description": "Break section hint"
+  },
+  "settingsToleranceTitle": {
+    "message": "Late tolerance",
+    "description": "Tolerance section title"
+  },
+  "settingsToleranceHint": {
+    "message": "Enter how many minutes late you allow for clock-in.",
+    "description": "Tolerance section hint"
+  },
+  "settingsUrlTitle": {
+    "message": "Easydots URL",
+    "description": "URL section title"
+  },
+  "settingsUrlHint": {
+    "message": "Your company's access address. It is detected automatically from the Easydots page you use.",
+    "description": "URL section hint"
+  },
+  "settingsLabelEntry": {
+    "message": "Clock in",
+    "description": "Entry field label"
+  },
+  "settingsLabelExit": {
+    "message": "Clock out",
+    "description": "Exit field label"
+  },
+  "settingsLabelBreakStart": {
+    "message": "Start",
+    "description": "Break start label"
+  },
+  "settingsLabelBreakEnd": {
+    "message": "End",
+    "description": "Break end label"
+  },
+  "settingsLabelMinutes": {
+    "message": "Minutes",
+    "description": "Minutes field label"
+  },
+  "settingsLabelAddress": {
+    "message": "Address",
+    "description": "Address field label"
+  },
+  "settingsAriaEntryHours": {
+    "message": "Clock-in hours",
+    "description": "Clock-in hours aria-label"
+  },
+  "settingsAriaEntryMinutes": {
+    "message": "Clock-in minutes",
+    "description": "Clock-in minutes aria-label"
+  },
+  "settingsAriaExitHours": {
+    "message": "Clock-out hours",
+    "description": "Clock-out hours aria-label"
+  },
+  "settingsAriaExitMinutes": {
+    "message": "Clock-out minutes",
+    "description": "Clock-out minutes aria-label"
+  },
+  "settingsAriaBreakStartHours": {
+    "message": "Break start hours",
+    "description": "Break start hours aria-label"
+  },
+  "settingsAriaBreakStartMinutes": {
+    "message": "Break start minutes",
+    "description": "Break start minutes aria-label"
+  },
+  "settingsAriaBreakEndHours": {
+    "message": "Break end hours",
+    "description": "Break end hours aria-label"
+  },
+  "settingsAriaBreakEndMinutes": {
+    "message": "Break end minutes",
+    "description": "Break end minutes aria-label"
+  },
+  "settingsAriaTolerance": {
+    "message": "Late tolerance in minutes",
+    "description": "Tolerance aria-label"
+  },
+  "settingsAriaEasydotsUrl": {
+    "message": "Easydots URL",
+    "description": "Easydots URL aria-label"
+  },
+  "settingsButtonCancel": {
+    "message": "Cancel",
+    "description": "Cancel button"
+  },
+  "settingsButtonReset": {
+    "message": "Reset",
+    "description": "Reset button"
+  },
+  "settingsButtonSave": {
+    "message": "Save",
+    "description": "Save button"
+  },
+  "settingsErrorSummaryTitle": {
+    "message": "Fix the fields below before saving:",
+    "description": "Form error summary title"
+  },
+  "settingsErrorFieldWorkEntry": {
+    "message": "clock-in time",
+    "description": "Work entry field name in error"
+  },
+  "settingsErrorFieldWorkExit": {
+    "message": "clock-out time",
+    "description": "Work exit field name in error"
+  },
+  "settingsErrorFieldBreakStart": {
+    "message": "break start",
+    "description": "Break start field name in error"
+  },
+  "settingsErrorFieldBreakEnd": {
+    "message": "break end",
+    "description": "Break end field name in error"
+  },
+  "settingsErrorInvalidTime": {
+    "message": "Enter a valid time for $FIELD$.",
+    "description": "Invalid time error",
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "clock-in time"
+      }
+    }
+  },
+  "settingsErrorExitAfterEntry": {
+    "message": "Clock-out must be after clock-in.",
+    "description": "Exit before entry error"
+  },
+  "settingsErrorBreakEndAfterStart": {
+    "message": "Break end must be after break start.",
+    "description": "Break end before start error"
+  },
+  "settingsErrorToleranceRange": {
+    "message": "Late tolerance must be between 1 and 60 minutes.",
+    "description": "Tolerance out of range error"
+  },
+  "settingsErrorUrlRequired": {
+    "message": "Enter the Easydots address.",
+    "description": "Empty URL error"
+  },
+  "settingsErrorUrlProtocol": {
+    "message": "The address must start with http:// or https://.",
+    "description": "Invalid protocol error"
+  },
+  "settingsErrorUrlInvalid": {
+    "message": "Enter a valid Easydots address.",
+    "description": "Invalid URL error"
+  },
+  "settingsToastReset": {
+    "message": "Settings restored to defaults.",
+    "description": "Toast after reset"
+  },
+  "settingsToastSaved": {
+    "message": "Settings saved!",
+    "description": "Toast after save"
+  },
+  "contentRegisterButton": {
+    "message": "Register Time",
+    "description": "Register time button"
+  },
+  "contentPunchEntry": {
+    "message": "Clock in",
+    "description": "Entry label in suggestions"
+  },
+  "contentPunchExit": {
+    "message": "Clock out",
+    "description": "Exit label in suggestions"
+  },
+  "contentSuggestionTag": {
+    "message": "Suggestion:",
+    "description": "Suggestion tag"
+  },
+  "contentDayBalanceLabel": {
+    "message": "Daily balance",
+    "description": "Daily balance label"
+  },
+  "contentCreditByline": {
+    "message": "by better easy dots",
+    "description": "Balance card credit"
+  },
+  "contentScheduleHint": {
+    "message": "Set clock-in, clock-out, and break in the gear icon",
+    "description": "Hint when schedule is not configured"
+  },
+  "contentNavbarTitle": {
+    "message": "Better Easy Dots",
+    "description": "Navbar link title"
+  },
+  "contentNavbarLabel": {
+    "message": "better easy dots",
+    "description": "Navbar link label"
+  },
+  "contentSourceFallback": {
+    "message": "WEB entry",
+    "description": "Default source in suggestions"
+  },
+  "contentErrorRegisterNotFound": {
+    "message": "Register button not found. Open the Easydots home page.",
+    "description": "Register button not found error"
+  },
+  "backgroundErrorNoTab": {
+    "message": "No Easydots tab is open.",
+    "description": "No Easydots tab error"
+  },
+  "backgroundErrorReloadPage": {
+    "message": "Reload the Easydots page and try again.",
+    "description": "Content script message error"
+  }
+}

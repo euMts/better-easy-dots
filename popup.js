@@ -1,3 +1,5 @@
+document.documentElement.lang = chrome.i18n.getUILanguage();
+
 const versionEl = document.getElementById('eed-popup-version');
 const reviewBtn = document.getElementById('eed-popup-review');
 const settingsFooterBtn = document.getElementById('eed-popup-settings-footer');

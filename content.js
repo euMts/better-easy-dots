@@ -14,7 +14,9 @@ const EASydots = {
   updateTimer: null,
   lastViewState: '',
 
-  REGISTER_BUTTON_HTML: `<button type="button" id="btnRegister" class="btn waves-effect m-l-5 loading" style="background-color: #8234e8; color: white; height: 85px; width: 240px; font-size: 1.3em; font-weight: bold;"><i class="md-alarm"></i> Registrar Horário</button>`,
+  getRegisterButtonHtml() {
+    return `<button type="button" id="btnRegister" class="btn waves-effect m-l-5 loading" style="background-color: #8234e8; color: white; height: 85px; width: 240px; font-size: 1.3em; font-weight: bold;"><i class="md-alarm"></i> ${t('contentRegisterButton')}</button>`;
+  },
 
   getRecords() {
     const rows = document.querySelectorAll(`${this.SELECTORS.recordsTable} tr`);
@@ -228,16 +230,16 @@ const EASydots = {
   getExpectedDaySequence(settings) {
     if (this.hasInterval(settings)) {
       return [
-        { type: 'entrada', label: 'Entrada', expected: settings.entrada, icon: 'icon-login' },
-        { type: 'saida', label: 'Saida', expected: settings.intervaloInicio, icon: 'icon-logout' },
-        { type: 'entrada', label: 'Entrada', expected: settings.intervaloFim, icon: 'icon-login' },
-        { type: 'saida', label: 'Saida', expected: settings.saida, icon: 'icon-logout' },
+        { type: 'entrada', label: t('contentPunchEntry'), expected: settings.entrada, icon: 'icon-login' },
+        { type: 'saida', label: t('contentPunchExit'), expected: settings.intervaloInicio, icon: 'icon-logout' },
+        { type: 'entrada', label: t('contentPunchEntry'), expected: settings.intervaloFim, icon: 'icon-login' },
+        { type: 'saida', label: t('contentPunchExit'), expected: settings.saida, icon: 'icon-logout' },
       ];
     }
 
     return [
-      { type: 'entrada', label: 'Entrada', expected: settings.entrada, icon: 'icon-login' },
-      { type: 'saida', label: 'Saida', expected: settings.saida, icon: 'icon-logout' },
+      { type: 'entrada', label: t('contentPunchEntry'), expected: settings.entrada, icon: 'icon-login' },
+      { type: 'saida', label: t('contentPunchExit'), expected: settings.saida, icon: 'icon-logout' },
     ];
   },
 
@@ -287,7 +289,7 @@ const EASydots = {
 
     const shift = this.getSuggestionShift(records, settings);
     const balanceRow = table.querySelector('#eed-day-balance-row');
-    const sourceLabel = records[records.length - 1]?.source || 'Registro WEB';
+    const sourceLabel = records[records.length - 1]?.source || t('contentSourceFallback');
 
     remaining.forEach((punch) => {
       const row = document.createElement('tr');
@@ -295,7 +297,7 @@ const EASydots = {
       const suggestedTime = this.secondsToTimeString(this.timeToSeconds(punch.expected) + shift);
 
       row.innerHTML = `
-        <td><span class="eed-suggestion-tag">Sugestão:</span> ${punch.label}</td>
+        <td><span class="eed-suggestion-tag">${t('contentSuggestionTag')}</span> ${punch.label}</td>
         <td>${sourceLabel}</td>
         <td><i class="${punch.icon} eed-suggestion-icon"></i></td>
         <td>${suggestedTime}</td>
@@ -446,10 +448,10 @@ const EASydots = {
         <td colspan="4" class="eed-day-balance-wrap">
           <div class="eed-day-balance-card fadeInUp animated">
             <div class="eed-day-balance-main">
-              <span class="eed-day-balance-label">Saldo do dia</span>
+              <span class="eed-day-balance-label">${t('contentDayBalanceLabel')}</span>
               <button type="button" class="eed-day-balance-credit">
                 <img src="${chrome.runtime.getURL('icons/easy-easy-dots.png')}" alt="" class="eed-day-balance-credit-icon" aria-hidden="true">
-                by better easy dots
+                ${t('contentCreditByline')}
               </button>
             </div>
             <div class="eed-day-balance-value"></div>
@@ -467,7 +469,7 @@ const EASydots = {
     const valueEl = balanceRow.querySelector('.eed-day-balance-value');
 
     if (!scheduleConfigured) {
-      const hintText = 'Configure entrada, saída e intervalo na engrenagem';
+      const hintText = t('contentScheduleHint');
       const hintClass = 'eed-day-balance-value eed-day-balance-hint';
 
       if (valueEl.textContent !== hintText) {
@@ -585,7 +587,7 @@ const EASydots = {
 
     const isMobileMessage = deviceType.textContent.includes('dispositivo móvel');
     if (isMobileMessage) {
-      deviceType.innerHTML = this.REGISTER_BUTTON_HTML;
+      deviceType.innerHTML = this.getRegisterButtonHtml();
       deviceType.style.color = '';
     }
   },
@@ -595,7 +597,7 @@ const EASydots = {
 
     const button = document.querySelector(this.SELECTORS.registerButton);
     if (!button) {
-      return { success: false, error: 'Botão de registro não encontrado. Abra a página inicial do Easydots.' };
+      return { success: false, error: t('contentErrorRegisterNotFound') };
     }
 
     button.click();
@@ -622,9 +624,9 @@ const EASydots = {
     li.id = 'eed-navbar-settings';
     li.className = 'dropdown top-menu-item-xs hidden-xs hidden-sm';
     li.innerHTML = `
-      <a href="#" class="dropdown-toggle eed-navbar-settings-link waves-effect waves-light" title="Better Easy Dots">
+      <a href="#" class="dropdown-toggle eed-navbar-settings-link waves-effect waves-light" title="${t('contentNavbarTitle')}">
         ${GEAR_ICON_SVG}
-        <span class="eed-navbar-settings-label">better easy dots</span>
+        <span class="eed-navbar-settings-label">${t('contentNavbarLabel')}</span>
       </a>
     `;
 
