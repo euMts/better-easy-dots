@@ -347,3 +347,64 @@
 .eed-settings-root--embedded .eed-settings-grid {
   grid-template-columns: 1fr;
 }
+
+.eed-settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.eed-settings-toggle-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.eed-settings-toggle-track {
+  position: relative;
+  flex-shrink: 0;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: #ddd6e8;
+  transition: background 0.2s ease;
+}
+
+.eed-settings-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transition: transform 0.2s ease;
+}
+
+.eed-settings-toggle-input:checked + .eed-settings-toggle-track {
+  background: linear-gradient(135deg, #8234e8 0%, #6b22c9 100%);
+}
+
+.eed-settings-toggle-input:checked + .eed-settings-toggle-track .eed-settings-toggle-thumb {
+  transform: translateX(18px);
+}
+
+.eed-settings-toggle-input:focus-visible + .eed-settings-toggle-track {
+  outline: 2px solid rgba(130, 52, 232, 0.45);
+  outline-offset: 2px;
+}
+
+.eed-settings-toggle-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}

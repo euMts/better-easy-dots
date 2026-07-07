@@ -8,11 +8,18 @@ const EASydots = {
     clock: '.clock',
     deviceType: '#deviceType',
     settingsMenuItem: '#eed-navbar-settings',
+    jornadaInput: '#inputHorario',
+    jornadaImport: '#eed-jornada-import',
   },
 
   isUpdating: false,
   updateTimer: null,
+  cachedSettings: null,
   lastViewState: '',
+  jornadaImportBusy: false,
+  jornadaFeedbackTimeout: null,
+  jornadaImportReady: false,
+  jornadaSyncTimer: null,
 
   getRegisterButtonHtml() {
     return `<button type="button" id="btnRegister" class="btn waves-effect m-l-5 loading" style="background-color: #8234e8; color: white; height: 85px; width: 240px; font-size: 1.3em; font-weight: bold;"><i class="md-alarm"></i> ${t('contentRegisterButton')}</button>`;
@@ -614,6 +621,258 @@ const EASydots = {
     };
   },
 
+  getJornadaImportButtonParts(button) {
+    return {
+      iconEl: button.querySelector('.eed-jornada-import-icon'),
+      spinnerEl: button.querySelector('.eed-jornada-import-spinner'),
+      checkEl: button.querySelector('.eed-jornada-import-check'),
+      labelEl: button.querySelector('.eed-jornada-import-label'),
+    };
+  },
+
+  setJornadaImportVisualState(button, state) {
+    if (!button) return;
+
+    if (button.dataset.eedVisualState === state) return;
+    button.dataset.eedVisualState = state;
+
+    const { iconEl, spinnerEl, checkEl, labelEl } = this.getJornadaImportButtonParts(button);
+
+    button.classList.remove(
+      'eed-jornada-import--loading',
+      'eed-jornada-import--success',
+      'eed-jornada-import--error',
+      'eed-jornada-import--flash',
+      'eed-jornada-import--saved'
+    );
+
+    if (iconEl) iconEl.hidden = state !== 'idle' && state !== 'saved';
+    if (spinnerEl) spinnerEl.hidden = state !== 'loading';
+    if (checkEl) checkEl.hidden = state !== 'success' && state !== 'saved';
+
+    if (state === 'loading') {
+      button.disabled = true;
+      button.classList.add('eed-jornada-import--loading');
+      if (labelEl) labelEl.textContent = t('contentJornadaImportSaving');
+      return;
+    }
+
+    if (state === 'success') {
+      button.disabled = false;
+      button.classList.add('eed-jornada-import--success', 'eed-jornada-import--flash');
+      if (labelEl) labelEl.textContent = t('contentJornadaImportSuccess');
+      return;
+    }
+
+    if (state === 'error') {
+      button.disabled = false;
+      button.classList.add('eed-jornada-import--error');
+      if (iconEl) iconEl.hidden = false;
+      if (labelEl) labelEl.textContent = t('contentJornadaImportFail');
+      return;
+    }
+
+    if (state === 'saved') {
+      button.disabled = false;
+      button.classList.add('eed-jornada-import--saved');
+      if (labelEl) labelEl.textContent = t('contentJornadaImportSaved');
+      return;
+    }
+
+    button.disabled = false;
+    if (iconEl) iconEl.hidden = false;
+    if (labelEl) labelEl.textContent = t('contentJornadaImport');
+  },
+
+  formatJornadaImportDetail(parsed) {
+    const hasInterval = this.timeToSeconds(parsed.intervaloFim) > this.timeToSeconds(parsed.intervaloInicio);
+
+    if (hasInterval) {
+      return t('contentJornadaImportSuccessDetail', [
+        parsed.entrada,
+        parsed.intervaloInicio,
+        parsed.intervaloFim,
+        parsed.saida,
+      ]);
+    }
+
+    return t('contentJornadaImportSuccessSimple', [parsed.entrada, parsed.saida]);
+  },
+
+  showJornadaImportToast(column, type, parsed = null) {
+    if (!column) return;
+
+    let toast = column.querySelector('#eed-jornada-feedback');
+    if (!toast) return;
+
+    if (this.jornadaFeedbackTimeout) {
+      clearTimeout(this.jornadaFeedbackTimeout);
+      this.jornadaFeedbackTimeout = null;
+    }
+
+    toast.classList.remove(
+      'eed-jornada-feedback--visible',
+      'eed-jornada-feedback--success',
+      'eed-jornada-feedback--error'
+    );
+    void toast.offsetWidth;
+
+    if (type === 'success' && parsed) {
+      toast.innerHTML = `
+        <span class="eed-jornada-feedback-icon" aria-hidden="true">✓</span>
+        <span class="eed-jornada-feedback-copy">
+          <strong>${t('contentJornadaImportSuccess')}</strong>
+          <span>${this.formatJornadaImportDetail(parsed)}</span>
+        </span>
+      `;
+      toast.classList.add('eed-jornada-feedback--success', 'eed-jornada-feedback--visible');
+    } else {
+      toast.innerHTML = `
+        <span class="eed-jornada-feedback-icon" aria-hidden="true">!</span>
+        <span class="eed-jornada-feedback-copy">
+          <strong>${t('contentJornadaImportFail')}</strong>
+        </span>
+      `;
+      toast.classList.add('eed-jornada-feedback--error', 'eed-jornada-feedback--visible');
+    }
+
+    this.jornadaFeedbackTimeout = window.setTimeout(() => {
+      toast.classList.remove('eed-jornada-feedback--visible');
+    }, 4200);
+  },
+
+  scheduleJornadaImportSync() {
+    clearTimeout(this.jornadaSyncTimer);
+    this.jornadaSyncTimer = window.setTimeout(() => {
+      this.syncJornadaImportState().catch(() => {});
+    }, 80);
+  },
+
+  async syncJornadaImportState() {
+    if (this.jornadaImportBusy) return;
+
+    const importButton = document.querySelector(this.SELECTORS.jornadaImport);
+    const input = document.querySelector(this.SELECTORS.jornadaInput);
+    if (!importButton || !input || typeof EEDSettings === 'undefined') return;
+
+    const parsed = EEDSettings.parseEasydotsJornada(input.value);
+
+    if (!parsed) {
+      importButton.disabled = true;
+      this.setJornadaImportVisualState(importButton, 'idle');
+      importButton.querySelector('.eed-jornada-import-label').textContent = t('contentJornadaImportError');
+      return;
+    }
+
+    const settings = this.cachedSettings || (await EEDSettings.load());
+    const isSaved = EEDSettings.scheduleMatchesJornada(settings, input.value);
+    this.setJornadaImportVisualState(importButton, isSaved ? 'saved' : 'idle');
+  },
+
+  async importJornadaFromInput() {
+    if (this.jornadaImportBusy) return;
+
+    const input = document.querySelector(this.SELECTORS.jornadaInput);
+    const importButton = document.querySelector(this.SELECTORS.jornadaImport);
+    const column = input?.closest('.col-sm-12, .col-md-6, [class*="col-"]');
+    if (!input || !importButton || typeof EEDSettings === 'undefined') return;
+
+    const parsed = EEDSettings.parseEasydotsJornada(input.value);
+    this.jornadaImportBusy = true;
+    delete importButton.dataset.eedVisualState;
+    this.setJornadaImportVisualState(importButton, 'loading');
+
+    await new Promise((resolve) => window.setTimeout(resolve, 280));
+
+    if (!parsed) {
+      this.setJornadaImportVisualState(importButton, 'error');
+      this.showJornadaImportToast(column, 'error');
+      window.setTimeout(() => {
+        this.jornadaImportBusy = false;
+        this.syncJornadaImportState().catch(() => {});
+      }, 1800);
+      return;
+    }
+
+    try {
+      const current = await EEDSettings.load();
+      const saved = await EEDSettings.save({ ...current, ...parsed });
+      this.cachedSettings = saved;
+      this.lastViewState = '';
+      this.scheduleUpdateRecordsView(true);
+
+      delete importButton.dataset.eedVisualState;
+      this.setJornadaImportVisualState(importButton, 'success');
+      this.showJornadaImportToast(column, 'success', parsed);
+
+      window.setTimeout(() => {
+        this.jornadaImportBusy = false;
+        delete importButton.dataset.eedVisualState;
+        this.setJornadaImportVisualState(importButton, 'saved');
+      }, 2200);
+    } catch {
+      delete importButton?.dataset.eedVisualState;
+      this.setJornadaImportVisualState(importButton, 'error');
+      this.showJornadaImportToast(column, 'error');
+      window.setTimeout(() => {
+        this.jornadaImportBusy = false;
+        this.syncJornadaImportState().catch(() => {});
+      }, 1800);
+    }
+  },
+
+  ensureJornadaImport() {
+    if (this.jornadaImportReady) return;
+
+    const input = document.querySelector(this.SELECTORS.jornadaInput);
+    if (!input) return;
+
+    if (document.querySelector(this.SELECTORS.jornadaImport)) {
+      this.jornadaImportReady = true;
+      return;
+    }
+
+    const column = input.closest('.col-sm-12, .col-md-6, [class*="col-"]');
+    if (!column) return;
+
+    const existingLabel = column.querySelector('label.control-label');
+    if (!existingLabel) return;
+
+    const labelRow = document.createElement('div');
+    labelRow.className = 'eed-jornada-label-row';
+    existingLabel.replaceWith(labelRow);
+    labelRow.appendChild(existingLabel);
+
+    const importButton = document.createElement('button');
+    importButton.type = 'button';
+    importButton.id = 'eed-jornada-import';
+    importButton.className = 'eed-jornada-import';
+    importButton.title = t('contentJornadaImportTitle');
+    importButton.innerHTML = `
+      <img src="${chrome.runtime.getURL('icons/easy-easy-dots.png')}" alt="" class="eed-jornada-import-icon" aria-hidden="true">
+      <span class="eed-jornada-import-spinner" hidden aria-hidden="true"></span>
+      <span class="eed-jornada-import-check" hidden aria-hidden="true">✓</span>
+      <span class="eed-jornada-import-label">${t('contentJornadaImport')}</span>
+    `;
+    importButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      this.importJornadaFromInput().catch(() => {});
+    });
+    labelRow.appendChild(importButton);
+
+    let toast = column.querySelector('#eed-jornada-feedback');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'eed-jornada-feedback';
+      toast.className = 'eed-jornada-feedback';
+      toast.setAttribute('aria-live', 'polite');
+      column.querySelector('.input-group')?.insertAdjacentElement('afterend', toast);
+    }
+
+    this.jornadaImportReady = true;
+    this.scheduleJornadaImportSync();
+  },
+
   injectNavbarItem() {
     if (document.querySelector(this.SELECTORS.settingsMenuItem)) return;
 
@@ -650,22 +909,35 @@ function init() {
   EASydots.injectNavbarItem();
   EASydots.ensureRegisterButton();
   EASydots.observeRecordsTable();
+  EASydots.ensureJornadaImport();
 
   const observer = new MutationObserver(() => {
     EASydots.injectNavbarItem();
     EASydots.ensureRegisterButton();
     EASydots.observeRecordsTable();
+
+    if (
+      !EASydots.jornadaImportReady &&
+      document.querySelector(EASydots.SELECTORS.jornadaInput) &&
+      !document.querySelector(EASydots.SELECTORS.jornadaImport)
+    ) {
+      EASydots.ensureJornadaImport();
+    }
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes['eed-settings']) {
-    EASydots.lastViewState = '';
-    EASydots.scheduleUpdateRecordsView(true);
-  }
-});
+if (chrome.storage?.onChanged) {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes['eed-settings']) {
+      EASydots.cachedSettings = null;
+      EASydots.lastViewState = '';
+      EASydots.scheduleUpdateRecordsView(true);
+      EASydots.scheduleJornadaImportSync();
+    }
+  });
+}
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'getPageData') {

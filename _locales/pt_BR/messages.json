@@ -253,6 +253,52 @@
     "message": "Configure entrada, saída e intervalo na engrenagem",
     "description": "Dica quando horários não estão configurados"
   },
+  "contentJornadaImport": {
+    "message": "Usar na extensão",
+    "description": "Botão para importar jornada do Easydots"
+  },
+  "contentJornadaImportTitle": {
+    "message": "Salvar horários da jornada na extensão",
+    "description": "Tooltip do botão de importar jornada"
+  },
+  "contentJornadaImportSaving": {
+    "message": "Salvando...",
+    "description": "Estado de carregamento ao importar jornada"
+  },
+  "contentJornadaImportSuccess": {
+    "message": "Horários salvos!",
+    "description": "Feedback de sucesso ao importar jornada"
+  },
+  "contentJornadaImportSuccessDetail": {
+    "message": "Entrada $ENTRADA$ · Intervalo $BREAK_START$–$BREAK_END$ · Saída $EXIT$",
+    "description": "Detalhe dos horários importados",
+    "placeholders": {
+      "entrada": { "content": "$1", "example": "08:00" },
+      "break_start": { "content": "$2", "example": "12:00" },
+      "break_end": { "content": "$3", "example": "13:30" },
+      "exit": { "content": "$4", "example": "18:10" }
+    }
+  },
+  "contentJornadaImportSuccessSimple": {
+    "message": "Entrada $ENTRADA$ · Saída $EXIT$",
+    "description": "Detalhe dos horários importados sem intervalo",
+    "placeholders": {
+      "entrada": { "content": "$1", "example": "08:00" },
+      "exit": { "content": "$2", "example": "18:00" }
+    }
+  },
+  "contentJornadaImportSaved": {
+    "message": "Salvo",
+    "description": "Estado quando a jornada já está nas configurações"
+  },
+  "contentJornadaImportFail": {
+    "message": "Não foi possível salvar",
+    "description": "Feedback de erro ao importar jornada"
+  },
+  "contentJornadaImportError": {
+    "message": "Jornada inválida",
+    "description": "Estado quando a jornada não pôde ser lida"
+  },
   "contentNavbarTitle": {
     "message": "Better Easy Dots",
     "description": "Título do link na navbar"

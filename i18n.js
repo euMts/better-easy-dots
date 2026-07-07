@@ -6,8 +6,23 @@ function t(key, substitutions) {
   return message || key;
 }
 
+function applyI18n(root = document) {
+  root.querySelectorAll('[data-i18n]').forEach((el) => {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+
+  root.querySelectorAll('*').forEach((el) => {
+    for (const attr of el.attributes) {
+      if (!attr.name.startsWith('data-i18n-')) continue;
+      const targetAttr = attr.name.slice('data-i18n-'.length);
+      el.setAttribute(targetAttr, t(attr.value));
+    }
+  });
+}
+
 if (typeof window !== 'undefined') {
   window.t = t;
+  window.applyI18n = applyI18n;
 }
 
 if (typeof self !== 'undefined') {

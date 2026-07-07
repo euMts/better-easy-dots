@@ -89,7 +89,7 @@ const EEDSettingsUI = {
           </label>
         </div>
 
-        <div class="eed-settings-section fadeInUp animated eed-animate-delay-3">
+        <div class="eed-settings-section fadeInUp animated eed-animate-delay-4">
           <h3 class="eed-settings-section-title">${t('settingsUrlTitle')}</h3>
           <p class="eed-settings-section-hint">${t('settingsUrlHint')}</p>
           <label class="eed-settings-field" data-field="easydotsUrl">
@@ -100,7 +100,7 @@ const EEDSettingsUI = {
         </div>
       </form>
 
-      <div class="eed-settings-footer fadeIn animated eed-animate-delay-4">
+      <div class="eed-settings-footer fadeIn animated eed-animate-delay-5">
         ${includeCancel ? `<button type="button" id="eed-settings-cancel" class="eed-settings-btn eed-settings-btn-ghost waves-effect">${t('settingsButtonCancel')}</button>` : ''}
         <button type="button" id="eed-settings-reset" class="eed-settings-btn eed-settings-btn-secondary waves-effect">${t('settingsButtonReset')}</button>
         <button type="button" id="eed-settings-save" class="eed-settings-btn eed-settings-btn-primary waves-effect waves-light">${t('settingsButtonSave')}</button>

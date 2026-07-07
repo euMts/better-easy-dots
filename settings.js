@@ -79,6 +79,65 @@ const EEDSettings = {
     return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
   },
 
+  normalizeTime(value) {
+    const match = String(value || '')
+      .trim()
+      .match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return null;
+
+    const hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+
+    const normalized = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    return this.isValidTime(normalized) ? normalized : null;
+  },
+
+  parseEasydotsJornada(value) {
+    const text = String(value || '').trim();
+    if (!text) return null;
+
+    const splitMatch = text.match(
+      /(\d{1,2}:\d{2})\s*[àa]s\s*(\d{1,2}:\d{2})\s+e\s+(\d{1,2}:\d{2})\s*[àa]s\s*(\d{1,2}:\d{2})/i
+    );
+
+    if (splitMatch) {
+      const entrada = this.normalizeTime(splitMatch[1]);
+      const intervaloInicio = this.normalizeTime(splitMatch[2]);
+      const intervaloFim = this.normalizeTime(splitMatch[3]);
+      const saida = this.normalizeTime(splitMatch[4]);
+
+      if ([entrada, intervaloInicio, intervaloFim, saida].every(Boolean)) {
+        return { entrada, intervaloInicio, intervaloFim, saida };
+      }
+
+      return null;
+    }
+
+    const simpleMatch = text.match(/(\d{1,2}:\d{2})\s*[àa]s\s*(\d{1,2}:\d{2})/i);
+    if (!simpleMatch) return null;
+
+    const entrada = this.normalizeTime(simpleMatch[1]);
+    const saida = this.normalizeTime(simpleMatch[2]);
+    if (!entrada || !saida) return null;
+
+    return {
+      entrada,
+      saida,
+      intervaloInicio: entrada,
+      intervaloFim: entrada,
+    };
+  },
+
+  scheduleMatchesJornada(settings, jornadaValue) {
+    const parsed = this.parseEasydotsJornada(jornadaValue);
+    if (!parsed || !this.isScheduleConfigured(settings)) return false;
+
+    return ['entrada', 'saida', 'intervaloInicio', 'intervaloFim'].every(
+      (key) => settings[key] === parsed[key]
+    );
+  },
+
   isScheduleConfigured(settings = {}) {
     if (!settings.horariosConfigurados) {
       return false;
@@ -106,22 +165,51 @@ const EEDSettings = {
     return settings;
   },
 
+  canUseStorage() {
+    return typeof chrome !== 'undefined' && Boolean(chrome.storage?.local);
+  },
+
+  async readStoredSettings() {
+    if (!this.canUseStorage()) {
+      return null;
+    }
+
+    try {
+      const result = await chrome.storage.local.get(EED_SETTINGS_KEY);
+      return result[EED_SETTINGS_KEY] ?? null;
+    } catch {
+      return null;
+    }
+  },
+
+  async writeStoredSettings(settings) {
+    if (!this.canUseStorage()) {
+      return false;
+    }
+
+    try {
+      await chrome.storage.local.set({ [EED_SETTINGS_KEY]: settings });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
   async load() {
-    const result = await chrome.storage.local.get(EED_SETTINGS_KEY);
-    return this.normalize(result[EED_SETTINGS_KEY]);
+    const stored = await this.readStoredSettings();
+    return this.normalize(stored ?? {});
   },
 
   async save(settings) {
     const normalized = this.normalize({ ...settings, horariosConfigurados: true });
-    await chrome.storage.local.set({ [EED_SETTINGS_KEY]: normalized });
+    await this.writeStoredSettings(normalized);
     return normalized;
   },
 
   async reset() {
-    await chrome.storage.local.set({
-      [EED_SETTINGS_KEY]: { ...EED_DEFAULT_SETTINGS, horariosConfigurados: false },
-    });
-    return { ...EED_DEFAULT_SETTINGS, horariosConfigurados: false };
+    const defaults = { ...EED_DEFAULT_SETTINGS, horariosConfigurados: false };
+    await this.writeStoredSettings(defaults);
+    return defaults;
   },
 
   async rememberSiteUrl(href) {
@@ -150,7 +238,7 @@ const EEDSettings = {
     }
 
     const normalized = this.normalize({ ...current, easydotsUrl: detectedUrl });
-    await chrome.storage.local.set({ [EED_SETTINGS_KEY]: normalized });
+    await this.writeStoredSettings(normalized);
     return normalized;
   },
 };

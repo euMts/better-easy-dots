@@ -1,4 +1,6 @@
 document.documentElement.lang = chrome.i18n.getUILanguage();
+document.title = t('popupTitle');
+applyI18n();
 
 const versionEl = document.getElementById('eed-popup-version');
 const reviewBtn = document.getElementById('eed-popup-review');

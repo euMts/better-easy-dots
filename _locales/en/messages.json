@@ -253,6 +253,52 @@
     "message": "Set clock-in, clock-out, and break in the gear icon",
     "description": "Hint when schedule is not configured"
   },
+  "contentJornadaImport": {
+    "message": "Use in extension",
+    "description": "Button to import schedule from Easydots"
+  },
+  "contentJornadaImportTitle": {
+    "message": "Save schedule times to the extension",
+    "description": "Import schedule button tooltip"
+  },
+  "contentJornadaImportSaving": {
+    "message": "Saving...",
+    "description": "Loading state when importing schedule"
+  },
+  "contentJornadaImportSuccess": {
+    "message": "Schedule saved!",
+    "description": "Success feedback when importing schedule"
+  },
+  "contentJornadaImportSuccessDetail": {
+    "message": "Start $ENTRADA$ · Break $BREAK_START$–$BREAK_END$ · End $EXIT$",
+    "description": "Imported schedule detail",
+    "placeholders": {
+      "entrada": { "content": "$1", "example": "08:00" },
+      "break_start": { "content": "$2", "example": "12:00" },
+      "break_end": { "content": "$3", "example": "13:30" },
+      "exit": { "content": "$4", "example": "18:10" }
+    }
+  },
+  "contentJornadaImportSuccessSimple": {
+    "message": "Start $ENTRADA$ · End $EXIT$",
+    "description": "Imported schedule detail without break",
+    "placeholders": {
+      "entrada": { "content": "$1", "example": "08:00" },
+      "exit": { "content": "$2", "example": "18:00" }
+    }
+  },
+  "contentJornadaImportSaved": {
+    "message": "Saved",
+    "description": "State when schedule is already in settings"
+  },
+  "contentJornadaImportFail": {
+    "message": "Could not save",
+    "description": "Error feedback when importing schedule"
+  },
+  "contentJornadaImportError": {
+    "message": "Invalid schedule",
+    "description": "State when schedule could not be parsed"
+  },
   "contentNavbarTitle": {
     "message": "Better Easy Dots",
     "description": "Navbar link title"
