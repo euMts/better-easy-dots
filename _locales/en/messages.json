@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extensionDescription": {
-    "message": "Unofficial Chrome extension that adds daily balance, colors, and schedule suggestions on the Easydots page",
+    "message": "Chrome extension that adds daily balance, colors, and schedule suggestions on the Easydots page",
     "description": "Extension description"
   },
   "popupTitle": {

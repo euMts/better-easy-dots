@@ -5,12 +5,12 @@
 <h1 align="center">Better Easy Dots</h1>
 
 <p align="center">
-  Extensão para Chrome que melhora a experiência de registro de ponto no <strong>Easydots</strong> (<code>*.acspontodigital.com.br</code>).
+  Extensão para Chrome que melhora a experiência de registro de ponto no <strong>Easydots</strong> (<code>sys.easydots.com.br</code>).
 </p>
 
 <p align="center">
   <a href="README.en.md"><img src="https://img.shields.io/badge/README-English-blue" alt="README in English"></a>
-  <img src="https://img.shields.io/badge/versão-0.1.0-purple" alt="Versão 0.1.0">
+  <img src="https://img.shields.io/badge/versão-1.0.0-purple" alt="Versão 1.0.0">
   <img src="https://img.shields.io/badge/Manifest-V3-blue" alt="Manifest V3">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licença-MIT-lightgrey" alt="Licença MIT"></a>
 </p>
@@ -74,6 +74,26 @@ O ícone da extensão na barra do Chrome mostra a quantidade de registros do dia
 
 ---
 
+## Capturas de tela
+
+### Tabela de registros
+
+Saldo do dia, coluna **Diferença** e cores por tolerância:
+
+<p align="center">
+  <img src="screenshots/pt/1.jpg" alt="Tabela de registros com saldo do dia, coluna Diferença e cores nos horários" width="720">
+</p>
+
+### Configurações
+
+Horários de trabalho, intervalo, tolerância e URL do Easydots:
+
+<p align="center">
+  <img src="screenshots/pt/2.jpg" alt="Página de configurações da extensão Better Easy Dots" width="480">
+</p>
+
+---
+
 ## Instalação
 
 ### Desenvolvimento (carregar sem compactação)
@@ -86,7 +106,7 @@ O ícone da extensão na barra do Chrome mostra a quantidade de registros do dia
 
 ### Chrome Web Store
 
-Em breve. Após a publicação, o link estará em `config.js` (`EED_EXTENSION_URL`).
+[Rascunho na loja](https://chromewebstore.google.com/detail/better-easy-dots/cfnehkkbmplomaianjpfiaoonmpekbbb) — o link ficará público após a publicação.
 
 ---
 
@@ -133,7 +153,8 @@ A pasta `website/` contém um espelho local da página do Easydots para testes c
 |-----------|--------|
 | `storage` | Salvar horários e URL do Easydots localmente |
 | `tabs` | Localizar aba aberta do Easydots para atualizar o badge |
-| `*.acspontodigital.com.br` | Injetar melhorias na página já aberta pelo usuário |
+| `*.easydots.com.br` | Injetar melhorias na página já aberta pelo usuário |
+| `*.acspontodigital.com.br` | Compatibilidade com domínio legado |
 
 Nenhum dado é transmitido para servidores da extensão.
 
@@ -151,21 +172,10 @@ Nenhum dado é transmitido para servidores da extensão.
 ## Compatibilidade
 
 - **Navegador:** Google Chrome (Manifest V3)
-- **Sites:** `https://*.acspontodigital.com.br/*`
-- **Versão atual:** `0.1.0` (beta)
+- **Sites:** `https://*.easydots.com.br/*` (padrão: `https://sys.easydots.com.br/`), `https://*.acspontodigital.com.br/*` (legado)
+- **Versão atual:** `1.0.0`
 
 A extensão depende da estrutura HTML atual do Easydots (`#table_registro_horario`, `#btnRegister`, navbar). Atualizações no site podem exigir ajustes nos seletores.
-
----
-
-## Roadmap
-
-- [ ] Publicação na Chrome Web Store
-- [ ] Popup com resumo do dia (saldo, última batida)
-- [ ] Testes automatizados para cálculo de saldo e validação de horários
-- [ ] Manifest de produção sem permissões de desenvolvimento
-
-Detalhes em [`docs/to-do.md`](docs/to-do.md).
 
 ---
 

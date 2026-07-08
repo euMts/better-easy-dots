@@ -94,7 +94,7 @@ const EEDSettingsUI = {
           <p class="eed-settings-section-hint">${t('settingsUrlHint')}</p>
           <label class="eed-settings-field" data-field="easydotsUrl">
             <span class="eed-settings-label">${t('settingsLabelAddress')}</span>
-            <input type="url" id="eed-input-easydots-url" class="eed-settings-input eed-settings-input-url" placeholder="https://sys.acspontodigital.com.br/..." aria-label="${t('settingsAriaEasydotsUrl')}">
+            <input type="url" id="eed-input-easydots-url" class="eed-settings-input eed-settings-input-url" placeholder="https://sys.easydots.com.br/..." aria-label="${t('settingsAriaEasydotsUrl')}">
             <span class="eed-settings-error" data-error-for="easydotsUrl" role="alert" hidden></span>
           </label>
         </div>

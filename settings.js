@@ -17,7 +17,7 @@ const EED_DEFAULT_SETTINGS = {
   easydotsUrl:
     typeof EED_DEFAULT_EASYDOTS_URL !== 'undefined'
       ? EED_DEFAULT_EASYDOTS_URL
-      : 'https://sys.acspontodigital.com.br/site/login',
+      : 'https://sys.easydots.com.br/',
 };
 
 const EEDSettings = {

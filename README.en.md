@@ -5,12 +5,12 @@
 <h1 align="center">Better Easy Dots</h1>
 
 <p align="center">
-  Chrome extension that improves time-clock registration on <strong>Easydots</strong> (<code>*.acspontodigital.com.br</code>).
+  Chrome extension that improves time-clock registration on <strong>Easydots</strong> (<code>sys.easydots.com.br</code>).
 </p>
 
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/README-Português_(BR)-green" alt="README in Portuguese"></a>
-  <img src="https://img.shields.io/badge/version-0.1.0-purple" alt="Version 0.1.0">
+  <img src="https://img.shields.io/badge/version-1.0.0-purple" alt="Version 1.0.0">
   <img src="https://img.shields.io/badge/Manifest-V3-blue" alt="Manifest V3">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="MIT License"></a>
 </p>
@@ -74,6 +74,26 @@ The extension icon in the Chrome toolbar shows the number of records for the day
 
 ---
 
+## Screenshots
+
+### Records table
+
+Daily balance, **Difference** column, and tolerance-based colors:
+
+<p align="center">
+  <img src="screenshots/en/1.jpg" alt="Records table with daily balance, difference column, and colored times" width="720">
+</p>
+
+### Settings
+
+Work hours, break times, tolerance, and Easydots URL:
+
+<p align="center">
+  <img src="screenshots/en/2.jpg" alt="Better Easy Dots settings page" width="480">
+</p>
+
+---
+
 ## Installation
 
 ### Development (load unpacked)
@@ -86,7 +106,7 @@ The extension icon in the Chrome toolbar shows the number of records for the day
 
 ### Chrome Web Store
 
-Coming soon. After publication, the link will be in `config.js` (`EED_EXTENSION_URL`).
+[Store draft](https://chromewebstore.google.com/detail/better-easy-dots/cfnehkkbmplomaianjpfiaoonmpekbbb) — the link will be public after publication.
 
 ---
 
@@ -133,7 +153,8 @@ The `website/` folder contains a local mirror of the Easydots page for testing w
 |------------|--------|
 | `storage` | Save schedule and Easydots URL locally |
 | `tabs` | Find an open Easydots tab to update the badge |
-| `*.acspontodigital.com.br` | Inject enhancements on the page you already opened |
+| `*.easydots.com.br` | Inject enhancements on the page you already opened |
+| `*.acspontodigital.com.br` | Legacy domain compatibility |
 
 No data is sent to extension servers.
 
@@ -151,21 +172,10 @@ No data is sent to extension servers.
 ## Compatibility
 
 - **Browser:** Google Chrome (Manifest V3)
-- **Sites:** `https://*.acspontodigital.com.br/*`
-- **Current version:** `0.1.0` (beta)
+- **Sites:** `https://*.easydots.com.br/*` (default: `https://sys.easydots.com.br/`), `https://*.acspontodigital.com.br/*` (legacy)
+- **Current version:** `1.0.0`
 
 The extension depends on the current Easydots HTML structure (`#table_registro_horario`, `#btnRegister`, navbar). Site updates may require selector adjustments.
-
----
-
-## Roadmap
-
-- [ ] Chrome Web Store publication
-- [ ] Popup with day summary (balance, last punch)
-- [ ] Automated tests for balance calculation and time validation
-- [ ] Production manifest without development permissions
-
-Details in [`docs/to-do.md`](docs/to-do.md).
 
 ---
 

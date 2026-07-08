@@ -1,5 +1,5 @@
-const EED_EXTENSION_URL = 'https://chromewebstore.google.com/detail/better-easy-dots/SEU_ID_AQUI';
-const EED_DEFAULT_EASYDOTS_URL = 'https://sys.acspontodigital.com.br/site/login';
+const EED_EXTENSION_URL = 'https://chromewebstore.google.com/detail/better-easy-dots/cfnehkkbmplomaianjpfiaoonmpekbbb';
+const EED_DEFAULT_EASYDOTS_URL = 'https://sys.easydots.com.br/';
 
 if (typeof window !== 'undefined') {
   window.EED_EXTENSION_URL = EED_EXTENSION_URL;

@@ -1,209 +1,75 @@
-# Better Easy Dots — To-do para produção
+# Better Easy Dots — To-do para publicação
 
-Checklist para levar a extensão de **quase pronta** a **publicável na Chrome Web Store**.
+Checklist do que **ainda falta** antes de publicar na Chrome Web Store.
 
----
+**Empacotar:** `./package.sh` → `better-easy-dots.zip` (v1.0.0, `manifest.prod.json`, sem localhost)
 
-## Já concluído
-
-- Versão beta `0.1.0` no `manifest.json`
-- `README.md` + `README.en.md` (com badges de idioma)
-- Licença MIT (`LICENSE`)
-- Seletores do DOM centralizados em `content.js` → `SELECTORS`
-- Espelho local `website/` para dev (HTML corrigido, seletores preservados, favicon, ícones offline, `mirror-dev.js` sem chamadas externas, loading máx. 2s)
-- Animações Easydots na extensão (`eed-animations.css`, ripple via `eed-waves.js` no popup/configurações)
-- `website/` no `.gitignore`
-- Internacionalização (`i18n.js`, `_locales/pt_BR`, `_locales/en`)
-- Coluna **Diferença** na tabela de registros (cabeçalho, cálculo por tipo de batida, cores, formato `±HH:MM:SS`)
-- Tooltips na coluna **Diferença** e no **Saldo do dia** (com horário previsto e mensagens amigáveis)
-- Hover na linha da tabela + destaque visual ao passar o mouse
-- Importação de jornada do Easydots (**Usar na extensão**)
-- Item **Better Easy Dots** no menu lateral (`#eed-sidebar-settings`) para abrir configurações
-- `manifest.prod.json` — manifest de produção sem permissões de localhost
+**Loja (rascunho):** [Better Easy Dots](https://chromewebstore.google.com/detail/better-easy-dots/cfnehkkbmplomaianjpfiaoonmpekbbb) · ID `cfnehkkbmplomaianjpfiaoonmpekbbb`
 
 ---
 
-## Bloqueadores (fazer antes de publicar)
+## Chrome Web Store
 
-### 1. ID da Chrome Web Store
-
-- [ ] Criar conta de desenvolvedor na [Chrome Web Store](https://chrome.google.com/webstore/devconsole) (taxa única de US$ 5)
-- [ ] Fazer upload do primeiro rascunho da extensão (`.zip` sem pasta `website/`)
-- [ ] Copiar o ID real da extensão após a publicação (ou do rascunho na URL `.../detail/.../XXXXXXXX`)
-- [ ] Atualizar `config.js`:
-
-  ```js
-  const EED_EXTENSION_URL = 'https://chromewebstore.google.com/detail/better-easy-dots/SEU_ID_REAL';
-  ```
-
-- [ ] Testar os links:
+- [ ] Testar links (rascunho pode retornar 404 para não-desenvolvedores):
   - Botão **Avaliar na loja** no popup
   - Link **by better easy dots** no saldo do dia
+- [ ] Preencher/atualizar o listing no painel:
+  - **Descrição curta** — usar `_locales/*/messages.json` → `extensionDescription`
+  - **Descrição longa** — funcionalidades, `*.easydots.com.br` / `*.acspontodigital.com.br`, dados locais (`chrome.storage.local`)
+  - **Categoria:** Produtividade (ou Ferramentas)
+  - **Idioma principal:** Português (Brasil)
+- [ ] Upload de imagens:
+  - Ícone 128×128 (`icons/android-chrome-512x512.png` ou `icons/128x128.png`)
+  - Screenshots em `screenshots/pt/` e `screenshots/en/` (mín. 1 por idioma)
+- [ ] Publicar política de privacidade (URL externa) e informar no painel — base: seção Privacidade do `README.md`
+- [ ] Justificativa de permissões para o revisor:
+  - `storage` — horários e URL do Easydots salvos localmente
+  - `*.easydots.com.br` / `*.acspontodigital.com.br` — injetar melhorias na página aberta pelo usuário
+- [ ] Enviar rascunho para revisão
 
 ---
 
-### 2. Build de produção
+## Testes antes de publicar
 
-O `manifest.json` atual mantém localhost para dev. Para publicar, usar `manifest.prod.json`.
-
-- [ ] Gerar o `.zip` com `manifest.prod.json` renomeado/copiado como `manifest.json` (ver item 4)
-- [ ] Confirmar que o pacote **não** inclui entradas `127.0.0.1` nem `192.168.x.x`
-- [ ] *(Opcional, branch dev)* Manter `manifest.json` com localhost; release usa `manifest.prod.json`
-
----
-
-### 3. Materiais da Chrome Web Store
-
-**Textos** (rascunhos no `README.md`; copiar/adaptar no painel da loja)
-
-- [ ] **Nome:** Better Easy Dots
-- [ ] **Descrição curta** (máx. 132 caracteres)
-- [ ] **Descrição longa** (funcionalidades, `*.acspontodigital.com.br`, dados locais, aviso não oficial)
-- [ ] **Categoria:** Produtividade (ou Ferramentas)
-- [ ] **Idioma principal:** Português (Brasil)
-
-**Imagens**
-
-- [ ] Ícone da loja: 128×128 (`icons/android-chrome-512x512.png` redimensionado)
-- [ ] Screenshots (mín. 1, recomendado 3–5): tabela com cores e coluna Diferença, saldo do dia, tooltips, configurações (1280×800 ou 640×400)
-
-**Privacidade**
-
-- [ ] Publicar política de privacidade (GitHub Pages, etc.) — conteúdo mínimo no `README.md` (seção Privacidade) serve de base
-- [ ] Informar a URL da política no painel da Chrome Web Store
-
-**Justificativa de permissões (para o revisor)**
-
-- [ ] `storage` — salvar horários e URL do Easydots localmente
-- [ ] `host_permissions` em `*.acspontodigital.com.br` e `*.easydots.com.br` — injetar melhorias na página aberta pelo usuário
+- [ ] Instalar o `.zip` empacotado em `chrome://extensions` (não só “recarregar” no modo dev)
+- [ ] Confirmar que o pacote **não** inclui `website/`, `docs/`, `.git/`, `.crx`, `.pem`
+- [ ] Testar em pelo menos **2 subdomínios** (ex.: `sys.easydots.com.br` e o da sua empresa)
+- [ ] Primeira visita: URL do Easydots detectada automaticamente
+- [ ] Configurações: validação de erros, salvar, recarregar página → UI atualiza
+- [ ] Tabela: cores, coluna **Diferença**, tooltips, hover, saldo do dia, sugestões de batidas
+- [ ] Menu lateral e popup → **Configurações** abrem `settings.html`
+- [ ] Badge no ícone com aba do Easydots aberta
+- [ ] Extensão funciona sem aba `127.0.0.1` aberta
 
 ---
 
-### 4. Empacotamento para upload
+## Pós-publicação
 
-- [ ] Gerar `.zip` **somente** com os arquivos da extensão:
-
-  ```
-  manifest.json          ← usar manifest.prod.json
-  background.js
-  config.js
-  i18n.js
-  settings.js
-  settings-ui.js
-  settings-ui.css
-  settings.html
-  settings-page.js
-  settings-page.css
-  content.js
-  content.css
-  eed-animations.css
-  eed-waves.js
-  popup.html
-  popup.js
-  popup.css
-  _locales/
-  icons/
-  LICENSE
-  ```
-
-- [ ] **Não incluir:** `website/`, `docs/`, `manifest.prod.json` (após copiar), `.git/`, `.crx`, `.pem`, `node_modules/`
-- [ ] Testar o pacote em `chrome://extensions` antes de enviar à loja
-
-```bash
-cp manifest.prod.json manifest.json
-zip -r better-easy-dots.zip \
-  manifest.json background.js config.js i18n.js settings.js settings-ui.js settings-ui.css \
-  settings.html settings-page.js settings-page.css \
-  content.js content.css eed-animations.css eed-waves.js \
-  popup.html popup.js popup.css _locales/ icons/ LICENSE \
-  -x "*.DS_Store"
-rm manifest.json && git checkout manifest.json
-```
+- [ ] Links da Chrome Web Store abrem a página pública da extensão
+- [ ] Tag git `v1.0.0` alinhada ao `manifest.json`
+- [ ] Changelog breve da release
 
 ---
 
-## Testes manuais obrigatórios
-
-### 5. Validar em ambiente real
-
-- [ ] Testar em pelo menos **2 subdomínios** diferentes (ex.: `sys.` e o da sua empresa)
-- [ ] Primeira visita: URL do Easydots detectada automaticamente (sem forçar `/site/login`)
-- [ ] Salvar configurações com campos inválidos → erros no formulário
-- [ ] Salvar configurações válidas → saldo, cores e coluna Diferença funcionam
-- [ ] Coluna **Diferença**: valores corretos, tooltips e hover na linha
-- [ ] Tooltip do **Saldo do dia** explica o resultado
-- [ ] Dia incompleto → saldo negativo correto; sugestões de batidas aparecem
-- [ ] Dia completo (2 entradas + 2 saídas com intervalo) → saldo com pontualidade
-- [ ] Item **Better Easy Dots** no menu lateral e popup → **Configurações** abrem `settings.html`
-- [ ] Badge no ícone mostra quantidade de registros com aba do Easydots aberta
-- [ ] Recarregar página do Easydots após mudar configs → UI atualiza
-- [ ] *(Opcional, dev)* Validar no espelho `http://127.0.0.1:5500/website/` — sem requisições externas no Network
-
-### 6. Testar fluxo pós-publicação
-
-- [ ] Instalar a versão empacotada (não só “recarregar” no modo dev)
-- [ ] Links da Chrome Web Store abrem a página correta da extensão
-- [ ] Extensão funciona sem nenhuma aba `127.0.0.1` aberta
-
----
-
-## Riscos conhecidos (mitigar quando possível)
-
-### 7. Acoplamento ao DOM do Easydots
+## Riscos conhecidos
 
 | Seletor | Uso |
 |---------|-----|
-| `#table_registro_horario` | Tabela de registros (tbody), coluna Diferença, saldo, sugestões, tooltips |
-| `#sidebar-menu > ul` / `#eed-sidebar-settings` | Item de configurações no menu lateral |
-| `#btnRegister` | Botão de registrar horário |
+| `#table_registro_horario` | Tabela, Diferença, saldo, sugestões, tooltips |
+| `#sidebar-menu > ul` / `#eed-sidebar-settings` | Configurações no menu lateral |
+| `#btnRegister` | Registrar horário |
 | `.clock` | Relógio da página |
 | `#deviceType` | Container do botão de registro |
-| `#inputHorario` | Campo de jornada (importação) |
+| `#inputHorario` | Importação de jornada |
 
-- [ ] Após qualquer update do Easydots, revalidar o item 5
-- [ ] *(Futuro)* Fallback/log em `content.js` quando seletor não existir
-
-### 8. `MutationObserver` no `document.body`
-
-- [ ] Monitorar performance em páginas pesadas; se houver lentidão, restringir o observer à tabela/menu lateral
+- [ ] Revalidar após updates do Easydots
+- [ ] Monitorar performance do `MutationObserver` em `document.body`
 
 ---
 
-## Melhorias opcionais (pós-v1)
+## Opcional (pós-v1)
 
-### 9. Popup mais útil
-
-- [ ] Resumo do dia no popup (saldo, última batida, horários configurados ou não)
+- [ ] Popup com resumo do dia (saldo, última batida)
 - [ ] Botão para abrir/focar aba do Easydots
-
-### 10. Testes automatizados
-
-- [ ] Testes unitários para `settings.js` (URL, validação de horários)
-- [ ] Testes unitários para saldo e diferença em `content.js`
-- [ ] *(Avançado)* E2E com espelho `website/` (só em dev)
-
-### 11. CI / release
-
-- [ ] Script `package.sh` que gera `better-easy-dots.zip` a partir de `manifest.prod.json`
-- [ ] Tag de versão alinhada ao `manifest.json`
-- [ ] Changelog breve por release
-
----
-
-## Ordem sugerida de execução
-
-1. Build de produção + empacotamento (itens 2 e 4)
-2. Testes manuais (itens 5 e 6)
-3. Rascunho na Chrome Web Store + materiais (item 3)
-4. Atualizar `EED_EXTENSION_URL` (item 1)
-5. Publicar e validar links (itens 1 e 6)
-6. Mitigações e melhorias (itens 7–11) conforme prioridade
-
----
-
-## Critério de “production-ready”
-
-| Cenário | Critério |
-|---------|----------|
-| **Uso pessoal / sideload** | Itens 2, 4, 5 e 6 concluídos |
-| **Chrome Web Store** | Itens 1–6 concluídos + política de privacidade + listing completo |
+- [ ] Testes unitários (`settings.js`, saldo/diferença em `content.js`)
+- [ ] Fallback/log em `content.js` quando seletor não existir
