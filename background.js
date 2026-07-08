@@ -1,57 +1,10 @@
-importScripts('config.js', 'settings.js', 'i18n.js');
-
-function isEasydotsUrl(url) {
-  if (!url) return false;
-  if (EEDSettings.isLocalDevWebsiteUrl(url)) return true;
-  return EEDSettings.isBuiltinEasydotsHost(url);
-}
-
-async function getEasydotsOrigin() {
-  try {
-    const settings = await EEDSettings.load();
-    return new URL(settings.easydotsUrl).origin;
-  } catch {
-    return new URL(EED_DEFAULT_EASYDOTS_URL).origin;
-  }
-}
-
-async function findEasydotsTab() {
-  const configuredOrigin = await getEasydotsOrigin();
-  const tabs = await chrome.tabs.query({});
-
-  return (
-    tabs.find((tab) => {
-      if (!tab.url) return false;
-      if (tab.url.startsWith(configuredOrigin)) return true;
-      if (EEDSettings.isLocalDevWebsiteUrl(tab.url)) return true;
-      return EEDSettings.isBuiltinEasydotsHost(tab.url);
-    }) || null
-  );
-}
-
-async function sendToEasydots(action) {
-  const tab = await findEasydotsTab();
-
-  if (!tab?.id) {
-    return { success: false, error: t('backgroundErrorNoTab') };
-  }
-
-  try {
-    return await chrome.tabs.sendMessage(tab.id, { action });
-  } catch {
-    return { success: false, error: t('backgroundErrorReloadPage') };
-  }
-}
-
-async function updateBadge() {
-  const result = await sendToEasydots('getPageData');
-
-  if (!result?.records?.length) {
+async function setBadge(recordCount) {
+  if (!recordCount) {
     await chrome.action.setBadgeText({ text: '' });
     return;
   }
 
-  await chrome.action.setBadgeText({ text: String(result.records.length) });
+  await chrome.action.setBadgeText({ text: String(recordCount) });
   await chrome.action.setBadgeBackgroundColor({ color: '#8234e8' });
 }
 
@@ -80,11 +33,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
-  return false;
-});
-
-chrome.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && isEasydotsUrl(tab.url)) {
-    updateBadge();
+  if (message.action === 'syncBadge') {
+    setBadge(message.recordCount ?? 0)
+      .then(() => sendResponse({ success: true }))
+      .catch(() => sendResponse({ success: false }));
+    return true;
   }
+
+  return false;
 });

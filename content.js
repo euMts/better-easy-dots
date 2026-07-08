@@ -840,9 +840,17 @@ const EASydots = {
     try {
       await this.applyRecordColorsWithState(settings, table);
       this.lastViewState = nextState;
+      this.syncBadge();
     } finally {
       this.isUpdating = false;
     }
+  },
+
+  syncBadge() {
+    if (!chrome.runtime?.sendMessage) return;
+
+    const recordCount = this.getRecords().length;
+    chrome.runtime.sendMessage({ action: 'syncBadge', recordCount }).catch(() => {});
   },
 
   observeRecordsTable() {
@@ -899,23 +907,6 @@ const EASydots = {
     this.updateRecordsView(true);
   },
 
-  getClock() {
-    const el = document.querySelector(this.SELECTORS.clock);
-    return el ? el.textContent.trim() : null;
-  },
-
-  getLastRecord() {
-    const records = this.getRecords();
-    return records.length > 0 ? records[records.length - 1] : null;
-  },
-
-  isLoggedIn() {
-    return Boolean(
-      document.querySelector(this.SELECTORS.registerButton) ||
-      document.querySelector(this.SELECTORS.recordsTable)
-    );
-  },
-
   ensureRegisterButton() {
     const deviceType = document.querySelector(this.SELECTORS.deviceType);
     const registerButton = document.querySelector(this.SELECTORS.registerButton);
@@ -927,28 +918,6 @@ const EASydots = {
       deviceType.innerHTML = this.getRegisterButtonHtml();
       deviceType.style.color = '';
     }
-  },
-
-  registerTime() {
-    this.ensureRegisterButton();
-
-    const button = document.querySelector(this.SELECTORS.registerButton);
-    if (!button) {
-      return { success: false, error: t('contentErrorRegisterNotFound') };
-    }
-
-    button.click();
-    return { success: true };
-  },
-
-  getPageData() {
-    return {
-      loggedIn: this.isLoggedIn(),
-      clock: this.getClock(),
-      records: this.getRecords(),
-      lastRecord: this.getLastRecord(),
-      url: window.location.href,
-    };
   },
 
   getJornadaImportButtonParts(button) {
@@ -1265,6 +1234,7 @@ function init() {
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
+  EASydots.syncBadge();
 }
 
 if (chrome.storage?.onChanged) {
@@ -1277,19 +1247,5 @@ if (chrome.storage?.onChanged) {
     }
   });
 }
-
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message.action === 'getPageData') {
-    sendResponse(EASydots.getPageData());
-    return true;
-  }
-
-  if (message.action === 'registerTime') {
-    sendResponse(EASydots.registerTime());
-    return true;
-  }
-
-  return false;
-});
 
 init();
