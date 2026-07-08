@@ -150,36 +150,6 @@ const EASydots = {
     return total;
   },
 
-  calculatePunctualityDelta(records, settings) {
-    let entradaIndex = 0;
-    let saidaIndex = 0;
-    const totalSaidas = records.filter((record) => this.isSaida(record.type)).length;
-    let totalSeconds = 0;
-
-    records.forEach((record) => {
-      const expectedTime = this.getExpectedTime(
-        record.type,
-        entradaIndex,
-        saidaIndex,
-        totalSaidas,
-        settings
-      );
-
-      const recordedSeconds = this.timeToSeconds(record.time);
-      const expectedSeconds = this.timeToSeconds(expectedTime);
-
-      if (this.isEntrada(record.type)) {
-        totalSeconds += expectedSeconds - recordedSeconds;
-        entradaIndex += 1;
-      } else {
-        totalSeconds += recordedSeconds - expectedSeconds;
-        saidaIndex += 1;
-      }
-    });
-
-    return totalSeconds;
-  },
-
   hasInterval(settings) {
     return (
       this.timeToSeconds(settings.intervaloFim) > this.timeToSeconds(settings.intervaloInicio)
@@ -208,12 +178,7 @@ const EASydots = {
     const expectedDaily = this.calculateExpectedDailyWork(settings);
     const worked = this.calculateWorkedSeconds(records);
 
-    if (!this.isWorkDayComplete(records, settings)) {
-      return -(expectedDaily - worked);
-    }
-
-    const punctuality = this.calculatePunctualityDelta(records, settings);
-    return worked - expectedDaily + punctuality;
+    return worked - expectedDaily;
   },
 
   timeToMinutes(timeStr) {
@@ -286,8 +251,15 @@ const EASydots = {
     return 'breakStart';
   },
 
-  calculateDifferenceSeconds(recordedTime, expectedTime) {
-    return this.timeToSeconds(expectedTime) - this.timeToSeconds(recordedTime);
+  calculateDifferenceSeconds(type, recordedTime, expectedTime) {
+    const recorded = this.timeToSeconds(recordedTime);
+    const expected = this.timeToSeconds(expectedTime);
+
+    if (this.isEntrada(type)) {
+      return expected - recorded;
+    }
+
+    return recorded - expected;
   },
 
   formatDifferenceText(diffSeconds) {
@@ -311,7 +283,8 @@ const EASydots = {
     const absSeconds = Math.abs(diffSeconds);
     if (absSeconds === 0) return t('contentDiffTooltipOnTime', [expectedLabel]);
 
-    const isEarly = diffSeconds > 0;
+    const isEntradaKind = kind === 'workEntry' || kind === 'breakEnd';
+    const isEarly = isEntradaKind ? diffSeconds > 0 : diffSeconds < 0;
     const useSeconds = absSeconds < 60;
     const keyMap = {
       workEntry: {
@@ -701,7 +674,7 @@ const EASydots = {
       this.setTimeCellStatus(timeCell, status);
 
       if (diffCell) {
-        const diffSeconds = this.calculateDifferenceSeconds(recordedTime, expectedTime);
+        const diffSeconds = this.calculateDifferenceSeconds(type, recordedTime, expectedTime);
         this.setDiffCell(
           diffCell,
           this.formatDifferenceText(diffSeconds),
