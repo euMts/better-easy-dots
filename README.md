@@ -89,7 +89,7 @@ Saldo do dia, coluna **Diferença** e cores por tolerância:
 Horários de trabalho, intervalo, tolerância e URL do Easydots:
 
 <p align="center">
-  <img src="screenshots/pt/2.jpg" alt="Página de configurações da extensão Better Easy Dots" width="480">
+  <img src="screenshots/pt/2.jpg" alt="Página de configurações da extensão Better Easy Dots" width="720">
 </p>
 
 ---

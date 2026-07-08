@@ -89,7 +89,7 @@ Daily balance, **Difference** column, and tolerance-based colors:
 Work hours, break times, tolerance, and Easydots URL:
 
 <p align="center">
-  <img src="screenshots/en/2.jpg" alt="Better Easy Dots settings page" width="480">
+  <img src="screenshots/en/2.jpg" alt="Better Easy Dots settings page" width="720">
 </p>
 
 ---
