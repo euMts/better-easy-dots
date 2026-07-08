@@ -245,6 +245,42 @@
     "message": "Saldo do dia",
     "description": "Rótulo do saldo diário"
   },
+  "contentDayBalanceTooltipNotConfigured": {
+    "message": "Configure seus horários na extensão para ver o saldo do dia.",
+    "description": "Tooltip do saldo quando horários não estão configurados"
+  },
+  "contentDayBalanceTooltipIncomplete": {
+    "message": "O dia ainda não fechou. Você trabalhou $WORKED$ de $EXPECTED$ previstas — faltam $REMAINING$.",
+    "description": "Tooltip do saldo quando a jornada ainda não foi concluída",
+    "placeholders": {
+      "worked": { "content": "$1", "example": "04:00:00" },
+      "expected": { "content": "$2", "example": "09:00:00" },
+      "remaining": { "content": "$3", "example": "05:00:00" }
+    }
+  },
+  "contentDayBalanceTooltipCompleteNeutral": {
+    "message": "Tudo certo! Você cumpriu as $EXPECTED$ previstas.",
+    "description": "Tooltip do saldo neutro com jornada concluída",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "09:00:00" }
+    }
+  },
+  "contentDayBalanceTooltipCompletePositive": {
+    "message": "Você ficou $BALANCE$ acima do previsto ($EXPECTED$).",
+    "description": "Tooltip do saldo positivo com jornada concluída",
+    "placeholders": {
+      "balance": { "content": "$1", "example": "00:30:00" },
+      "expected": { "content": "$2", "example": "09:00:00" }
+    }
+  },
+  "contentDayBalanceTooltipCompleteNegative": {
+    "message": "Você ficou $BALANCE$ abaixo do previsto ($EXPECTED$).",
+    "description": "Tooltip do saldo negativo com jornada concluída",
+    "placeholders": {
+      "balance": { "content": "$1", "example": "01:00:00" },
+      "expected": { "content": "$2", "example": "09:00:00" }
+    }
+  },
   "contentCreditByline": {
     "message": "by better easy dots",
     "description": "Crédito no card de saldo"
@@ -252,6 +288,257 @@
   "contentScheduleHint": {
     "message": "Configure entrada, saída e intervalo na engrenagem",
     "description": "Dica quando horários não estão configurados"
+  },
+  "contentDiffColumnHeader": {
+    "message": "Diferença",
+    "description": "Título da coluna de diferença na tabela de registros"
+  },
+  "contentDiffTooltipOnTime": {
+    "message": "No horário! Previsto: $EXPECTED$.",
+    "description": "Tooltip quando o registro está no horário previsto",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryEarlyOne": {
+    "message": "Entrada: 1 minuto mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de entrada adiantada (1 minuto)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryEarly": {
+    "message": "Entrada: $MINUTES$ minutos mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de entrada adiantada",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "15" },
+      "expected": { "content": "$2", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryLateOne": {
+    "message": "Entrada: 1 minuto atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de entrada atrasada (1 minuto)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryLate": {
+    "message": "Entrada: $MINUTES$ minutos atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de entrada atrasada",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryEarlySecondsOne": {
+    "message": "Entrada: 1 segundo mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de entrada adiantada (1 segundo)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryEarlySeconds": {
+    "message": "Entrada: $SECONDS$ segundos mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de entrada adiantada em segundos",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "15" },
+      "expected": { "content": "$2", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryLateSecondsOne": {
+    "message": "Entrada: 1 segundo atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de entrada atrasada (1 segundo)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryLateSeconds": {
+    "message": "Entrada: $SECONDS$ segundos atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de entrada atrasada em segundos",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartEarlyOne": {
+    "message": "Intervalo: 1 minuto mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída para intervalo adiantada (1 minuto)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartEarly": {
+    "message": "Intervalo: $MINUTES$ minutos mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída para intervalo adiantada",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartLateOne": {
+    "message": "Intervalo: 1 minuto atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída para intervalo atrasada (1 minuto)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartLate": {
+    "message": "Intervalo: $MINUTES$ minutos atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída para intervalo atrasada",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartEarlySecondsOne": {
+    "message": "Intervalo: 1 segundo mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída para intervalo adiantada (1 segundo)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartEarlySeconds": {
+    "message": "Intervalo: $SECONDS$ segundos mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída para intervalo adiantada em segundos",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartLateSecondsOne": {
+    "message": "Intervalo: 1 segundo atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída para intervalo atrasada (1 segundo)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartLateSeconds": {
+    "message": "Intervalo: $SECONDS$ segundos atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída para intervalo atrasada em segundos",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndEarlyOne": {
+    "message": "Retorno: 1 minuto mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de retorno do intervalo adiantado (1 minuto)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndEarly": {
+    "message": "Retorno: $MINUTES$ minutos mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de retorno do intervalo adiantado",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndLateOne": {
+    "message": "Retorno: 1 minuto atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de retorno do intervalo atrasado (1 minuto)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndLate": {
+    "message": "Retorno: $MINUTES$ minutos atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de retorno do intervalo atrasado",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndEarlySecondsOne": {
+    "message": "Retorno: 1 segundo mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de retorno do intervalo adiantado (1 segundo)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndEarlySeconds": {
+    "message": "Retorno: $SECONDS$ segundos mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de retorno do intervalo adiantado em segundos",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndLateSecondsOne": {
+    "message": "Retorno: 1 segundo atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de retorno do intervalo atrasado (1 segundo)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndLateSeconds": {
+    "message": "Retorno: $SECONDS$ segundos atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de retorno do intervalo atrasado em segundos",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitEarlyOne": {
+    "message": "Saída: 1 minuto mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída final adiantada (1 minuto)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "18:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitEarly": {
+    "message": "Saída: $MINUTES$ minutos mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída final adiantada",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "18:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitLateOne": {
+    "message": "Saída: 1 minuto atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída final atrasada (1 minuto)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "18:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitLate": {
+    "message": "Saída: $MINUTES$ minutos atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída final atrasada",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "18:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitEarlySecondsOne": {
+    "message": "Saída: 1 segundo mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída final adiantada (1 segundo)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "18:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitEarlySeconds": {
+    "message": "Saída: $SECONDS$ segundos mais cedo. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída final adiantada em segundos",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "18:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitLateSecondsOne": {
+    "message": "Saída: 1 segundo atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída final atrasada (1 segundo)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "18:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitLateSeconds": {
+    "message": "Saída: $SECONDS$ segundos atrasado. Previsto: $EXPECTED$.",
+    "description": "Tooltip de saída final atrasada em segundos",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "18:00:00" }
+    }
   },
   "contentJornadaImport": {
     "message": "Usar na extensão",

@@ -80,6 +80,50 @@ const EASydots = {
     };
   },
 
+  formatDuration(totalSeconds) {
+    const abs = Math.abs(Math.round(totalSeconds));
+    const hours = Math.floor(abs / 3600);
+    const minutes = Math.floor((abs % 3600) / 60);
+    const seconds = abs % 60;
+
+    return [hours, minutes, seconds]
+      .map((unit) => String(unit).padStart(2, '0'))
+      .join(':');
+  },
+
+  getDayBalanceTooltip(records, settings) {
+    if (!EEDSettings.isScheduleConfigured(settings)) {
+      return t('contentDayBalanceTooltipNotConfigured');
+    }
+
+    const expectedDaily = this.calculateExpectedDailyWork(settings);
+    const worked = this.calculateWorkedSeconds(records);
+    const workedText = this.formatDuration(worked);
+    const expectedText = this.formatDuration(expectedDaily);
+
+    if (!this.isWorkDayComplete(records, settings)) {
+      const remaining = Math.max(0, expectedDaily - worked);
+      return t('contentDayBalanceTooltipIncomplete', [
+        workedText,
+        expectedText,
+        this.formatDuration(remaining),
+      ]);
+    }
+
+    const balance = this.calculateDayBalance(records, settings);
+    const balanceText = this.formatDuration(balance);
+
+    if (balance === 0) {
+      return t('contentDayBalanceTooltipCompleteNeutral', [expectedText]);
+    }
+
+    if (balance > 0) {
+      return t('contentDayBalanceTooltipCompletePositive', [balanceText, expectedText]);
+    }
+
+    return t('contentDayBalanceTooltipCompleteNegative', [balanceText, expectedText]);
+  },
+
   calculateExpectedDailyWork(settings) {
     const workSpan = this.timeToSeconds(settings.saida) - this.timeToSeconds(settings.entrada);
     const breakSpan =
@@ -177,18 +221,18 @@ const EASydots = {
   },
 
   getEntradaStatus(recordedTime, expectedTime, toleranceMinutes) {
-    const diff = this.timeToMinutes(recordedTime) - this.timeToMinutes(expectedTime);
+    const lateSeconds = this.timeToSeconds(recordedTime) - this.timeToSeconds(expectedTime);
 
-    if (diff <= 0) return 'eed-time-ok';
-    if (diff <= toleranceMinutes) return 'eed-time-warning';
+    if (lateSeconds <= 0) return 'eed-time-ok';
+    if (lateSeconds <= toleranceMinutes * 60) return 'eed-time-warning';
     return 'eed-time-late';
   },
 
   getSaidaStatus(recordedTime, expectedTime, toleranceMinutes) {
-    const diff = this.timeToMinutes(expectedTime) - this.timeToMinutes(recordedTime);
+    const earlySeconds = this.timeToSeconds(expectedTime) - this.timeToSeconds(recordedTime);
 
-    if (diff <= 0) return 'eed-time-ok';
-    if (diff <= toleranceMinutes) return 'eed-time-warning';
+    if (earlySeconds <= 0) return 'eed-time-ok';
+    if (earlySeconds <= toleranceMinutes * 60) return 'eed-time-warning';
     return 'eed-time-late';
   },
 
@@ -217,12 +261,254 @@ const EASydots = {
     }, 50);
   },
 
+  TIME_STATUS_CLASSES: ['eed-time-ok', 'eed-time-warning', 'eed-time-late'],
+
   setTimeCellStatus(timeCell, status) {
-    const statusClasses = ['eed-time-ok', 'eed-time-warning', 'eed-time-late'];
     if (timeCell.classList.contains(status)) return;
 
-    timeCell.classList.remove(...statusClasses);
+    timeCell.classList.remove(...this.TIME_STATUS_CLASSES);
     timeCell.classList.add(status);
+  },
+
+  getRecordKind(type, entradaIndex, saidaIndex, totalSaidas, settings) {
+    if (this.isEntrada(type)) {
+      return entradaIndex === 0 ? 'workEntry' : 'breakEnd';
+    }
+
+    if (!this.hasInterval(settings)) {
+      return 'workExit';
+    }
+
+    if (saidaIndex >= totalSaidas - 1 && totalSaidas >= 2) {
+      return 'workExit';
+    }
+
+    return 'breakStart';
+  },
+
+  calculateDifferenceSeconds(recordedTime, expectedTime) {
+    return this.timeToSeconds(expectedTime) - this.timeToSeconds(recordedTime);
+  },
+
+  formatDifferenceText(diffSeconds) {
+    if (diffSeconds === 0) return '00:00:00';
+
+    const sign = diffSeconds > 0 ? '+' : '-';
+    const abs = Math.abs(diffSeconds);
+    const hours = Math.floor(abs / 3600);
+    const minutes = Math.floor((abs % 3600) / 60);
+    const seconds = abs % 60;
+
+    return `${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  },
+
+  formatExpectedTimeForTooltip(expectedTime) {
+    return this.secondsToTimeString(this.timeToSeconds(expectedTime));
+  },
+
+  getDifferenceTooltip(kind, diffSeconds, expectedTime) {
+    const expectedLabel = this.formatExpectedTimeForTooltip(expectedTime);
+    const absSeconds = Math.abs(diffSeconds);
+    if (absSeconds === 0) return t('contentDiffTooltipOnTime', [expectedLabel]);
+
+    const isEarly = diffSeconds > 0;
+    const useSeconds = absSeconds < 60;
+    const keyMap = {
+      workEntry: {
+        early: {
+          second: ['contentDiffTooltipWorkEntryEarlySecondsOne', 'contentDiffTooltipWorkEntryEarlySeconds'],
+          minute: ['contentDiffTooltipWorkEntryEarlyOne', 'contentDiffTooltipWorkEntryEarly'],
+        },
+        late: {
+          second: ['contentDiffTooltipWorkEntryLateSecondsOne', 'contentDiffTooltipWorkEntryLateSeconds'],
+          minute: ['contentDiffTooltipWorkEntryLateOne', 'contentDiffTooltipWorkEntryLate'],
+        },
+      },
+      breakStart: {
+        early: {
+          second: ['contentDiffTooltipBreakStartEarlySecondsOne', 'contentDiffTooltipBreakStartEarlySeconds'],
+          minute: ['contentDiffTooltipBreakStartEarlyOne', 'contentDiffTooltipBreakStartEarly'],
+        },
+        late: {
+          second: ['contentDiffTooltipBreakStartLateSecondsOne', 'contentDiffTooltipBreakStartLateSeconds'],
+          minute: ['contentDiffTooltipBreakStartLateOne', 'contentDiffTooltipBreakStartLate'],
+        },
+      },
+      breakEnd: {
+        early: {
+          second: ['contentDiffTooltipBreakEndEarlySecondsOne', 'contentDiffTooltipBreakEndEarlySeconds'],
+          minute: ['contentDiffTooltipBreakEndEarlyOne', 'contentDiffTooltipBreakEndEarly'],
+        },
+        late: {
+          second: ['contentDiffTooltipBreakEndLateSecondsOne', 'contentDiffTooltipBreakEndLateSeconds'],
+          minute: ['contentDiffTooltipBreakEndLateOne', 'contentDiffTooltipBreakEndLate'],
+        },
+      },
+      workExit: {
+        early: {
+          second: ['contentDiffTooltipWorkExitEarlySecondsOne', 'contentDiffTooltipWorkExitEarlySeconds'],
+          minute: ['contentDiffTooltipWorkExitEarlyOne', 'contentDiffTooltipWorkExitEarly'],
+        },
+        late: {
+          second: ['contentDiffTooltipWorkExitLateSecondsOne', 'contentDiffTooltipWorkExitLateSeconds'],
+          minute: ['contentDiffTooltipWorkExitLateOne', 'contentDiffTooltipWorkExitLate'],
+        },
+      },
+    };
+
+    const unit = useSeconds ? 'second' : 'minute';
+    const amount = useSeconds ? absSeconds : Math.floor(absSeconds / 60);
+    const [oneKey, manyKey] = keyMap[kind][isEarly ? 'early' : 'late'][unit];
+    return t(amount === 1 ? oneKey : manyKey, amount === 1 ? [expectedLabel] : [String(amount), expectedLabel]);
+  },
+
+  ensureDiffColumnHeader(recordsRoot) {
+    const tableEl = recordsRoot?.closest?.('table') || recordsRoot;
+    const headerRow =
+      tableEl.querySelector('thead tr') || tableEl.querySelector('th')?.closest('tr');
+    if (!headerRow || headerRow.querySelector('.eed-diff-header')) return;
+
+    const headerCell = document.createElement('th');
+    headerCell.className = 'eed-diff-header';
+    headerCell.scope = 'col';
+    headerCell.textContent = t('contentDiffColumnHeader');
+    headerRow.appendChild(headerCell);
+  },
+
+  ensureDiffCell(row) {
+    if (row.id === 'eed-day-balance-row') return null;
+
+    if (row.classList.contains('eed-suggestion-row')) {
+      while (row.querySelectorAll('td').length < 5) {
+        row.appendChild(document.createElement('td'));
+      }
+      return null;
+    }
+
+    let diffCell = row.querySelector('.eed-diff-cell');
+    if (!diffCell) {
+      diffCell = document.createElement('td');
+      diffCell.className = 'eed-diff-cell';
+      row.appendChild(diffCell);
+    }
+
+    return diffCell;
+  },
+
+  setTooltipTarget(el, tooltip) {
+    if (tooltip) {
+      el.setAttribute('data-eed-tooltip', tooltip);
+      if (el.title !== tooltip) {
+        el.title = tooltip;
+      }
+    } else {
+      el.removeAttribute('data-eed-tooltip');
+      el.removeAttribute('title');
+      if (this.diffTooltipAnchor === el) {
+        this.hideDiffTooltip();
+      }
+    }
+  },
+
+  setDiffCell(diffCell, text, status, tooltip) {
+    if (diffCell.textContent !== text) {
+      diffCell.textContent = text;
+    }
+
+    this.setTooltipTarget(diffCell, tooltip);
+
+    if (!status) {
+      diffCell.classList.remove(...this.TIME_STATUS_CLASSES);
+      return;
+    }
+
+    if (diffCell.classList.contains(status)) return;
+
+    diffCell.classList.remove(...this.TIME_STATUS_CLASSES);
+    diffCell.classList.add(status);
+  },
+
+  clearDiffCell(diffCell) {
+    diffCell.textContent = '';
+    this.setTooltipTarget(diffCell, null);
+    diffCell.classList.remove(...this.TIME_STATUS_CLASSES);
+  },
+
+  getDiffTooltipEl() {
+    if (!this.diffTooltipEl) {
+      this.diffTooltipEl = document.createElement('div');
+      this.diffTooltipEl.id = 'eed-diff-tooltip';
+      this.diffTooltipEl.className = 'eed-diff-tooltip';
+      this.diffTooltipEl.hidden = true;
+      this.diffTooltipEl.setAttribute('role', 'tooltip');
+      document.body.appendChild(this.diffTooltipEl);
+    }
+
+    return this.diffTooltipEl;
+  },
+
+  positionDiffTooltip(cell) {
+    const tip = this.getDiffTooltipEl();
+    const rect = cell.getBoundingClientRect();
+    tip.style.left = `${rect.left + rect.width / 2}px`;
+    tip.style.top = `${rect.top}px`;
+  },
+
+  showDiffTooltip(cell) {
+    const tooltip = cell.getAttribute('data-eed-tooltip');
+    if (!tooltip) {
+      this.hideDiffTooltip();
+      return;
+    }
+
+    const tip = this.getDiffTooltipEl();
+    tip.textContent = tooltip;
+    tip.hidden = false;
+    this.diffTooltipAnchor = cell;
+    cell.setAttribute('aria-describedby', 'eed-diff-tooltip');
+    this.positionDiffTooltip(cell);
+  },
+
+  hideDiffTooltip() {
+    if (!this.diffTooltipEl) return;
+
+    this.diffTooltipEl.hidden = true;
+    this.diffTooltipAnchor?.removeAttribute('aria-describedby');
+    this.diffTooltipAnchor = null;
+  },
+
+  installDiffTooltips(recordsRoot) {
+    const tableEl = recordsRoot?.closest?.('table') || recordsRoot;
+    if (!tableEl || tableEl.dataset.eedDiffTooltipsReady) return;
+
+    tableEl.dataset.eedDiffTooltipsReady = 'true';
+
+    tableEl.addEventListener('mouseover', (event) => {
+      const target = event.target.closest('[data-eed-tooltip]');
+      if (!target || !tableEl.contains(target)) return;
+      this.showDiffTooltip(target);
+    });
+
+    tableEl.addEventListener('mouseout', (event) => {
+      const target = event.target.closest('[data-eed-tooltip]');
+      if (!target) return;
+
+      const related = event.relatedTarget;
+      if (related && target.contains(related)) return;
+
+      if (this.diffTooltipAnchor === target) {
+        this.hideDiffTooltip();
+      }
+    });
+
+    this.handleDiffTooltipReposition = () => {
+      if (this.diffTooltipAnchor) {
+        this.positionDiffTooltip(this.diffTooltipAnchor);
+      }
+    };
+
+    window.addEventListener('scroll', this.handleDiffTooltipReposition, true);
+    window.addEventListener('resize', this.handleDiffTooltipReposition);
   },
 
   secondsToTimeString(totalSeconds) {
@@ -308,6 +594,7 @@ const EASydots = {
         <td>${sourceLabel}</td>
         <td><i class="${punch.icon} eed-suggestion-icon"></i></td>
         <td>${suggestedTime}</td>
+        <td></td>
       `;
 
       if (balanceRow) {
@@ -343,13 +630,20 @@ const EASydots = {
   },
 
   async applyRecordColorsWithState(settings, table) {
+    this.ensureDiffColumnHeader(table);
+    this.installDiffTooltips(table);
+
     const rows = table.querySelectorAll('tr');
+    const balanceRow = table.querySelector('#eed-day-balance-row');
+    balanceRow?.querySelector('.eed-day-balance-wrap')?.setAttribute('colspan', '5');
 
     if (!EEDSettings.isScheduleConfigured(settings)) {
       rows.forEach((row) => {
         if (row.id === 'eed-day-balance-row' || row.classList.contains('eed-suggestion-row')) return;
         const timeCell = row.querySelectorAll('td')[3];
-        timeCell?.classList.remove('eed-time-ok', 'eed-time-warning', 'eed-time-late');
+        timeCell?.classList.remove(...this.TIME_STATUS_CLASSES);
+        const diffCell = this.ensureDiffCell(row);
+        if (diffCell) this.clearDiffCell(diffCell);
       });
       this.clearSuggestionRows(table);
       await this.renderDayBalance(settings, table);
@@ -372,13 +666,22 @@ const EASydots = {
       const type = cells[0].textContent.trim();
       const timeCell = cells[3];
       const recordedTime = timeCell.textContent.trim();
+      const diffCell = this.ensureDiffCell(row);
 
       if (!this.isEntrada(type) && !this.isSaida(type)) {
-        timeCell.classList.remove('eed-time-ok', 'eed-time-warning', 'eed-time-late');
+        timeCell.classList.remove(...this.TIME_STATUS_CLASSES);
+        if (diffCell) this.clearDiffCell(diffCell);
         return;
       }
 
       const expectedTime = this.getExpectedTime(
+        type,
+        entradaIndex,
+        saidaIndex,
+        totalSaidas,
+        settings
+      );
+      const recordKind = this.getRecordKind(
         type,
         entradaIndex,
         saidaIndex,
@@ -396,6 +699,16 @@ const EASydots = {
         settings.toleranciaAtraso
       );
       this.setTimeCellStatus(timeCell, status);
+
+      if (diffCell) {
+        const diffSeconds = this.calculateDifferenceSeconds(recordedTime, expectedTime);
+        this.setDiffCell(
+          diffCell,
+          this.formatDifferenceText(diffSeconds),
+          status,
+          this.getDifferenceTooltip(recordKind, diffSeconds, expectedTime)
+        );
+      }
     });
 
     this.renderSuggestionRows(settings, table, records);
@@ -452,7 +765,7 @@ const EASydots = {
       balanceRow.id = 'eed-day-balance-row';
       balanceRow.className = 'eed-day-balance-row';
       balanceRow.innerHTML = `
-        <td colspan="4" class="eed-day-balance-wrap">
+        <td colspan="5" class="eed-day-balance-wrap">
           <div class="eed-day-balance-card fadeInUp animated">
             <div class="eed-day-balance-main">
               <span class="eed-day-balance-label">${t('contentDayBalanceLabel')}</span>
@@ -487,6 +800,8 @@ const EASydots = {
         valueEl.className = hintClass;
       }
 
+      this.setTooltipTarget(valueEl, t('contentDayBalanceTooltipNotConfigured'));
+
       this.adjustRecordsContainer(scrollContainer, true);
       return;
     }
@@ -502,6 +817,8 @@ const EASydots = {
     if (valueEl.className !== nextClass) {
       valueEl.className = nextClass;
     }
+
+    this.setTooltipTarget(valueEl, this.getDayBalanceTooltip(records, loadedSettings));
 
     this.adjustRecordsContainer(scrollContainer, true);
   },
@@ -541,6 +858,10 @@ const EASydots = {
         const target = mutation.target;
 
         if (target.nodeType === Node.TEXT_NODE) {
+          if (target.parentElement?.classList?.contains('eed-diff-cell')) {
+            return false;
+          }
+
           const row = target.parentElement?.closest('tr');
           return (
             row?.id !== 'eed-day-balance-row' &&
@@ -550,6 +871,15 @@ const EASydots = {
         }
 
         if (target.id === 'eed-day-balance-row' || target.closest?.('#eed-day-balance-row')) {
+          return false;
+        }
+
+        if (
+          target.classList?.contains('eed-diff-cell') ||
+          target.classList?.contains('eed-diff-header') ||
+          target.closest?.('.eed-diff-cell') ||
+          target.closest?.('.eed-diff-header')
+        ) {
           return false;
         }
 

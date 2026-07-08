@@ -9,10 +9,17 @@ Checklist para levar a extensão de **quase pronta** a **publicável na Chrome W
 - Versão beta `0.1.0` no `manifest.json`
 - `README.md` + `README.en.md` (com badges de idioma)
 - Licença MIT (`LICENSE`)
-- Seletores do DOM documentados (abaixo) e centralizados em `content.js` → `SELECTORS`
+- Seletores do DOM centralizados em `content.js` → `SELECTORS`
 - Espelho local `website/` para dev (HTML corrigido, seletores preservados, favicon, ícones offline, `mirror-dev.js` sem chamadas externas, loading máx. 2s)
 - Animações Easydots na extensão (`eed-animations.css`, ripple via `eed-waves.js` no popup/configurações)
 - `website/` no `.gitignore`
+- Internacionalização (`i18n.js`, `_locales/pt_BR`, `_locales/en`)
+- Coluna **Diferença** na tabela de registros (cabeçalho, cálculo por tipo de batida, cores, formato `±HH:MM:SS`)
+- Tooltips na coluna **Diferença** e no **Saldo do dia** (com horário previsto e mensagens amigáveis)
+- Hover na linha da tabela + destaque visual ao passar o mouse
+- Importação de jornada do Easydots (**Usar na extensão**)
+- Item **Better Easy Dots** no menu lateral (`#eed-sidebar-settings`) para abrir configurações
+- `manifest.prod.json` — manifest de produção sem permissões de localhost
 
 ---
 
@@ -35,22 +42,13 @@ Checklist para levar a extensão de **quase pronta** a **publicável na Chrome W
 
 ---
 
-### 2. Manifest de produção (remover ambiente de dev)
+### 2. Build de produção
 
-Remover todas as referências a `http://127.0.0.1:5500` antes de gerar o `.zip` para a loja.
+O `manifest.json` atual mantém localhost para dev. Para publicar, usar `manifest.prod.json`.
 
-**`manifest.json`**
-
-- [ ] Remover `http://127.0.0.1:5500/*` de `host_permissions`
-- [ ] Remover `http://127.0.0.1:5500/website/*` de `content_scripts[].matches`
-- [ ] Remover `http://127.0.0.1:5500/*` de `web_accessible_resources[].matches`
-
-**Código (opcional; manter em branch `dev` se quiser espelho local)**
-
-- [ ] `settings.js` — remover checagens de `127.0.0.1:5500`
-- [ ] `background.js` — remover checagens de `127.0.0.1:5500`
-
-**Sugestão:** `manifest.dev.json` na branch `dev` com localhost; `manifest.json` limpo na release.
+- [ ] Gerar o `.zip` com `manifest.prod.json` renomeado/copiado como `manifest.json` (ver item 4)
+- [ ] Confirmar que o pacote **não** inclui entradas `127.0.0.1` nem `192.168.x.x`
+- [ ] *(Opcional, branch dev)* Manter `manifest.json` com localhost; release usa `manifest.prod.json`
 
 ---
 
@@ -67,7 +65,7 @@ Remover todas as referências a `http://127.0.0.1:5500` antes de gerar o `.zip` 
 **Imagens**
 
 - [ ] Ícone da loja: 128×128 (`icons/android-chrome-512x512.png` redimensionado)
-- [ ] Screenshots (mín. 1, recomendado 3–5): tabela com cores, saldo do dia, sugestões, configurações (1280×800 ou 640×400)
+- [ ] Screenshots (mín. 1, recomendado 3–5): tabela com cores e coluna Diferença, saldo do dia, tooltips, configurações (1280×800 ou 640×400)
 
 **Privacidade**
 
@@ -77,8 +75,7 @@ Remover todas as referências a `http://127.0.0.1:5500` antes de gerar o `.zip` 
 **Justificativa de permissões (para o revisor)**
 
 - [ ] `storage` — salvar horários e URL do Easydots localmente
-- [ ] `tabs` — localizar aba aberta do Easydots para atualizar o badge
-- [ ] `host_permissions` em `*.acspontodigital.com.br` — injetar melhorias na página aberta pelo usuário
+- [ ] `host_permissions` em `*.acspontodigital.com.br` e `*.easydots.com.br` — injetar melhorias na página aberta pelo usuário
 
 ---
 
@@ -87,9 +84,10 @@ Remover todas as referências a `http://127.0.0.1:5500` antes de gerar o `.zip` 
 - [ ] Gerar `.zip` **somente** com os arquivos da extensão:
 
   ```
-  manifest.json
+  manifest.json          ← usar manifest.prod.json
   background.js
   config.js
+  i18n.js
   settings.js
   settings-ui.js
   settings-ui.css
@@ -103,20 +101,23 @@ Remover todas as referências a `http://127.0.0.1:5500` antes de gerar o `.zip` 
   popup.html
   popup.js
   popup.css
+  _locales/
   icons/
   LICENSE
   ```
 
-- [ ] **Não incluir:** `website/`, `docs/`, `.git/`, `.crx`, `.pem`, `node_modules/`
+- [ ] **Não incluir:** `website/`, `docs/`, `manifest.prod.json` (após copiar), `.git/`, `.crx`, `.pem`, `node_modules/`
 - [ ] Testar o pacote em `chrome://extensions` antes de enviar à loja
 
 ```bash
+cp manifest.prod.json manifest.json
 zip -r better-easy-dots.zip \
-  manifest.json background.js config.js settings.js settings-ui.js settings-ui.css \
+  manifest.json background.js config.js i18n.js settings.js settings-ui.js settings-ui.css \
   settings.html settings-page.js settings-page.css \
   content.js content.css eed-animations.css eed-waves.js \
-  popup.html popup.js popup.css icons/ LICENSE \
+  popup.html popup.js popup.css _locales/ icons/ LICENSE \
   -x "*.DS_Store"
+rm manifest.json && git checkout manifest.json
 ```
 
 ---
@@ -128,10 +129,12 @@ zip -r better-easy-dots.zip \
 - [ ] Testar em pelo menos **2 subdomínios** diferentes (ex.: `sys.` e o da sua empresa)
 - [ ] Primeira visita: URL do Easydots detectada automaticamente (sem forçar `/site/login`)
 - [ ] Salvar configurações com campos inválidos → erros no formulário
-- [ ] Salvar configurações válidas → saldo e cores funcionam
+- [ ] Salvar configurações válidas → saldo, cores e coluna Diferença funcionam
+- [ ] Coluna **Diferença**: valores corretos, tooltips e hover na linha
+- [ ] Tooltip do **Saldo do dia** explica o resultado
 - [ ] Dia incompleto → saldo negativo correto; sugestões de batidas aparecem
 - [ ] Dia completo (2 entradas + 2 saídas com intervalo) → saldo com pontualidade
-- [ ] Gear na navbar e botões de configurações abrem `settings.html`
+- [ ] Item **Better Easy Dots** no menu lateral e popup → **Configurações** abrem `settings.html`
 - [ ] Badge no ícone mostra quantidade de registros com aba do Easydots aberta
 - [ ] Recarregar página do Easydots após mudar configs → UI atualiza
 - [ ] *(Opcional, dev)* Validar no espelho `http://127.0.0.1:5500/website/` — sem requisições externas no Network
@@ -150,18 +153,19 @@ zip -r better-easy-dots.zip \
 
 | Seletor | Uso |
 |---------|-----|
-| `#table_registro_horario` | Tabela de registros, saldo, sugestões |
+| `#table_registro_horario` | Tabela de registros (tbody), coluna Diferença, saldo, sugestões, tooltips |
+| `#sidebar-menu > ul` / `#eed-sidebar-settings` | Item de configurações no menu lateral |
 | `#btnRegister` | Botão de registrar horário |
-| `ul.navbar-nav.navbar-right.pull-right` | Gear na navbar |
 | `.clock` | Relógio da página |
 | `#deviceType` | Container do botão de registro |
+| `#inputHorario` | Campo de jornada (importação) |
 
 - [ ] Após qualquer update do Easydots, revalidar o item 5
 - [ ] *(Futuro)* Fallback/log em `content.js` quando seletor não existir
 
 ### 8. `MutationObserver` no `document.body`
 
-- [ ] Monitorar performance em páginas pesadas; se houver lentidão, restringir o observer à tabela/navbar
+- [ ] Monitorar performance em páginas pesadas; se houver lentidão, restringir o observer à tabela/menu lateral
 
 ---
 
@@ -175,12 +179,12 @@ zip -r better-easy-dots.zip \
 ### 10. Testes automatizados
 
 - [ ] Testes unitários para `settings.js` (URL, validação de horários)
-- [ ] Testes unitários para saldo em `content.js`
+- [ ] Testes unitários para saldo e diferença em `content.js`
 - [ ] *(Avançado)* E2E com espelho `website/` (só em dev)
 
 ### 11. CI / release
 
-- [ ] Script `package.sh` que gera `better-easy-dots.zip` (produção, sem localhost)
+- [ ] Script `package.sh` que gera `better-easy-dots.zip` a partir de `manifest.prod.json`
 - [ ] Tag de versão alinhada ao `manifest.json`
 - [ ] Changelog breve por release
 
@@ -188,7 +192,7 @@ zip -r better-easy-dots.zip \
 
 ## Ordem sugerida de execução
 
-1. Manifest de produção + empacotamento (itens 2 e 4)
+1. Build de produção + empacotamento (itens 2 e 4)
 2. Testes manuais (itens 5 e 6)
 3. Rascunho na Chrome Web Store + materiais (item 3)
 4. Atualizar `EED_EXTENSION_URL` (item 1)

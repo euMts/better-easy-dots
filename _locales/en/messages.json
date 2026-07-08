@@ -245,6 +245,42 @@
     "message": "Daily balance",
     "description": "Daily balance label"
   },
+  "contentDayBalanceTooltipNotConfigured": {
+    "message": "Set your schedule in the extension to see your daily balance.",
+    "description": "Balance tooltip when schedule is not configured"
+  },
+  "contentDayBalanceTooltipIncomplete": {
+    "message": "Day not done yet. You worked $WORKED$ of $EXPECTED$ expected — $REMAINING$ to go.",
+    "description": "Balance tooltip when the workday is not complete",
+    "placeholders": {
+      "worked": { "content": "$1", "example": "04:00:00" },
+      "expected": { "content": "$2", "example": "09:00:00" },
+      "remaining": { "content": "$3", "example": "05:00:00" }
+    }
+  },
+  "contentDayBalanceTooltipCompleteNeutral": {
+    "message": "All good! You worked exactly the $EXPECTED$ expected.",
+    "description": "Neutral balance tooltip with complete workday",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "09:00:00" }
+    }
+  },
+  "contentDayBalanceTooltipCompletePositive": {
+    "message": "You're $BALANCE$ above the expected ($EXPECTED$).",
+    "description": "Positive balance tooltip with complete workday",
+    "placeholders": {
+      "balance": { "content": "$1", "example": "00:30:00" },
+      "expected": { "content": "$2", "example": "09:00:00" }
+    }
+  },
+  "contentDayBalanceTooltipCompleteNegative": {
+    "message": "You're $BALANCE$ below the expected ($EXPECTED$).",
+    "description": "Negative balance tooltip with complete workday",
+    "placeholders": {
+      "balance": { "content": "$1", "example": "01:00:00" },
+      "expected": { "content": "$2", "example": "09:00:00" }
+    }
+  },
   "contentCreditByline": {
     "message": "by better easy dots",
     "description": "Balance card credit"
@@ -252,6 +288,257 @@
   "contentScheduleHint": {
     "message": "Set clock-in, clock-out, and break in the gear icon",
     "description": "Hint when schedule is not configured"
+  },
+  "contentDiffColumnHeader": {
+    "message": "Difference",
+    "description": "Difference column header in the records table"
+  },
+  "contentDiffTooltipOnTime": {
+    "message": "Right on time! Expected: $EXPECTED$.",
+    "description": "Tooltip when the record is on time",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryEarlyOne": {
+    "message": "Clock-in: 1 minute early. Expected: $EXPECTED$.",
+    "description": "Early work entry tooltip (1 minute)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryEarly": {
+    "message": "Clock-in: $MINUTES$ minutes early. Expected: $EXPECTED$.",
+    "description": "Early work entry tooltip",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "15" },
+      "expected": { "content": "$2", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryLateOne": {
+    "message": "Clock-in: 1 minute late. Expected: $EXPECTED$.",
+    "description": "Late work entry tooltip (1 minute)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryLate": {
+    "message": "Clock-in: $MINUTES$ minutes late. Expected: $EXPECTED$.",
+    "description": "Late work entry tooltip",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryEarlySecondsOne": {
+    "message": "Clock-in: 1 second early. Expected: $EXPECTED$.",
+    "description": "Early work entry tooltip (1 second)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryEarlySeconds": {
+    "message": "Clock-in: $SECONDS$ seconds early. Expected: $EXPECTED$.",
+    "description": "Early work entry tooltip in seconds",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "15" },
+      "expected": { "content": "$2", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryLateSecondsOne": {
+    "message": "Clock-in: 1 second late. Expected: $EXPECTED$.",
+    "description": "Late work entry tooltip (1 second)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkEntryLateSeconds": {
+    "message": "Clock-in: $SECONDS$ seconds late. Expected: $EXPECTED$.",
+    "description": "Late work entry tooltip in seconds",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "08:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartEarlyOne": {
+    "message": "Break: 1 minute early. Expected: $EXPECTED$.",
+    "description": "Early break start tooltip (1 minute)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartEarly": {
+    "message": "Break: $MINUTES$ minutes early. Expected: $EXPECTED$.",
+    "description": "Early break start tooltip",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartLateOne": {
+    "message": "Break: 1 minute late. Expected: $EXPECTED$.",
+    "description": "Late break start tooltip (1 minute)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartLate": {
+    "message": "Break: $MINUTES$ minutes late. Expected: $EXPECTED$.",
+    "description": "Late break start tooltip",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartEarlySecondsOne": {
+    "message": "Break: 1 second early. Expected: $EXPECTED$.",
+    "description": "Early break start tooltip (1 second)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartEarlySeconds": {
+    "message": "Break: $SECONDS$ seconds early. Expected: $EXPECTED$.",
+    "description": "Early break start tooltip in seconds",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartLateSecondsOne": {
+    "message": "Break: 1 second late. Expected: $EXPECTED$.",
+    "description": "Late break start tooltip (1 second)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakStartLateSeconds": {
+    "message": "Break: $SECONDS$ seconds late. Expected: $EXPECTED$.",
+    "description": "Late break start tooltip in seconds",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "12:00:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndEarlyOne": {
+    "message": "Return: 1 minute early. Expected: $EXPECTED$.",
+    "description": "Early break return tooltip (1 minute)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndEarly": {
+    "message": "Return: $MINUTES$ minutes early. Expected: $EXPECTED$.",
+    "description": "Early break return tooltip",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndLateOne": {
+    "message": "Return: 1 minute late. Expected: $EXPECTED$.",
+    "description": "Late break return tooltip (1 minute)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndLate": {
+    "message": "Return: $MINUTES$ minutes late. Expected: $EXPECTED$.",
+    "description": "Late break return tooltip",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndEarlySecondsOne": {
+    "message": "Return: 1 second early. Expected: $EXPECTED$.",
+    "description": "Early break return tooltip (1 second)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndEarlySeconds": {
+    "message": "Return: $SECONDS$ seconds early. Expected: $EXPECTED$.",
+    "description": "Early break return tooltip in seconds",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndLateSecondsOne": {
+    "message": "Return: 1 second late. Expected: $EXPECTED$.",
+    "description": "Late break return tooltip (1 second)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipBreakEndLateSeconds": {
+    "message": "Return: $SECONDS$ seconds late. Expected: $EXPECTED$.",
+    "description": "Late break return tooltip in seconds",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "13:30:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitEarlyOne": {
+    "message": "Clock-out: 1 minute early. Expected: $EXPECTED$.",
+    "description": "Early final exit tooltip (1 minute)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "18:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitEarly": {
+    "message": "Clock-out: $MINUTES$ minutes early. Expected: $EXPECTED$.",
+    "description": "Early final exit tooltip",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "18:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitLateOne": {
+    "message": "Clock-out: 1 minute late. Expected: $EXPECTED$.",
+    "description": "Late final exit tooltip (1 minute)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "18:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitLate": {
+    "message": "Clock-out: $MINUTES$ minutes late. Expected: $EXPECTED$.",
+    "description": "Late final exit tooltip",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "18:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitEarlySecondsOne": {
+    "message": "Clock-out: 1 second early. Expected: $EXPECTED$.",
+    "description": "Early final exit tooltip (1 second)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "18:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitEarlySeconds": {
+    "message": "Clock-out: $SECONDS$ seconds early. Expected: $EXPECTED$.",
+    "description": "Early final exit tooltip in seconds",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "18:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitLateSecondsOne": {
+    "message": "Clock-out: 1 second late. Expected: $EXPECTED$.",
+    "description": "Late final exit tooltip (1 second)",
+    "placeholders": {
+      "expected": { "content": "$1", "example": "18:00:00" }
+    }
+  },
+  "contentDiffTooltipWorkExitLateSeconds": {
+    "message": "Clock-out: $SECONDS$ seconds late. Expected: $EXPECTED$.",
+    "description": "Late final exit tooltip in seconds",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "10" },
+      "expected": { "content": "$2", "example": "18:00:00" }
+    }
   },
   "contentJornadaImport": {
     "message": "Use in extension",
