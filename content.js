@@ -528,11 +528,54 @@ const EASydots = {
     return sequence.slice(sequenceIndex);
   },
 
-  getSuggestionShift(records, settings) {
-    const firstEntrada = records.find((record) => this.isEntrada(record.type));
-    if (!firstEntrada) return 0;
+  isLunchExitPunch(punch, settings) {
+    return (
+      this.hasInterval(settings) &&
+      punch.type === 'saida' &&
+      punch.expected === settings.intervaloInicio
+    );
+  },
 
-    return this.timeToSeconds(firstEntrada.time) - this.timeToSeconds(settings.entrada);
+  getSuggestedTimeForPunch(records, settings, punch) {
+    if (this.isEntrada(punch.type)) {
+      return this.formatExpectedTimeForTooltip(punch.expected);
+    }
+
+    const lastRecord = records[records.length - 1];
+    if (!lastRecord || !this.isEntrada(lastRecord.type)) {
+      return this.formatExpectedTimeForTooltip(punch.expected);
+    }
+
+    const lastEntradaSeconds = this.timeToSeconds(lastRecord.time);
+
+    if (this.isLunchExitPunch(punch, settings)) {
+      const morningSegmentSeconds =
+        this.timeToSeconds(settings.intervaloInicio) - this.timeToSeconds(settings.entrada);
+      return this.secondsToTimeString(lastEntradaSeconds + morningSegmentSeconds);
+    }
+
+    const expectedDaily = this.calculateExpectedDailyWork(settings);
+    const workedCompleted = this.calculateWorkedSeconds(records);
+    const remainingSeconds = expectedDaily - workedCompleted;
+
+    return this.secondsToTimeString(lastEntradaSeconds + remainingSeconds);
+  },
+
+  getSuggestedPunchTimes(records, settings) {
+    const remaining = this.getRemainingExpectedPunches(records, settings);
+    const simulatedRecords = records.map((record) => ({ ...record }));
+    const suggestions = [];
+
+    remaining.forEach((punch) => {
+      const suggestedTime = this.getSuggestedTimeForPunch(simulatedRecords, settings, punch);
+      suggestions.push({ punch, suggestedTime });
+      simulatedRecords.push({
+        type: punch.type,
+        time: suggestedTime,
+      });
+    });
+
+    return suggestions;
   },
 
   clearSuggestionRows(table) {
@@ -550,17 +593,15 @@ const EASydots = {
       return;
     }
 
-    const remaining = this.getRemainingExpectedPunches(records, settings);
-    if (!remaining.length) return;
+    const suggestions = this.getSuggestedPunchTimes(records, settings);
+    if (!suggestions.length) return;
 
-    const shift = this.getSuggestionShift(records, settings);
     const balanceRow = table.querySelector('#eed-day-balance-row');
     const sourceLabel = records[records.length - 1]?.source || t('contentSourceFallback');
 
-    remaining.forEach((punch) => {
+    suggestions.forEach(({ punch, suggestedTime }) => {
       const row = document.createElement('tr');
       row.className = 'eed-suggestion-row';
-      const suggestedTime = this.secondsToTimeString(this.timeToSeconds(punch.expected) + shift);
 
       row.innerHTML = `
         <td><span class="eed-suggestion-tag">${t('contentSuggestionTag')}</span> ${punch.label}</td>
