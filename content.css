@@ -275,6 +275,27 @@ table:has(#table_registro_horario) th.eed-diff-header,
   text-align: right;
 }
 
+#table_registro_horario tr.eed-day-balance-row .eed-day-balance-hint-link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #8234e8;
+  font: inherit;
+  font-weight: 600;
+  line-height: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(130, 52, 232, 0.35);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+#table_registro_horario tr.eed-day-balance-row .eed-day-balance-hint-link:hover {
+  color: #6b22c9;
+  text-decoration-color: #6b22c9;
+}
+
 .eed-jornada-label-row {
   display: flex;
   align-items: flex-end;

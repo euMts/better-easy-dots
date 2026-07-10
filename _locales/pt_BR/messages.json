@@ -403,9 +403,13 @@
     "message": "Fechar planejador",
     "description": "Aria-label do botão fechar no verso do card"
   },
-  "contentScheduleHint": {
-    "message": "Configure entrada, saída e intervalo na engrenagem",
-    "description": "Dica quando horários não estão configurados"
+  "contentScheduleHintBefore": {
+    "message": "Configure entrada, saída e intervalo",
+    "description": "Texto antes do link de configuração quando horários não estão configurados"
+  },
+  "contentScheduleHintLink": {
+    "message": "clicando aqui",
+    "description": "Link que abre as configurações quando horários não estão configurados"
   },
   "contentDiffColumnHeader": {
     "message": "Diferença",

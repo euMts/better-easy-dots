@@ -403,9 +403,13 @@
     "message": "Close planner",
     "description": "Close button aria-label on the card back"
   },
-  "contentScheduleHint": {
-    "message": "Set clock-in, clock-out, and break in the gear icon",
-    "description": "Hint when schedule is not configured"
+  "contentScheduleHintBefore": {
+    "message": "Set clock-in, clock-out, and break by",
+    "description": "Text before settings link when schedule is not configured"
+  },
+  "contentScheduleHintLink": {
+    "message": "clicking here",
+    "description": "Link that opens settings when schedule is not configured"
   },
   "contentDiffColumnHeader": {
     "message": "Difference",

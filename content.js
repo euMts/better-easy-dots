@@ -396,6 +396,25 @@ const EASydots = {
     return diffCell;
   },
 
+  renderScheduleHint(valueEl) {
+    const hintClass = 'eed-day-balance-value eed-day-balance-hint';
+
+    if (valueEl.className !== hintClass) {
+      valueEl.className = hintClass;
+    }
+
+    if (valueEl.dataset.eedScheduleHint === 'true') return;
+
+    valueEl.dataset.eedScheduleHint = 'true';
+    valueEl.innerHTML = `${t('contentScheduleHintBefore')} <button type="button" class="eed-day-balance-hint-link">${t('contentScheduleHintLink')}</button>`;
+
+    valueEl.querySelector('.eed-day-balance-hint-link')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      chrome.runtime.sendMessage({ action: 'openSettings' });
+    });
+  },
+
   setTooltipTarget(el, tooltip) {
     if (tooltip) {
       el.setAttribute('data-eed-tooltip', tooltip);
@@ -831,22 +850,14 @@ const EASydots = {
     const valueEl = balanceRow.querySelector('.eed-day-balance-value');
 
     if (!scheduleConfigured) {
-      const hintText = t('contentScheduleHint');
-      const hintClass = 'eed-day-balance-value eed-day-balance-hint';
-
-      if (valueEl.textContent !== hintText) {
-        valueEl.textContent = hintText;
-      }
-
-      if (valueEl.className !== hintClass) {
-        valueEl.className = hintClass;
-      }
-
+      this.renderScheduleHint(valueEl);
       this.setTooltipTarget(valueEl, t('contentDayBalanceTooltipNotConfigured'));
 
       this.adjustRecordsContainer(scrollContainer, true);
       return;
     }
+
+    delete valueEl.dataset.eedScheduleHint;
 
     const totalSeconds = this.calculateDayBalance(records, loadedSettings);
     const { text, sign } = this.formatBalance(totalSeconds);
