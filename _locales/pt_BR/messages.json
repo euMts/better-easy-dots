@@ -731,5 +731,128 @@
   "backgroundErrorReloadPage": {
     "message": "Recarregue a página do Easydots e tente novamente.",
     "description": "Erro ao enviar mensagem para content script"
+  },
+  "changelogTitle": {
+    "message": "Novidades",
+    "description": "Título do modal de changelog"
+  },
+  "changelogCurrentVersion": {
+    "message": "Versão",
+    "description": "Rótulo da versão atual no changelog"
+  },
+  "changelogNewBadge": {
+    "message": "Novo",
+    "description": "Badge de novidade no changelog"
+  },
+  "changelogClose": {
+    "message": "Fechar",
+    "description": "Botão de fechar o changelog"
+  },
+  "changelogView": {
+    "message": "Novidades",
+    "description": "Link manual para abrir o changelog"
+  },
+  "changelogUpdatedSubtitle": {
+    "message": "Novidades da versão $VERSION$",
+    "description": "Subtítulo da página de changelog com versão",
+    "placeholders": {
+      "version": { "content": "$1", "example": "1.1.0" }
+    }
+  },
+  "changelogSeeWhatChanged": {
+    "message": "Veja o que mudou",
+    "description": "Linha auxiliar da página de changelog"
+  },
+  "changelogRateInStore": {
+    "message": "Avaliar na loja do Chrome",
+    "description": "Botão principal da página de changelog para abrir avaliação na loja"
+  },
+  "changelogOpenSettings": {
+    "message": "Ver configurações",
+    "description": "Botão secundário da página de changelog"
+  },
+  "changelogV110Item1": {
+    "message": "Tela de novidades em página dedicada",
+    "description": "Item do changelog v1.1.0"
+  },
+  "changelogV110Item2": {
+    "message": "Abertura automática após instalar ou atualizar",
+    "description": "Item do changelog v1.1.0"
+  },
+  "changelogV110Item3": {
+    "message": "Acesso manual pelo popup e configurações",
+    "description": "Item do changelog v1.1.0"
+  },
+  "changelogV100Item1": {
+    "message": "Suporte a português e inglês",
+    "description": "Item do changelog v1.0.0"
+  },
+  "changelogV100Item2": {
+    "message": "Importação de jornada a partir do Easydots",
+    "description": "Item do changelog v1.0.0"
+  },
+  "changelogV100Item3": {
+    "message": "Coluna de diferença na tabela de registros",
+    "description": "Item do changelog v1.0.0"
+  },
+  "changelogV012Item1": {
+    "message": "Planejador de compensação do banco de horas",
+    "description": "Item do changelog v0.1.2"
+  },
+  "changelogV012Item2": {
+    "message": "Simulação de horas extras por quantidade de dias",
+    "description": "Item do changelog v0.1.2"
+  },
+  "changelogV012Item3": {
+    "message": "Slider de 1 a 90 dias",
+    "description": "Item do changelog v0.1.2"
+  },
+  "changelogV012Item4": {
+    "message": "Mensagens amigáveis para quitação de saldo",
+    "description": "Item do changelog v0.1.2"
+  },
+  "changelogV012Item5": {
+    "message": "Estado visual positivo quando o saldo está zerado ou positivo",
+    "description": "Item do changelog v0.1.2"
+  },
+  "changelogV011Item1": {
+    "message": "Melhorias no cálculo das sugestões de horários",
+    "description": "Item do changelog v0.1.1"
+  },
+  "changelogV011Item2": {
+    "message": "Correção da lógica de saldo acumulado do dia",
+    "description": "Item do changelog v0.1.1"
+  },
+  "changelogV011Item3": {
+    "message": "Padronização dos horários no formato HH:mm:ss",
+    "description": "Item do changelog v0.1.1"
+  },
+  "changelogV011Item4": {
+    "message": "Ajustes visuais na tabela de registros",
+    "description": "Item do changelog v0.1.1"
+  },
+  "changelogV010Item1": {
+    "message": "Saldo diário nos registros de ponto",
+    "description": "Item do changelog v0.1.0"
+  },
+  "changelogV010Item2": {
+    "message": "Cores visuais para horários",
+    "description": "Item do changelog v0.1.0"
+  },
+  "changelogV010Item3": {
+    "message": "Sugestões dos próximos registros",
+    "description": "Item do changelog v0.1.0"
+  },
+  "changelogV010Item4": {
+    "message": "Configurações de entrada, saída, intervalo e tolerância visual",
+    "description": "Item do changelog v0.1.0"
+  },
+  "changelogV010Item5": {
+    "message": "Armazenamento local das configurações",
+    "description": "Item do changelog v0.1.0"
+  },
+  "changelogV010Item6": {
+    "message": "Suporte inicial ao Easydots",
+    "description": "Item do changelog v0.1.0"
   }
 }

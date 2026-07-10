@@ -7,8 +7,14 @@ const reviewBtn = document.getElementById('eed-popup-review');
 const settingsFooterBtn = document.getElementById('eed-popup-settings-footer');
 const storeLink = document.getElementById('eed-popup-store-link');
 const settingsBtn = document.getElementById('eed-popup-settings');
+const changelogBtn = document.getElementById('eed-popup-changelog');
 
-versionEl.textContent = `v${chrome.runtime.getManifest().version}`;
+try {
+  versionEl.textContent = `v${chrome.runtime.getManifest().version}`;
+} catch {
+  versionEl.textContent = 'v1.1.0';
+}
+versionEl.title = t('changelogView');
 
 function openStore() {
   chrome.tabs.create({ url: EED_EXTENSION_URL });
@@ -19,6 +25,11 @@ function openSettingsPage() {
   window.close();
 }
 
+function openChangelogPage() {
+  chrome.runtime.sendMessage({ action: 'openChangelog' });
+  window.close();
+}
+
 reviewBtn.addEventListener('click', openStore);
 storeLink.addEventListener('click', (event) => {
   event.preventDefault();
@@ -26,3 +37,5 @@ storeLink.addEventListener('click', (event) => {
 });
 settingsFooterBtn.addEventListener('click', openSettingsPage);
 settingsBtn.addEventListener('click', openSettingsPage);
+changelogBtn.addEventListener('click', openChangelogPage);
+versionEl.addEventListener('click', openChangelogPage);

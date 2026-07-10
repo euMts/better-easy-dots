@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Better Easy Dots</title>
+  <link rel="stylesheet" href="eed-animations.css">
+  <link rel="stylesheet" href="changelog.css">
+</head>
+<body>
+  <div class="eed-changelog-page">
+    <div class="eed-changelog-card fadeInUp fadeInUp--alteracao animated">
+      <header class="eed-changelog-hero">
+        <p class="eed-changelog-brand" data-i18n="popupTitle"></p>
+        <h1 class="eed-changelog-title" data-i18n="changelogTitle"></h1>
+        <p id="eed-changelog-subtitle" class="eed-changelog-subtitle"></p>
+        <p id="eed-changelog-version-line" class="eed-changelog-version-line"></p>
+      </header>
+
+      <main id="eed-changelog-entries" class="eed-changelog-entries" aria-live="polite"></main>
+
+      <footer class="eed-changelog-actions">
+        <button type="button" id="eed-changelog-review" class="eed-changelog-btn eed-changelog-btn-primary waves-effect waves-light" data-i18n="changelogRateInStore"></button>
+        <button type="button" id="eed-changelog-settings" class="eed-changelog-btn eed-changelog-btn-secondary waves-effect" data-i18n="changelogOpenSettings"></button>
+      </footer>
+    </div>
+
+    <p class="eed-changelog-page-footer" data-i18n="popupTitle"></p>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="i18n.js"></script>
+  <script src="changelog.js"></script>
+  <script src="eed-waves.js"></script>
+</body>
+</html>

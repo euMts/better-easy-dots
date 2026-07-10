@@ -30,11 +30,14 @@
     </main>
 
     <footer class="eed-popup-footer fadeIn animated eed-animate-delay-2">
-      <button type="button" id="eed-popup-settings-footer" class="eed-popup-btn eed-popup-btn-ghost waves-effect" data-i18n="popupSettingsTitle"></button>
-      <button type="button" id="eed-popup-review" class="eed-popup-btn eed-popup-btn-primary waves-effect waves-light" data-i18n="popupReviewButton"></button>
+      <button type="button" id="eed-popup-changelog" class="eed-changelog-link" data-i18n="changelogView"></button>
+      <div class="eed-popup-footer-actions">
+        <button type="button" id="eed-popup-settings-footer" class="eed-popup-btn eed-popup-btn-ghost waves-effect" data-i18n="popupSettingsTitle"></button>
+        <button type="button" id="eed-popup-review" class="eed-popup-btn eed-popup-btn-primary waves-effect waves-light" data-i18n="popupReviewButton"></button>
+      </div>
     </footer>
 
-    <span id="eed-popup-version" class="eed-popup-version"></span>
+    <button type="button" id="eed-popup-version" class="eed-popup-version eed-changelog-trigger" title=""></button>
   </div>
 
   <script src="config.js"></script>

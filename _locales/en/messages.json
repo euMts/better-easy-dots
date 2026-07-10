@@ -731,5 +731,128 @@
   "backgroundErrorReloadPage": {
     "message": "Reload the Easydots page and try again.",
     "description": "Content script message error"
+  },
+  "changelogTitle": {
+    "message": "What's new",
+    "description": "Changelog modal title"
+  },
+  "changelogCurrentVersion": {
+    "message": "Version",
+    "description": "Current version label in changelog"
+  },
+  "changelogNewBadge": {
+    "message": "New",
+    "description": "New badge in changelog"
+  },
+  "changelogClose": {
+    "message": "Close",
+    "description": "Close changelog button"
+  },
+  "changelogView": {
+    "message": "What's new",
+    "description": "Manual link to open changelog"
+  },
+  "changelogUpdatedSubtitle": {
+    "message": "What's new in version $VERSION$",
+    "description": "Changelog page subtitle with version",
+    "placeholders": {
+      "version": { "content": "$1", "example": "1.1.0" }
+    }
+  },
+  "changelogSeeWhatChanged": {
+    "message": "See what changed",
+    "description": "Changelog page helper line"
+  },
+  "changelogRateInStore": {
+    "message": "Rate on the Chrome Web Store",
+    "description": "Primary changelog page button to open store review"
+  },
+  "changelogOpenSettings": {
+    "message": "Open settings",
+    "description": "Secondary changelog page button"
+  },
+  "changelogV110Item1": {
+    "message": "Dedicated what's new page",
+    "description": "Changelog v1.1.0 item"
+  },
+  "changelogV110Item2": {
+    "message": "Auto-opens after install or update",
+    "description": "Changelog v1.1.0 item"
+  },
+  "changelogV110Item3": {
+    "message": "Manual access from popup and settings",
+    "description": "Changelog v1.1.0 item"
+  },
+  "changelogV100Item1": {
+    "message": "Portuguese and English support",
+    "description": "Changelog v1.0.0 item"
+  },
+  "changelogV100Item2": {
+    "message": "Import work schedule from Easydots",
+    "description": "Changelog v1.0.0 item"
+  },
+  "changelogV100Item3": {
+    "message": "Difference column in the records table",
+    "description": "Changelog v1.0.0 item"
+  },
+  "changelogV012Item1": {
+    "message": "Time bank compensation planner",
+    "description": "Changelog v0.1.2 item"
+  },
+  "changelogV012Item2": {
+    "message": "Extra-time simulation by number of days",
+    "description": "Changelog v0.1.2 item"
+  },
+  "changelogV012Item3": {
+    "message": "Slider from 1 to 90 days",
+    "description": "Changelog v0.1.2 item"
+  },
+  "changelogV012Item4": {
+    "message": "Friendly messages for balance compensation",
+    "description": "Changelog v0.1.2 item"
+  },
+  "changelogV012Item5": {
+    "message": "Positive visual state when balance is zero or positive",
+    "description": "Changelog v0.1.2 item"
+  },
+  "changelogV011Item1": {
+    "message": "Improved time suggestion calculation",
+    "description": "Changelog v0.1.1 item"
+  },
+  "changelogV011Item2": {
+    "message": "Fixed accumulated daily balance logic",
+    "description": "Changelog v0.1.1 item"
+  },
+  "changelogV011Item3": {
+    "message": "Standardized times in HH:mm:ss format",
+    "description": "Changelog v0.1.1 item"
+  },
+  "changelogV011Item4": {
+    "message": "Visual improvements in the records table",
+    "description": "Changelog v0.1.1 item"
+  },
+  "changelogV010Item1": {
+    "message": "Daily balance in time records",
+    "description": "Changelog v0.1.0 item"
+  },
+  "changelogV010Item2": {
+    "message": "Visual time status colors",
+    "description": "Changelog v0.1.0 item"
+  },
+  "changelogV010Item3": {
+    "message": "Next punch suggestions",
+    "description": "Changelog v0.1.0 item"
+  },
+  "changelogV010Item4": {
+    "message": "Entry, exit, break and visual tolerance settings",
+    "description": "Changelog v0.1.0 item"
+  },
+  "changelogV010Item5": {
+    "message": "Local settings storage",
+    "description": "Changelog v0.1.0 item"
+  },
+  "changelogV010Item6": {
+    "message": "Initial Easydots support",
+    "description": "Changelog v0.1.0 item"
   }
 }

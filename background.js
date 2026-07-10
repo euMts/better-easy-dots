@@ -1,3 +1,5 @@
+importScripts('changelog.js');
+
 async function setBadge(recordCount) {
   if (!recordCount) {
     await chrome.action.setBadgeText({ text: '' });
@@ -25,9 +27,50 @@ async function openSettingsPage() {
   return tab.id;
 }
 
+async function openChangelogPage({ focusExisting = true } = {}) {
+  const changelogUrl = eedGetChangelogUrl();
+
+  if (focusExisting) {
+    const tabs = await chrome.tabs.query({ url: changelogUrl });
+    const existing = tabs.find((tab) => tab.id);
+    if (existing?.id) {
+      await chrome.tabs.update(existing.id, { active: true });
+      if (existing.windowId) {
+        await chrome.windows.update(existing.windowId, { focused: true });
+      }
+      return existing.id;
+    }
+  }
+
+  const tab = await chrome.tabs.create({ url: changelogUrl, active: true });
+  return tab.id;
+}
+
+async function openChangelogIfNeeded() {
+  try {
+    const shouldOpen = await eedShouldOpenChangelog();
+    if (!shouldOpen) return;
+    await openChangelogPage({ focusExisting: true });
+  } catch {
+    /* fail silently */
+  }
+}
+
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason !== 'install' && details.reason !== 'update') return;
+  openChangelogIfNeeded();
+});
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'openSettings') {
     openSettingsPage()
+      .then((tabId) => sendResponse({ success: true, tabId }))
+      .catch(() => sendResponse({ success: false }));
+    return true;
+  }
+
+  if (message.action === 'openChangelog') {
+    openChangelogPage({ focusExisting: true })
       .then((tabId) => sendResponse({ success: true, tabId }))
       .catch(() => sendResponse({ success: false }));
     return true;
