@@ -285,6 +285,124 @@
     "message": "by better easy dots",
     "description": "Crédito no card de saldo"
   },
+  "contentHourBankFlipAriaLabel": {
+    "message": "Planejar compensação do banco de horas",
+    "description": "Aria-label do card interativo de banco de horas"
+  },
+  "contentHourBankHoverHint": {
+    "message": "Planejar compensação",
+    "description": "Hint exibido ao passar o mouse no card de banco de horas"
+  },
+  "contentHourBankPlanTitle": {
+    "message": "Planejar compensação",
+    "description": "Título do verso do card de banco de horas"
+  },
+  "contentHourBankDeficitLabel": {
+    "message": "Faltam",
+    "description": "Rótulo do saldo negativo no verso do card"
+  },
+  "contentHourBankDaysLabel": {
+    "message": "Dias para compensar",
+    "description": "Rótulo do slider de dias no verso do card"
+  },
+  "contentHourBankDaysValue": {
+    "message": "$DAYS$ dias",
+    "description": "Valor exibido ao lado do slider de dias",
+    "placeholders": {
+      "days": { "content": "$1", "example": "5" }
+    }
+  },
+  "contentHourBankExtraPerDay": {
+    "message": "+$TIME$ por dia",
+    "description": "Tempo extra por dia calculado",
+    "placeholders": {
+      "time": { "content": "$1", "example": "01:01:51" }
+    }
+  },
+  "contentHourBankForecastZero": {
+    "message": "Em $DAYS$ dias, saldo zerado.",
+    "description": "Previsão textual compacta após planejamento (legado plural)",
+    "placeholders": {
+      "days": { "content": "$1", "example": "5" }
+    }
+  },
+  "contentHourBankForecastSingular": {
+    "message": "Fazendo $DURATION$ extras em 1 dia, você zera o saldo.",
+    "description": "Previsão amigável quando o planejamento é de 1 dia",
+    "placeholders": {
+      "duration": { "content": "$1", "example": "5h 09min 14s" }
+    }
+  },
+  "contentHourBankForecastPlural": {
+    "message": "Fazendo $DURATION$ extras por dia, você zera o saldo em $DAYS$ dias.",
+    "description": "Previsão amigável quando o planejamento é de vários dias",
+    "placeholders": {
+      "duration": { "content": "$1", "example": "1h 01min 51s" },
+      "days": { "content": "$2", "example": "5" }
+    }
+  },
+  "contentHourBankSummaryLine": {
+    "message": "$DAYS$ dias · +$TIME$/dia",
+    "description": "Resumo compacto (legado plural)",
+    "placeholders": {
+      "days": { "content": "$1", "example": "5" },
+      "time": { "content": "$2", "example": "01:01:51" }
+    }
+  },
+  "contentHourBankSummarySingular": {
+    "message": "1 dia · +$TIME$/dia",
+    "description": "Resumo compacto quando o planejamento é de 1 dia",
+    "placeholders": {
+      "time": { "content": "$1", "example": "01:01:51" }
+    }
+  },
+  "contentHourBankSummaryPlural": {
+    "message": "$DAYS$ dias · +$TIME$/dia",
+    "description": "Resumo compacto quando o planejamento é de vários dias",
+    "placeholders": {
+      "days": { "content": "$1", "example": "5" },
+      "time": { "content": "$2", "example": "01:01:51" }
+    }
+  },
+  "contentHourBankNoDeficit": {
+    "message": "Você não possui saldo negativo para compensar.",
+    "description": "Mensagem quando o banco de horas não está negativo"
+  },
+  "contentHourBankPositiveTitle": {
+    "message": "Saldo positivo",
+    "description": "Título do verso quando o banco está positivo"
+  },
+  "contentHourBankPositiveMessage": {
+    "message": "Você possui horas disponíveis no banco.",
+    "description": "Mensagem principal do verso com saldo positivo"
+  },
+  "contentHourBankNoCompensationNeeded": {
+    "message": "Nenhuma compensação necessária.",
+    "description": "Mensagem quando não há saldo negativo para compensar"
+  },
+  "contentHourBankPositiveBadge": {
+    "message": "Tudo certo",
+    "description": "Badge de sucesso no verso com saldo positivo"
+  },
+  "contentHourBankAvailableLabel": {
+    "message": "Disponível para uso: $TIME$",
+    "description": "Linha de horas disponíveis no verso positivo",
+    "placeholders": {
+      "time": { "content": "$1", "example": "02:15:30" }
+    }
+  },
+  "contentHourBankZeroTitle": {
+    "message": "Banco zerado",
+    "description": "Título do verso quando o banco está zerado"
+  },
+  "contentHourBankZeroMessage": {
+    "message": "Seu saldo está equilibrado.",
+    "description": "Mensagem principal do verso com saldo zerado"
+  },
+  "contentHourBankClose": {
+    "message": "Fechar planejador",
+    "description": "Aria-label do botão fechar no verso do card"
+  },
   "contentScheduleHint": {
     "message": "Configure entrada, saída e intervalo na engrenagem",
     "description": "Dica quando horários não estão configurados"

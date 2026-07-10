@@ -91,6 +91,34 @@ const EASydots = {
       .join(':');
   },
 
+  parseSignedHHMMSSToSeconds(text) {
+    if (!text || typeof text !== 'string') return null;
+
+    const normalized = text.trim().replace(/\s+/g, '');
+    if (!normalized) return null;
+
+    const sign = normalized.startsWith('-') ? -1 : 1;
+    const clean = normalized.replace(/^[-+]/, '');
+    const parts = clean.split(':').map(Number);
+
+    if (parts.length < 2 || parts.length > 3 || parts.some((n) => !Number.isFinite(n))) {
+      return null;
+    }
+
+    const [hours, minutes, seconds = 0] = parts;
+    return sign * (hours * 3600 + minutes * 60 + seconds);
+  },
+
+  formatSecondsToHHMMSS(seconds) {
+    return this.formatDuration(seconds);
+  },
+
+  calculateExtraPerDay(totalSeconds, days) {
+    const abs = Math.abs(totalSeconds);
+    if (days <= 0 || abs === 0) return 0;
+    return Math.ceil(abs / days);
+  },
+
   getDayBalanceTooltip(records, settings) {
     if (!EEDSettings.isScheduleConfigured(settings)) {
       return t('contentDayBalanceTooltipNotConfigured');
@@ -1190,6 +1218,429 @@ const EASydots = {
     document.querySelector('#eed-navbar-settings')?.remove();
   },
 
+  HOUR_BANK_LABEL: 'Saldo no banco de horas',
+  HOUR_BANK_MAX_DAYS: 90,
+
+  findHourBankCard() {
+    const enhanced = document.querySelector('[data-eed-hour-bank-enhanced="true"]');
+    if (enhanced) return enhanced;
+
+    const cards = document.querySelectorAll('.card-box--dashboard');
+    for (const card of cards) {
+      const label = card.querySelector('h5');
+      if (label?.textContent?.includes(this.HOUR_BANK_LABEL)) {
+        return card;
+      }
+
+      const style = card.getAttribute('style') || '';
+      if (style.includes('#8234e8') && card.querySelector('.md-access-alarms')) {
+        return card;
+      }
+    }
+
+    return null;
+  },
+
+  getHourBankBalanceSeconds(flip) {
+    const valueEl =
+      flip.querySelector('.eed-hour-bank-front h2 b') ||
+      flip.querySelector('.eed-hour-bank-front h2');
+    if (!valueEl) return null;
+    return this.parseSignedHHMMSSToSeconds(valueEl.textContent);
+  },
+
+  getHourBankCloseButtonHtml() {
+    return `<button type="button" class="eed-hour-bank-close" aria-label="${t('contentHourBankClose')}"><span aria-hidden="true">×</span></button>`;
+  },
+
+  getHourBankBalanceVariant(balanceSeconds) {
+    if (balanceSeconds < 0) return 'deficit';
+    if (balanceSeconds > 0) return 'surplus';
+    return 'balanced';
+  },
+
+  setHourBankBackVariant(back, variant) {
+    back.classList.remove(
+      'eed-hour-bank-back--deficit',
+      'eed-hour-bank-back--surplus',
+      'eed-hour-bank-back--balanced'
+    );
+    back.classList.add(`eed-hour-bank-back--${variant}`);
+    back.dataset.eedBalanceVariant = variant;
+
+    const card = back.closest('.eed-hour-bank-card');
+    if (!card) return;
+
+    card.classList.remove(
+      'eed-hour-bank-state-deficit',
+      'eed-hour-bank-state-surplus',
+      'eed-hour-bank-state-balanced'
+    );
+    card.classList.add(`eed-hour-bank-state-${variant}`);
+  },
+
+  formatPositiveBalanceDisplay(balanceSeconds) {
+    return `+${this.formatSecondsToHHMMSS(balanceSeconds)}`;
+  },
+
+  getHourBankSummaryText(days, extraText) {
+    const count = Number(days);
+    if (count === 1) return t('contentHourBankSummarySingular', [extraText]);
+    return t('contentHourBankSummaryPlural', [String(count), extraText]);
+  },
+
+  formatFriendlyDuration(totalSeconds) {
+    const total = Math.max(0, Math.floor(Math.abs(totalSeconds)));
+
+    const hours = Math.floor(total / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const secs = total % 60;
+
+    const parts = [];
+
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0) parts.push(`${minutes}min`);
+    if (secs > 0) parts.push(`${secs}s`);
+
+    return parts.length > 0 ? parts.join(' ') : '0s';
+  },
+
+  getHourBankForecastText(extraPerDaySeconds, days) {
+    const count = Number(days);
+    const duration = this.formatFriendlyDuration(extraPerDaySeconds);
+
+    if (count === 1) {
+      return t('contentHourBankForecastSingular', [duration]);
+    }
+
+    return t('contentHourBankForecastPlural', [duration, String(count)]);
+  },
+
+  renderNegativeBalancePlanner(back, flip, balanceSeconds) {
+    this.setHourBankBackVariant(back, 'deficit');
+
+    const days = parseInt(flip.dataset.eedDays, 10) || 5;
+    const deficit = this.formatSecondsToHHMMSS(balanceSeconds);
+    const extraPerDay = this.calculateExtraPerDay(balanceSeconds, days);
+    const extraText = this.formatSecondsToHHMMSS(extraPerDay);
+    const sliderId = flip.dataset.eedSliderId || `eed-hour-bank-days-${Date.now()}`;
+    flip.dataset.eedSliderId = sliderId;
+
+    back.innerHTML = `
+      ${this.getHourBankCloseButtonHtml()}
+      <div class="eed-hour-bank-back-content eed-hour-bank-back-deficit">
+        <p class="eed-hour-bank-back-title">${t('contentHourBankPlanTitle')}</p>
+        <div class="eed-hour-bank-back-row eed-hour-bank-back-deficit-row">
+          <span class="eed-hour-bank-back-label">${t('contentHourBankDeficitLabel')}</span>
+          <span class="eed-hour-bank-back-value">${deficit}</span>
+        </div>
+        <div class="eed-hour-bank-slider-wrap">
+          <label class="eed-hour-bank-sr-label" for="${sliderId}">${t('contentHourBankDaysLabel')}</label>
+          <input
+            type="range"
+            id="${sliderId}"
+            class="eed-hour-bank-slider"
+            min="1"
+            max="${this.HOUR_BANK_MAX_DAYS}"
+            value="${days}"
+            aria-valuemin="1"
+            aria-valuemax="${this.HOUR_BANK_MAX_DAYS}"
+            aria-valuenow="${days}"
+          >
+        </div>
+        <p class="eed-hour-bank-summary">${this.getHourBankSummaryText(days, extraText)}</p>
+        <p class="eed-hour-bank-forecast">${this.getHourBankForecastText(extraPerDay, days)}</p>
+      </div>
+    `;
+  },
+
+  renderPositiveBalanceState(back, balanceSeconds) {
+    this.setHourBankBackVariant(back, 'surplus');
+
+    const balanceText = this.formatSecondsToHHMMSS(balanceSeconds);
+    const balanceDisplay = this.formatPositiveBalanceDisplay(balanceSeconds);
+
+    back.innerHTML = `
+      ${this.getHourBankCloseButtonHtml()}
+      <div class="eed-hour-bank-back-content eed-hour-bank-back-surplus">
+        <span class="eed-hour-bank-status-badge">${t('contentHourBankPositiveBadge')}</span>
+        <p class="eed-hour-bank-back-heading">${t('contentHourBankPositiveTitle')}</p>
+        <p class="eed-hour-bank-balance-hero">${balanceDisplay}</p>
+        <p class="eed-hour-bank-back-message">${t('contentHourBankPositiveMessage')}</p>
+        <p class="eed-hour-bank-back-submessage">${t('contentHourBankNoCompensationNeeded')}</p>
+        <p class="eed-hour-bank-available">${t('contentHourBankAvailableLabel', [balanceText])}</p>
+      </div>
+    `;
+  },
+
+  renderZeroBalanceState(back) {
+    this.setHourBankBackVariant(back, 'balanced');
+
+    back.innerHTML = `
+      ${this.getHourBankCloseButtonHtml()}
+      <div class="eed-hour-bank-back-content eed-hour-bank-back-balanced">
+        <p class="eed-hour-bank-back-heading">${t('contentHourBankZeroTitle')}</p>
+        <p class="eed-hour-bank-balance-hero">00:00:00</p>
+        <p class="eed-hour-bank-back-message">${t('contentHourBankZeroMessage')}</p>
+        <p class="eed-hour-bank-back-submessage">${t('contentHourBankNoCompensationNeeded')}</p>
+      </div>
+    `;
+  },
+
+  setHourBankFlipped(flip, card, flipped) {
+    const inner = flip.querySelector('.eed-hour-bank-flip-inner');
+    if (!inner) return;
+
+    const wasFlipped = flip.dataset.eedFlipped === 'true';
+    if (wasFlipped === flipped) return;
+
+    flip.dataset.eedFlipped = flipped ? 'true' : 'false';
+    inner.classList.toggle('eed-hour-bank-flipped', flipped);
+    card.classList.toggle('eed-hour-bank-is-flipped', flipped);
+    card.setAttribute('aria-expanded', flipped ? 'true' : 'false');
+
+    if (flipped) {
+      const back = flip.querySelector('.eed-hour-bank-back');
+      this.renderHourBankBack(back, flip);
+      if (this.getHourBankBalanceSeconds(flip) < 0) {
+        this.bindHourBankSlider(flip);
+      }
+      window.setTimeout(() => {
+        if (flip.dataset.eedFlipped === 'true') {
+          document.addEventListener('click', flip._eedHourBankOutsideClick, true);
+        }
+      }, 0);
+      return;
+    }
+
+    document.removeEventListener('click', flip._eedHourBankOutsideClick, true);
+    card.classList.remove(
+      'eed-hour-bank-state-deficit',
+      'eed-hour-bank-state-surplus',
+      'eed-hour-bank-state-balanced'
+    );
+  },
+
+  renderHourBankBack(back, flip) {
+    if (!back) return;
+
+    const balanceSeconds = this.getHourBankBalanceSeconds(flip);
+
+    if (balanceSeconds === null || !Number.isFinite(balanceSeconds)) {
+      console.warn(
+        '[Better Easy Dots] Saldo inválido para planejador:',
+        flip.querySelector('.eed-hour-bank-front h2')?.textContent
+      );
+      return;
+    }
+
+    if (balanceSeconds < 0) {
+      this.renderNegativeBalancePlanner(back, flip, balanceSeconds);
+      return;
+    }
+
+    if (balanceSeconds > 0) {
+      this.renderPositiveBalanceState(back, balanceSeconds);
+      return;
+    }
+
+    this.renderZeroBalanceState(back);
+  },
+
+  updateHourBankBackValues(flip) {
+    const back = flip.querySelector('.eed-hour-bank-back');
+    if (!back) return;
+
+    const balanceSeconds = this.getHourBankBalanceSeconds(flip);
+    if (balanceSeconds === null || !Number.isFinite(balanceSeconds)) return;
+
+    const nextVariant = this.getHourBankBalanceVariant(balanceSeconds);
+    if (back.dataset.eedBalanceVariant !== nextVariant) {
+      this.renderHourBankBack(back, flip);
+      if (balanceSeconds < 0) {
+        this.bindHourBankSlider(flip);
+      }
+      return;
+    }
+
+    if (balanceSeconds >= 0) return;
+
+    const days = parseInt(flip.dataset.eedDays, 10) || 5;
+    const deficit = this.formatSecondsToHHMMSS(balanceSeconds);
+    const extraPerDay = this.calculateExtraPerDay(balanceSeconds, days);
+    const extraText = this.formatSecondsToHHMMSS(extraPerDay);
+
+    const deficitEl = back.querySelector('.eed-hour-bank-back-value');
+    const summaryEl = back.querySelector('.eed-hour-bank-summary');
+    const forecastEl = back.querySelector('.eed-hour-bank-forecast');
+    const slider = back.querySelector('.eed-hour-bank-slider');
+
+    if (deficitEl) deficitEl.textContent = deficit;
+    if (summaryEl) summaryEl.textContent = this.getHourBankSummaryText(days, extraText);
+    if (forecastEl) forecastEl.textContent = this.getHourBankForecastText(extraPerDay, days);
+    if (slider) {
+      slider.value = String(days);
+      slider.setAttribute('aria-valuenow', String(days));
+    }
+  },
+
+  updateHourBankSliderDisplay(flip, slider) {
+    const back = flip.querySelector('.eed-hour-bank-back');
+    if (!back) return;
+
+    const balanceSeconds = this.getHourBankBalanceSeconds(flip);
+    if (balanceSeconds === null || !Number.isFinite(balanceSeconds) || balanceSeconds >= 0) return;
+
+    const days = Number(slider.value);
+    if (!Number.isFinite(days) || days <= 0) return;
+
+    flip.dataset.eedDays = String(days);
+    const extraPerDay = this.calculateExtraPerDay(balanceSeconds, days);
+    const extraText = this.formatSecondsToHHMMSS(extraPerDay);
+
+    const summaryEl = back.querySelector('.eed-hour-bank-summary');
+    const forecastEl = back.querySelector('.eed-hour-bank-forecast');
+
+    if (summaryEl) summaryEl.textContent = this.getHourBankSummaryText(days, extraText);
+    if (forecastEl) forecastEl.textContent = this.getHourBankForecastText(extraPerDay, days);
+    slider.setAttribute('aria-valuenow', String(days));
+  },
+
+  bindHourBankSlider(flip) {
+    const slider = flip.querySelector('.eed-hour-bank-slider');
+    if (!slider || slider.dataset.eedBound) return;
+
+    slider.dataset.eedBound = 'true';
+    slider.addEventListener('input', (event) => {
+      event.stopPropagation();
+      this.updateHourBankSliderDisplay(flip, slider);
+    });
+    slider.addEventListener('click', (event) => event.stopPropagation());
+    slider.addEventListener('mousedown', (event) => event.stopPropagation());
+    slider.addEventListener('pointerdown', (event) => event.stopPropagation());
+  },
+
+  bindHourBankEvents(flip, card) {
+    if (card.dataset.eedEventsBound) return;
+    card.dataset.eedEventsBound = 'true';
+
+    flip._eedHourBankOutsideClick = (event) => {
+      if (flip.dataset.eedFlipped !== 'true') return;
+      if (card.contains(event.target)) return;
+      this.setHourBankFlipped(flip, card, false);
+    };
+
+    card.addEventListener('click', (event) => {
+      if (event.target.closest('.eed-hour-bank-close')) {
+        event.stopPropagation();
+        this.setHourBankFlipped(flip, card, false);
+        return;
+      }
+
+      if (flip.dataset.eedFlipped === 'true') return;
+
+      if (event.target.closest('.eed-hour-bank-slider, .eed-hour-bank-sr-label')) return;
+
+      this.setHourBankFlipped(flip, card, true);
+    });
+
+    card.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && flip.dataset.eedFlipped === 'true') {
+        event.preventDefault();
+        this.setHourBankFlipped(flip, card, false);
+        return;
+      }
+
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      if (flip.dataset.eedFlipped === 'true') return;
+      if (event.target.closest('.eed-hour-bank-slider')) return;
+
+      event.preventDefault();
+      this.setHourBankFlipped(flip, card, true);
+    });
+  },
+
+  observeHourBankBalance(flip) {
+    if (flip.dataset.eedBalanceObserved === 'true') return;
+
+    const valueEl =
+      flip.querySelector('.eed-hour-bank-front h2 b') ||
+      flip.querySelector('.eed-hour-bank-front h2');
+    if (!valueEl) return;
+
+    flip.dataset.eedBalanceObserved = 'true';
+    let lastText = valueEl.textContent;
+
+    const observer = new MutationObserver(() => {
+      if (flip.dataset.eedFlipped !== 'true') return;
+
+      const nextText = valueEl.textContent;
+      if (nextText === lastText) return;
+      lastText = nextText;
+
+      try {
+        this.updateHourBankBackValues(flip);
+      } catch (error) {
+        console.warn('[Better Easy Dots] Erro ao atualizar planejador:', error);
+      }
+    });
+
+    observer.observe(valueEl, { characterData: true, subtree: true, childList: true });
+  },
+
+  initBalanceCardPlanner() {
+    try {
+      const card = this.findHourBankCard();
+      if (!card) return;
+
+      if (card.dataset.eedPlannerInitialized === 'true') return;
+
+      const barWidget = card.querySelector('.bar-widget');
+      if (!barWidget) return;
+
+      card.dataset.eedPlannerInitialized = 'true';
+      card.dataset.eedHourBankEnhanced = 'true';
+      card.classList.add('eed-hour-bank-card');
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', t('contentHourBankFlipAriaLabel'));
+      card.setAttribute('aria-expanded', 'false');
+
+      const flip = document.createElement('div');
+      flip.className = 'eed-hour-bank-flip';
+      flip.dataset.eedFlipped = 'false';
+      flip.dataset.eedDays = '5';
+
+      flip.innerHTML = `
+        <div class="eed-hour-bank-flip-inner">
+          <div class="eed-hour-bank-face eed-hour-bank-front"></div>
+          <div class="eed-hour-bank-face eed-hour-bank-back"></div>
+        </div>
+      `;
+
+      const front = flip.querySelector('.eed-hour-bank-front');
+      const back = flip.querySelector('.eed-hour-bank-back');
+
+      front.appendChild(barWidget);
+
+      const hint = document.createElement('span');
+      hint.className = 'eed-hour-bank-hover-hint';
+      hint.textContent = t('contentHourBankHoverHint');
+      hint.setAttribute('aria-hidden', 'true');
+      front.appendChild(hint);
+
+      card.appendChild(flip);
+      this.bindHourBankEvents(flip, card);
+      this.observeHourBankBalance(flip);
+    } catch (error) {
+      console.warn('[Better Easy Dots] Erro ao inicializar planejador:', error);
+    }
+  },
+
+  ensureHourBankCard() {
+    this.initBalanceCardPlanner();
+  },
+
   injectSidebarSettingsItem() {
     this.removeLegacyNavbarItem();
 
@@ -1225,6 +1676,12 @@ const EASydots = {
   },
 };
 
+function mutationOriginatesFromHourBankCard(mutation) {
+  const target = mutation.target;
+  const element = target.nodeType === Node.TEXT_NODE ? target.parentElement : target;
+  return Boolean(element?.closest?.('.eed-hour-bank-card'));
+}
+
 function init() {
   EEDSettings.rememberSiteUrl(window.location.href).catch(() => {});
 
@@ -1232,11 +1689,17 @@ function init() {
   EASydots.ensureRegisterButton();
   EASydots.observeRecordsTable();
   EASydots.ensureJornadaImport();
+  EASydots.ensureHourBankCard();
 
-  const observer = new MutationObserver(() => {
+  const observer = new MutationObserver((mutations) => {
     EASydots.injectSidebarSettingsItem();
     EASydots.ensureRegisterButton();
     EASydots.observeRecordsTable();
+
+    const hasExternalMutation = mutations.some((mutation) => !mutationOriginatesFromHourBankCard(mutation));
+    if (hasExternalMutation) {
+      EASydots.ensureHourBankCard();
+    }
 
     if (
       !EASydots.jornadaImportReady &&

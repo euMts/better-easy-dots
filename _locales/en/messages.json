@@ -285,6 +285,124 @@
     "message": "by better easy dots",
     "description": "Balance card credit"
   },
+  "contentHourBankFlipAriaLabel": {
+    "message": "Plan hour bank compensation",
+    "description": "Aria-label for the interactive hour bank card"
+  },
+  "contentHourBankHoverHint": {
+    "message": "Plan compensation",
+    "description": "Hint shown when hovering the hour bank card"
+  },
+  "contentHourBankPlanTitle": {
+    "message": "Plan compensation",
+    "description": "Back face title for the hour bank card"
+  },
+  "contentHourBankDeficitLabel": {
+    "message": "Remaining",
+    "description": "Negative balance label on the card back"
+  },
+  "contentHourBankDaysLabel": {
+    "message": "Days to compensate",
+    "description": "Slider label on the card back"
+  },
+  "contentHourBankDaysValue": {
+    "message": "$DAYS$ days",
+    "description": "Days value shown next to the slider",
+    "placeholders": {
+      "days": { "content": "$1", "example": "5" }
+    }
+  },
+  "contentHourBankExtraPerDay": {
+    "message": "+$TIME$ per day",
+    "description": "Calculated extra time per day",
+    "placeholders": {
+      "time": { "content": "$1", "example": "01:01:51" }
+    }
+  },
+  "contentHourBankForecastZero": {
+    "message": "In $DAYS$ days, balance zeroed.",
+    "description": "Compact forecast text (legacy plural)",
+    "placeholders": {
+      "days": { "content": "$1", "example": "5" }
+    }
+  },
+  "contentHourBankForecastSingular": {
+    "message": "By working $DURATION$ extra in 1 day, you zero the balance.",
+    "description": "Friendly forecast when planning for 1 day",
+    "placeholders": {
+      "duration": { "content": "$1", "example": "5h 09min 14s" }
+    }
+  },
+  "contentHourBankForecastPlural": {
+    "message": "By working $DURATION$ extra per day, you zero the balance in $DAYS$ days.",
+    "description": "Friendly forecast when planning for multiple days",
+    "placeholders": {
+      "duration": { "content": "$1", "example": "1h 01min 51s" },
+      "days": { "content": "$2", "example": "5" }
+    }
+  },
+  "contentHourBankSummaryLine": {
+    "message": "$DAYS$ days · +$TIME$/day",
+    "description": "Compact summary (legacy plural)",
+    "placeholders": {
+      "days": { "content": "$1", "example": "5" },
+      "time": { "content": "$2", "example": "01:01:51" }
+    }
+  },
+  "contentHourBankSummarySingular": {
+    "message": "1 day · +$TIME$/day",
+    "description": "Compact summary when planning for 1 day",
+    "placeholders": {
+      "time": { "content": "$1", "example": "01:01:51" }
+    }
+  },
+  "contentHourBankSummaryPlural": {
+    "message": "$DAYS$ days · +$TIME$/day",
+    "description": "Compact summary when planning for multiple days",
+    "placeholders": {
+      "days": { "content": "$1", "example": "5" },
+      "time": { "content": "$2", "example": "01:01:51" }
+    }
+  },
+  "contentHourBankNoDeficit": {
+    "message": "You do not have a negative balance to compensate.",
+    "description": "Message when the hour bank is not negative"
+  },
+  "contentHourBankPositiveTitle": {
+    "message": "Positive balance",
+    "description": "Back face title when the hour bank is positive"
+  },
+  "contentHourBankPositiveMessage": {
+    "message": "You have available hours in the bank.",
+    "description": "Main message on the positive balance back face"
+  },
+  "contentHourBankNoCompensationNeeded": {
+    "message": "No compensation needed.",
+    "description": "Message when there is no negative balance to compensate"
+  },
+  "contentHourBankPositiveBadge": {
+    "message": "All good",
+    "description": "Success badge on the positive balance back face"
+  },
+  "contentHourBankAvailableLabel": {
+    "message": "Available to use: $TIME$",
+    "description": "Available hours line on the positive back face",
+    "placeholders": {
+      "time": { "content": "$1", "example": "02:15:30" }
+    }
+  },
+  "contentHourBankZeroTitle": {
+    "message": "Balance zeroed",
+    "description": "Back face title when the hour bank is zero"
+  },
+  "contentHourBankZeroMessage": {
+    "message": "Your hour bank is balanced.",
+    "description": "Main message on the zero balance back face"
+  },
+  "contentHourBankClose": {
+    "message": "Close planner",
+    "description": "Close button aria-label on the card back"
+  },
   "contentScheduleHint": {
     "message": "Set clock-in, clock-out, and break in the gear icon",
     "description": "Hint when schedule is not configured"
