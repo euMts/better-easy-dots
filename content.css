@@ -632,18 +632,8 @@ table:has(#table_registro_horario) th.eed-diff-header,
   font-weight: 600;
   letter-spacing: 0.02em;
   line-height: 1.3;
-  opacity: 0;
-  transform: translateY(4px);
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
-  pointer-events: none;
-}
-
-.card-box.eed-hour-bank-card:not(.eed-hour-bank-is-flipped):hover .eed-hour-bank-hover-hint,
-.card-box.eed-hour-bank-card:not(.eed-hour-bank-is-flipped):focus-within .eed-hour-bank-hover-hint {
   opacity: 1;
-  transform: translateY(0);
+  pointer-events: none;
 }
 
 .card-box.eed-hour-bank-card .eed-hour-bank-back {

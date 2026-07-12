@@ -771,6 +771,10 @@
     "message": "Open settings",
     "description": "Secondary changelog page button"
   },
+  "changelogV111Item1": {
+    "message": "“Plan compensation” hint always visible on the hour bank card",
+    "description": "Changelog v1.1.1 item"
+  },
   "changelogV110Item1": {
     "message": "Dedicated what's new page",
     "description": "Changelog v1.1.0 item"

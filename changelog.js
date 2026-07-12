@@ -2,6 +2,12 @@ const EED_CHANGELOG_STORAGE_KEY = 'eedLastSeenChangelogVersion';
 
 const EED_CHANGELOG_ENTRIES = [
   {
+    version: '1.1.1',
+    items: [
+      'changelogV111Item1',
+    ],
+  },
+  {
     version: '1.1.0',
     items: [
       'changelogV110Item1',
@@ -51,9 +57,9 @@ const EED_CHANGELOG_ENTRIES = [
 
 function eedGetCurrentVersion() {
   try {
-    return chrome.runtime?.getManifest?.()?.version || '1.1.0';
+    return chrome.runtime?.getManifest?.()?.version || '1.1.1';
   } catch {
-    return '1.1.0';
+    return '1.1.1';
   }
 }
 

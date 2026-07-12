@@ -771,6 +771,10 @@
     "message": "Ver configurações",
     "description": "Botão secundário da página de changelog"
   },
+  "changelogV111Item1": {
+    "message": "Dica “Planejar compensação” sempre visível no card do banco de horas",
+    "description": "Item do changelog v1.1.1"
+  },
   "changelogV110Item1": {
     "message": "Tela de novidades em página dedicada",
     "description": "Item do changelog v1.1.0"
