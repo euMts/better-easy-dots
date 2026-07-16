@@ -396,6 +396,7 @@ const EASydots = {
   },
 
   formatSignedBalanceText(totalSeconds) {
+    if (totalSeconds === 0) return '00:00:00';
     const { text } = this.formatBalance(totalSeconds);
     return text.replace(/\s+/g, '');
   },
@@ -2062,6 +2063,523 @@ const EASydots = {
     this.initBalanceCardPlanner();
   },
 
+  EMPLOYER_CARD_LABEL: 'Informações do empregador',
+
+  findEmployerCard() {
+    const enhanced = document.querySelector('[data-eed-employer-sim-enhanced="true"]');
+    if (enhanced) return enhanced;
+
+    const cards = document.querySelectorAll('.card-box--dashboard');
+    for (const card of cards) {
+      const labels = Array.from(card.querySelectorAll('h5, h4, .text-white'))
+        .map((el) => (el.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase())
+        .join(' | ');
+
+      if (
+        labels.includes('informações do empregador') ||
+        labels.includes('informacoes do empregador') ||
+        labels.includes('employer information')
+      ) {
+        return card;
+      }
+
+      const style = (card.getAttribute('style') || '').toLowerCase();
+      if (
+        (style.includes('#47c5ef') || style.includes('rgb(71, 197, 239)')) &&
+        card.querySelector('.fa-building-o, .fa-building, .mdi-domain, .md-business')
+      ) {
+        return card;
+      }
+    }
+
+    return null;
+  },
+
+  normalizeSimulatedTimeInput(value) {
+    const text = String(value || '').trim();
+    if (!text) return null;
+
+    const full = text.match(/^([01]?\d|2[0-3]):([0-5]\d):([0-5]\d)$/);
+    if (full) {
+      return [
+        String(full[1]).padStart(2, '0'),
+        full[2],
+        full[3],
+      ].join(':');
+    }
+
+    const short = text.match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+    if (short) {
+      return `${String(short[1]).padStart(2, '0')}:${short[2]}:00`;
+    }
+
+    return null;
+  },
+
+  getSimulatorSeedTimes(records, settings) {
+    const seeds = {
+      entrada: this.formatExpectedTimeForTooltip(settings.entrada),
+      intervaloInicio: this.formatExpectedTimeForTooltip(settings.intervaloInicio),
+      intervaloFim: this.formatExpectedTimeForTooltip(settings.intervaloFim),
+      saida: this.formatExpectedTimeForTooltip(settings.saida),
+    };
+
+    if (!this.hasInterval(settings)) {
+      seeds.intervaloInicio = seeds.entrada;
+      seeds.intervaloFim = seeds.entrada;
+    }
+
+    const fieldByIndex = this.hasInterval(settings)
+      ? ['entrada', 'intervaloInicio', 'intervaloFim', 'saida']
+      : ['entrada', 'saida'];
+
+    let index = 0;
+    records.forEach((record) => {
+      if (index >= fieldByIndex.length) return;
+
+      const field = fieldByIndex[index];
+      const expectsEntrada = field === 'entrada' || field === 'intervaloFim';
+      const matches =
+        (expectsEntrada && this.isEntrada(record.type)) ||
+        (!expectsEntrada && this.isSaida(record.type));
+
+      if (!matches) return;
+
+      const normalized = this.normalizeSimulatedTimeInput(record.time);
+      if (normalized) {
+        seeds[field] = normalized;
+      }
+      index += 1;
+    });
+
+    return seeds;
+  },
+
+  calculateSimulatedWorkedSeconds(times, settings) {
+    const entrada = this.timeToSeconds(times.entrada);
+    const saida = this.timeToSeconds(times.saida);
+
+    if (!this.hasInterval(settings)) {
+      return Math.max(0, saida - entrada);
+    }
+
+    const lunchOut = this.timeToSeconds(times.intervaloInicio);
+    const lunchIn = this.timeToSeconds(times.intervaloFim);
+    return Math.max(0, lunchOut - entrada) + Math.max(0, saida - lunchIn);
+  },
+
+  buildSimulatorAnalysis(times, settings) {
+    const expected = this.calculateExpectedDailyWork(settings);
+    const worked = this.calculateSimulatedWorkedSeconds(times, settings);
+    const raw = worked - expected;
+    const toleranceSeconds = this.getToleranceSeconds(settings);
+    const safetyMarginSeconds = this.getSafetyMarginSeconds(settings);
+    const safeLimitSeconds = this.getToleranceSafeLimitSeconds(
+      toleranceSeconds,
+      safetyMarginSeconds
+    );
+    const afterTolerance = this.applyDailyTolerance(raw, toleranceSeconds);
+    const status = this.classifyDailyBalanceStatus(raw, toleranceSeconds, safeLimitSeconds);
+    const estimatedOvertimeSeconds = raw > toleranceSeconds ? raw : 0;
+
+    return {
+      raw,
+      afterTolerance,
+      status,
+      estimatedOvertimeSeconds,
+      toleranceSeconds,
+    };
+  },
+
+  readSimulatorTimesFromBack(back) {
+    const fields = ['entrada', 'intervaloInicio', 'intervaloFim', 'saida'];
+    const times = {};
+
+    for (const field of fields) {
+      const input = back.querySelector(`[data-eed-sim-field="${field}"]`);
+      const normalized = this.normalizeSimulatedTimeInput(input?.value);
+      if (!normalized) return null;
+      times[field] = normalized;
+    }
+
+    return times;
+  },
+
+  getSimulatorResultLabel(analysis) {
+    if (analysis.status === 'within_safe') return t('contentSimStatusWithin');
+    if (analysis.status === 'at_limit') return t('contentSimStatusAtLimit');
+    if (analysis.status === 'outside_negative') return t('contentSimStatusMissing');
+    return t('contentSimOvertimeToday');
+  },
+
+  getSimulatorResultValue(analysis) {
+    if (analysis.status === 'within_safe' || analysis.status === 'at_limit') {
+      return this.formatSignedBalanceText(analysis.afterTolerance) || '00:00:00';
+    }
+
+    if (analysis.status === 'outside_negative') {
+      return this.formatSignedBalanceText(analysis.afterTolerance);
+    }
+
+    return this.formatSignedBalanceText(analysis.estimatedOvertimeSeconds);
+  },
+
+  getSimulatorResultMeta(analysis) {
+    return t('contentSimResultMeta', [
+      this.formatSignedBalanceText(analysis.raw),
+      this.formatSignedBalanceText(analysis.afterTolerance),
+    ]);
+  },
+
+  getSimulatorResultTooltip(analysis) {
+    const parts = [t('contentSimTooltipExplain')];
+
+    if (analysis.status === 'outside_negative') {
+      parts.push(
+        t('contentSimTooltipOutsideNeg', [
+          this.formatFriendlyDuration(Math.abs(analysis.raw)),
+        ])
+      );
+    } else if (analysis.status === 'outside_positive') {
+      parts.push(
+        t('contentSimTooltipOvertime', [
+          this.formatSignedBalanceText(analysis.estimatedOvertimeSeconds),
+        ])
+      );
+    } else if (analysis.status === 'at_limit') {
+      parts.push(t('contentDayBalanceTooltipAtLimitExtra'));
+    } else {
+      parts.push(t('contentSimTooltipWithin'));
+    }
+
+    parts.push(this.getSimulatorResultMeta(analysis));
+    return parts.filter(Boolean).join(' ');
+  },
+
+  updateSimulatorResult(back, settings) {
+    const resultEl = back.querySelector('.eed-sim-result');
+    if (!resultEl) return;
+
+    const times = this.readSimulatorTimesFromBack(back);
+    if (!times) {
+      resultEl.className = 'eed-sim-result eed-sim-result--invalid';
+      const labelEl = resultEl.querySelector('.eed-sim-result-label');
+      const valueEl = resultEl.querySelector('.eed-sim-result-value');
+      const metaEl = resultEl.querySelector('.eed-sim-result-meta');
+      if (labelEl) labelEl.textContent = t('contentSimInvalidTimes');
+      if (valueEl) valueEl.textContent = '--:--:--';
+      if (metaEl) metaEl.textContent = '';
+      this.setTooltipTarget(resultEl, t('contentSimInvalidTimes'));
+      return;
+    }
+
+    const analysis = this.buildSimulatorAnalysis(times, settings);
+    const statusClass = {
+      within_safe: 'within-safe',
+      at_limit: 'at-limit',
+      outside_negative: 'outside-negative',
+      outside_positive: 'outside-positive',
+    }[analysis.status];
+
+    resultEl.className = `eed-sim-result eed-sim-result--${statusClass}`;
+
+    const labelEl = resultEl.querySelector('.eed-sim-result-label');
+    const valueEl = resultEl.querySelector('.eed-sim-result-value');
+    const metaEl = resultEl.querySelector('.eed-sim-result-meta');
+
+    if (labelEl) labelEl.textContent = this.getSimulatorResultLabel(analysis);
+    if (valueEl) valueEl.textContent = this.getSimulatorResultValue(analysis);
+    if (metaEl) metaEl.textContent = this.getSimulatorResultMeta(analysis);
+
+    this.setTooltipTarget(resultEl, this.getSimulatorResultTooltip(analysis));
+  },
+
+  getEmployerSimCloseButtonHtml() {
+    return `<button type="button" class="eed-employer-sim-close" aria-label="${t('contentSimClose')}"><span aria-hidden="true">×</span></button>`;
+  },
+
+  renderEmployerSimulatorBack(back, settings, records) {
+    if (!back) return;
+
+    delete back.dataset.eedSimInputsBound;
+
+    if (!EEDSettings.isScheduleConfigured(settings)) {
+      back.className = 'eed-hour-bank-face eed-employer-sim-back eed-employer-sim-back--hint';
+      back.innerHTML = `
+        ${this.getEmployerSimCloseButtonHtml()}
+        <div class="eed-sim-content">
+          <p class="eed-sim-title">${t('contentSimTitle')}</p>
+          <p class="eed-sim-hint">${t('contentSimScheduleRequired')}</p>
+        </div>
+      `;
+      return;
+    }
+
+    const seeds = this.getSimulatorSeedTimes(records, settings);
+    const hasInterval = this.hasInterval(settings);
+
+    back.className = 'eed-hour-bank-face eed-employer-sim-back';
+    back.innerHTML = `
+      ${this.getEmployerSimCloseButtonHtml()}
+      <div class="eed-sim-content">
+        <p class="eed-sim-title">${t('contentSimTitle')}</p>
+        <div class="eed-sim-fields ${hasInterval ? '' : 'eed-sim-fields--simple'}">
+          <label class="eed-sim-field">
+            <span>${t('contentSimLabelEntry')}</span>
+            <input type="text" data-eed-sim-field="entrada" inputmode="numeric" maxlength="8" value="${seeds.entrada}" autocomplete="off">
+          </label>
+          ${
+            hasInterval
+              ? `
+          <label class="eed-sim-field">
+            <span>${t('contentSimLabelLunchOut')}</span>
+            <input type="text" data-eed-sim-field="intervaloInicio" inputmode="numeric" maxlength="8" value="${seeds.intervaloInicio}" autocomplete="off">
+          </label>
+          <label class="eed-sim-field">
+            <span>${t('contentSimLabelLunchIn')}</span>
+            <input type="text" data-eed-sim-field="intervaloFim" inputmode="numeric" maxlength="8" value="${seeds.intervaloFim}" autocomplete="off">
+          </label>
+          `
+              : `
+          <input type="hidden" data-eed-sim-field="intervaloInicio" value="${seeds.intervaloInicio}">
+          <input type="hidden" data-eed-sim-field="intervaloFim" value="${seeds.intervaloFim}">
+          `
+          }
+          <label class="eed-sim-field">
+            <span>${t('contentSimLabelExit')}</span>
+            <input type="text" data-eed-sim-field="saida" inputmode="numeric" maxlength="8" value="${seeds.saida}" autocomplete="off">
+          </label>
+        </div>
+        <div class="eed-sim-result">
+          <span class="eed-sim-result-label"></span>
+          <span class="eed-sim-result-value"></span>
+          <span class="eed-sim-result-meta"></span>
+        </div>
+      </div>
+    `;
+
+    this.updateSimulatorResult(back, settings);
+  },
+
+  bindEmployerSimulatorInputs(flip, card, settings) {
+    const back = flip.querySelector('.eed-employer-sim-back');
+    if (!back || back.dataset.eedSimInputsBound === 'true') return;
+    back.dataset.eedSimInputsBound = 'true';
+
+    const stop = (event) => event.stopPropagation();
+
+    back.querySelectorAll('[data-eed-sim-field]').forEach((input) => {
+      if (input.type === 'hidden') return;
+
+      input.addEventListener('click', stop);
+      input.addEventListener('mousedown', stop);
+      input.addEventListener('pointerdown', stop);
+      input.addEventListener('keydown', stop);
+      input.addEventListener('keyup', stop);
+      input.addEventListener('focus', stop);
+
+      input.addEventListener('input', (event) => {
+        event.stopPropagation();
+        this.updateSimulatorResult(back, settings);
+      });
+
+      input.addEventListener('blur', (event) => {
+        event.stopPropagation();
+        const normalized = this.normalizeSimulatedTimeInput(input.value);
+        if (normalized) input.value = normalized;
+        this.updateSimulatorResult(back, settings);
+      });
+    });
+  },
+
+  setEmployerSimFlipped(flip, card, flipped) {
+    const inner = flip.querySelector('.eed-employer-sim-flip-inner');
+    if (!inner) return;
+
+    const wasFlipped = flip.dataset.eedFlipped === 'true';
+    if (wasFlipped === flipped) return;
+
+    flip.dataset.eedFlipped = flipped ? 'true' : 'false';
+    inner.classList.toggle('eed-employer-sim-flipped', flipped);
+    card.classList.toggle('eed-employer-sim-is-flipped', flipped);
+    card.setAttribute('aria-expanded', flipped ? 'true' : 'false');
+
+    if (flipped) {
+      this.ensureEmployerSimulatorBack(flip).catch(() => {});
+      window.setTimeout(() => {
+        if (flip.dataset.eedFlipped === 'true') {
+          document.addEventListener('click', flip._eedEmployerOutsideClick, true);
+        }
+      }, 0);
+      return;
+    }
+
+    document.removeEventListener('click', flip._eedEmployerOutsideClick, true);
+  },
+
+  bindEmployerSimEvents(flip, card) {
+    if (card.dataset.eedEmployerEventsBound === 'true') return;
+    card.dataset.eedEmployerEventsBound = 'true';
+
+    flip._eedEmployerOutsideClick = (event) => {
+      if (flip.dataset.eedFlipped !== 'true') return;
+      if (card.contains(event.target)) return;
+      this.setEmployerSimFlipped(flip, card, false);
+    };
+
+    // Same pattern as hour-bank, plus capture so #btnLocal cannot swallow the click.
+    const onActivate = (event) => {
+      if (event.target.closest('.eed-employer-sim-close')) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        this.setEmployerSimFlipped(flip, card, false);
+        return;
+      }
+
+      if (event.target.closest('[data-eed-sim-field], .eed-sim-field, .eed-sim-content input')) {
+        return;
+      }
+
+      if (flip.dataset.eedFlipped === 'true') return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      this.setEmployerSimFlipped(flip, card, true);
+    };
+
+    card.addEventListener('click', onActivate, true);
+    card.addEventListener('click', onActivate);
+
+    card.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && flip.dataset.eedFlipped === 'true') {
+        event.preventDefault();
+        this.setEmployerSimFlipped(flip, card, false);
+        return;
+      }
+
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      if (flip.dataset.eedFlipped === 'true') return;
+      if (event.target.closest('[data-eed-sim-field]')) return;
+
+      event.preventDefault();
+      this.setEmployerSimFlipped(flip, card, true);
+    });
+  },
+
+  async ensureEmployerSimulatorBack(flip) {
+    const back = flip.querySelector('.eed-employer-sim-back');
+    if (!back || back.dataset.eedSimReady === 'true') return;
+    if (flip._eedEmployerBackPromise) return flip._eedEmployerBackPromise;
+    if (!this.isExtensionAlive()) return;
+
+    flip._eedEmployerBackPromise = (async () => {
+      try {
+        const settings = await EEDSettings.load();
+        if (!this.isExtensionAlive() || !document.body.contains(back)) return;
+
+        const records = this.getRecords();
+        this.renderEmployerSimulatorBack(back, settings, records);
+        this.bindEmployerSimulatorInputs(
+          flip,
+          flip.closest('.eed-employer-sim-card'),
+          settings
+        );
+        back.dataset.eedSimReady = 'true';
+      } catch (error) {
+        if (this.isContextInvalidatedError(error)) {
+          this.markExtensionDead();
+          return;
+        }
+        console.warn('[Better Easy Dots] Erro ao montar verso do simulador:', error);
+      } finally {
+        flip._eedEmployerBackPromise = null;
+      }
+    })();
+
+    return flip._eedEmployerBackPromise;
+  },
+
+  initEmployerSimulator() {
+    if (!this.isExtensionAlive()) return;
+
+    try {
+      const card = this.findEmployerCard();
+      if (!card) return;
+
+      if (card.dataset.eedEmployerSimInitialized === 'true') {
+        const flip = card.querySelector('.eed-employer-sim-flip');
+        if (flip && card.dataset.eedEmployerEventsBound !== 'true') {
+          this.bindEmployerSimEvents(flip, card);
+        }
+        return;
+      }
+
+      const barWidget = card.querySelector('.bar-widget');
+      if (!barWidget) return;
+
+      card.dataset.eedEmployerSimInitialized = 'true';
+      card.dataset.eedEmployerSimEnhanced = 'true';
+      card.classList.add('eed-employer-sim-card');
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', t('contentSimFlipAriaLabel'));
+      card.setAttribute('aria-expanded', 'false');
+
+      const flip = document.createElement('div');
+      flip.className = 'eed-employer-sim-flip';
+      flip.dataset.eedFlipped = 'false';
+
+      flip.innerHTML = `
+        <div class="eed-employer-sim-flip-inner">
+          <div class="eed-hour-bank-face eed-employer-sim-front"></div>
+          <div class="eed-hour-bank-face eed-employer-sim-back">
+            ${this.getEmployerSimCloseButtonHtml()}
+            <div class="eed-sim-content">
+              <p class="eed-sim-title">${t('contentSimTitle')}</p>
+              <p class="eed-sim-hint">…</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const front = flip.querySelector('.eed-employer-sim-front');
+      front.appendChild(barWidget);
+
+      // Keep layout, but do not let the site's #btnLocal eat pointer events.
+      front.querySelectorAll('#btnLocal, [id="btnLocal"]').forEach((el) => {
+        el.style.pointerEvents = 'none';
+        el.setAttribute('aria-hidden', 'true');
+      });
+
+      const hint = document.createElement('span');
+      hint.className = 'eed-employer-sim-hover-hint';
+      hint.textContent = t('contentSimHoverHint');
+      hint.setAttribute('aria-hidden', 'true');
+      front.appendChild(hint);
+
+      card.appendChild(flip);
+      this.bindEmployerSimEvents(flip, card);
+      this.ensureEmployerSimulatorBack(flip).catch(() => {});
+    } catch (error) {
+      if (this.isContextInvalidatedError(error)) {
+        this.markExtensionDead();
+        return;
+      }
+      console.warn('[Better Easy Dots] Erro ao inicializar simulador:', error);
+      const card = this.findEmployerCard();
+      if (card) {
+        delete card.dataset.eedEmployerSimInitialized;
+        delete card.dataset.eedEmployerSimEnhanced;
+        delete card.dataset.eedEmployerEventsBound;
+      }
+    }
+  },
+
+  ensureEmployerSimulator() {
+    if (!this.isExtensionAlive()) return;
+    this.initEmployerSimulator();
+  },
+
   injectSidebarSettingsItem() {
     if (!this.isExtensionAlive()) return;
 
@@ -2101,10 +2619,13 @@ const EASydots = {
   },
 };
 
-function mutationOriginatesFromHourBankCard(mutation) {
+function mutationOriginatesFromEnhancedCard(mutation) {
   const target = mutation.target;
   const element = target.nodeType === Node.TEXT_NODE ? target.parentElement : target;
-  return Boolean(element?.closest?.('.eed-hour-bank-card'));
+  return Boolean(
+    element?.closest?.('.eed-hour-bank-card') ||
+      element?.closest?.('.eed-employer-sim-card')
+  );
 }
 
 function init() {
@@ -2118,6 +2639,7 @@ function init() {
     EASydots.observeRecordsTable();
     EASydots.ensureJornadaImport();
     EASydots.ensureHourBankCard();
+    EASydots.ensureEmployerSimulator();
   } catch (error) {
     if (EASydots.isContextInvalidatedError(error)) {
       EASydots.markExtensionDead();
@@ -2135,10 +2657,11 @@ function init() {
       EASydots.observeRecordsTable();
 
       const hasExternalMutation = mutations.some(
-        (mutation) => !mutationOriginatesFromHourBankCard(mutation)
+        (mutation) => !mutationOriginatesFromEnhancedCard(mutation)
       );
       if (hasExternalMutation) {
         EASydots.ensureHourBankCard();
+        EASydots.ensureEmployerSimulator();
       }
 
       if (

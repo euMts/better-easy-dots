@@ -587,6 +587,92 @@
     "message": "Close planner",
     "description": "Close button aria-label on the card back"
   },
+  "contentSimTitle": {
+    "message": "Simulate workday",
+    "description": "Title on the workday simulator card back"
+  },
+  "contentSimHoverHint": {
+    "message": "Simulate workday",
+    "description": "Hover hint on the employer card"
+  },
+  "contentSimFlipAriaLabel": {
+    "message": "Simulate workday and overtime",
+    "description": "Aria-label for the interactive employer card"
+  },
+  "contentSimClose": {
+    "message": "Back",
+    "description": "Close button on the simulator back"
+  },
+  "contentSimLabelEntry": {
+    "message": "Entry",
+    "description": "Simulator entry field"
+  },
+  "contentSimLabelLunchOut": {
+    "message": "Lunch exit",
+    "description": "Simulator lunch exit field"
+  },
+  "contentSimLabelLunchIn": {
+    "message": "Return",
+    "description": "Simulator lunch return field"
+  },
+  "contentSimLabelExit": {
+    "message": "Final exit",
+    "description": "Simulator final exit field"
+  },
+  "contentSimOvertimeToday": {
+    "message": "Overtime today",
+    "description": "Overtime label on the simulator"
+  },
+  "contentSimStatusWithin": {
+    "message": "Within tolerance",
+    "description": "Within tolerance status on the simulator"
+  },
+  "contentSimStatusAtLimit": {
+    "message": "At the limit",
+    "description": "At limit status on the simulator"
+  },
+  "contentSimStatusMissing": {
+    "message": "Missing time",
+    "description": "Negative outside tolerance status on the simulator"
+  },
+  "contentSimResultMeta": {
+    "message": "Raw: $RAW$ · After tolerance: $AFTER$",
+    "description": "Simulator result meta line",
+    "placeholders": {
+      "raw": { "content": "$1", "example": "+01:13:00" },
+      "after": { "content": "$2", "example": "+01:13:00" }
+    }
+  },
+  "contentSimTooltipExplain": {
+    "message": "The simulator uses the times you enter and applies the configured daily tolerance. Raw balance is calculated second by second.",
+    "description": "Base tooltip for simulator result"
+  },
+  "contentSimTooltipWithin": {
+    "message": "With these times, the day stays within daily tolerance.",
+    "description": "Tooltip when simulation is within tolerance"
+  },
+  "contentSimTooltipOutsideNeg": {
+    "message": "With these times, you would be $AMOUNT$ negative, outside daily tolerance.",
+    "description": "Tooltip when simulation is negative outside tolerance",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "12min" }
+    }
+  },
+  "contentSimTooltipOvertime": {
+    "message": "Estimated overtime: $AMOUNT$.",
+    "description": "Tooltip when simulation generates overtime",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "+01:13:00" }
+    }
+  },
+  "contentSimInvalidTimes": {
+    "message": "Enter valid times (HH:mm or HH:mm:ss).",
+    "description": "Invalid times error on the simulator"
+  },
+  "contentSimScheduleRequired": {
+    "message": "Configure your schedule in the extension to simulate the workday.",
+    "description": "Notice when schedule is not configured"
+  },
   "contentScheduleHintBefore": {
     "message": "Set clock-in, clock-out, and break by",
     "description": "Text before settings link when schedule is not configured"
@@ -973,6 +1059,10 @@
   },
   "changelogV120Item5": {
     "message": "Custom tooltips without the native browser balloon",
+    "description": "Changelog v1.2.0 item"
+  },
+  "changelogV120Item6": {
+    "message": "Workday simulator on the back of the Employer information card",
     "description": "Changelog v1.2.0 item"
   },
   "changelogV111Item1": {

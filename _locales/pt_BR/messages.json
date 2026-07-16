@@ -587,6 +587,92 @@
     "message": "Fechar planejador",
     "description": "Aria-label do botão fechar no verso do card"
   },
+  "contentSimTitle": {
+    "message": "Simular jornada",
+    "description": "Título do verso do simulador de jornada"
+  },
+  "contentSimHoverHint": {
+    "message": "Simular jornada",
+    "description": "Hint de hover no card do empregador"
+  },
+  "contentSimFlipAriaLabel": {
+    "message": "Simular jornada e horas extras",
+    "description": "Aria-label do card interativo do empregador"
+  },
+  "contentSimClose": {
+    "message": "Voltar",
+    "description": "Botão fechar do verso do simulador"
+  },
+  "contentSimLabelEntry": {
+    "message": "Entrada",
+    "description": "Campo entrada do simulador"
+  },
+  "contentSimLabelLunchOut": {
+    "message": "Saída almoço",
+    "description": "Campo saída almoço do simulador"
+  },
+  "contentSimLabelLunchIn": {
+    "message": "Retorno",
+    "description": "Campo retorno do simulador"
+  },
+  "contentSimLabelExit": {
+    "message": "Saída final",
+    "description": "Campo saída final do simulador"
+  },
+  "contentSimOvertimeToday": {
+    "message": "Extras hoje",
+    "description": "Label de horas extras no simulador"
+  },
+  "contentSimStatusWithin": {
+    "message": "Dentro da tolerância",
+    "description": "Status dentro da tolerância no simulador"
+  },
+  "contentSimStatusAtLimit": {
+    "message": "No limite",
+    "description": "Status no limite no simulador"
+  },
+  "contentSimStatusMissing": {
+    "message": "Tempo faltante",
+    "description": "Status negativo fora da tolerância no simulador"
+  },
+  "contentSimResultMeta": {
+    "message": "Bruto: $RAW$ · Após tolerância: $AFTER$",
+    "description": "Meta do resultado do simulador",
+    "placeholders": {
+      "raw": { "content": "$1", "example": "+01:13:00" },
+      "after": { "content": "$2", "example": "+01:13:00" }
+    }
+  },
+  "contentSimTooltipExplain": {
+    "message": "O simulador usa os horários informados e aplica a tolerância diária configurada. O saldo bruto é calculado segundo por segundo.",
+    "description": "Tooltip base do resultado do simulador"
+  },
+  "contentSimTooltipWithin": {
+    "message": "Com esses horários, o dia fica dentro da tolerância diária.",
+    "description": "Tooltip quando a simulação fica dentro da tolerância"
+  },
+  "contentSimTooltipOutsideNeg": {
+    "message": "Com esses horários, você ficaria $AMOUNT$ negativo, fora da tolerância diária.",
+    "description": "Tooltip quando a simulação fica negativa fora da tolerância",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "12min" }
+    }
+  },
+  "contentSimTooltipOvertime": {
+    "message": "Horas extras estimadas: $AMOUNT$.",
+    "description": "Tooltip quando a simulação gera hora extra",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "+01:13:00" }
+    }
+  },
+  "contentSimInvalidTimes": {
+    "message": "Informe horários válidos (HH:mm ou HH:mm:ss).",
+    "description": "Erro de horários inválidos no simulador"
+  },
+  "contentSimScheduleRequired": {
+    "message": "Configure seus horários na extensão para simular a jornada.",
+    "description": "Aviso quando horários não estão configurados"
+  },
   "contentScheduleHintBefore": {
     "message": "Configure entrada, saída e intervalo",
     "description": "Texto antes do link de configuração quando horários não estão configurados"
@@ -973,6 +1059,10 @@
   },
   "changelogV120Item5": {
     "message": "Tooltips customizados sem o balão nativo do navegador",
+    "description": "Item do changelog v1.2.0"
+  },
+  "changelogV120Item6": {
+    "message": "Simulador de jornada no verso do card Informações do empregador",
     "description": "Item do changelog v1.2.0"
   },
   "changelogV111Item1": {
