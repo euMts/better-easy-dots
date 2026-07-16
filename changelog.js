@@ -10,6 +10,7 @@ const EED_CHANGELOG_ENTRIES = [
       'changelogV120Item4',
       'changelogV120Item5',
       'changelogV120Item6',
+      'changelogV120Item7',
     ],
   },
   {

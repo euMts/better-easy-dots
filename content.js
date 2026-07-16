@@ -2205,75 +2205,91 @@ const EASydots = {
     return times;
   },
 
-  getSimulatorResultLabel(analysis) {
-    if (analysis.status === 'within_safe') return t('contentSimStatusWithin');
-    if (analysis.status === 'at_limit') return t('contentSimStatusAtLimit');
-    if (analysis.status === 'outside_negative') return t('contentSimStatusMissing');
-    return t('contentSimOvertimeToday');
-  },
+  getSimulatorResultView(analysis) {
+    const rawText = this.formatSignedBalanceText(analysis.raw);
+    const afterText = this.formatSignedBalanceText(analysis.afterTolerance);
+    const friendlyRaw = this.formatFriendlyDuration(Math.abs(analysis.raw));
+    const withinTolerance =
+      analysis.status === 'within_safe' || analysis.status === 'at_limit';
+    const statusText =
+      analysis.status === 'at_limit'
+        ? t('contentSimStatusAtLimit')
+        : withinTolerance
+          ? t('contentSimStatusWithin')
+          : t('contentSimStatusOutside');
 
-  getSimulatorResultValue(analysis) {
-    if (analysis.status === 'within_safe' || analysis.status === 'at_limit') {
-      return this.formatSignedBalanceText(analysis.afterTolerance) || '00:00:00';
+    if (analysis.raw === 0) {
+      return {
+        label: t('contentSimStatusWithin'),
+        value: '00:00:00',
+        meta: t('contentSimResultMeta', [rawText, afterText]),
+        consequence: t('contentSimConsequenceBalanced'),
+        tooltip: t('contentSimTooltipBalanced'),
+      };
     }
 
-    if (analysis.status === 'outside_negative') {
-      return this.formatSignedBalanceText(analysis.afterTolerance);
+    if (withinTolerance && analysis.raw > 0) {
+      return {
+        label: t('contentSimLabelExtraRaw'),
+        value: t('contentSimValueRaw', [rawText]),
+        meta: t('contentSimMetaWithin', [statusText, afterText]),
+        consequence: t('contentSimConsequenceNoOvertime'),
+        tooltip: t('contentSimTooltipWithinPositive', [friendlyRaw, afterText]),
+      };
     }
 
-    return this.formatSignedBalanceText(analysis.estimatedOvertimeSeconds);
-  },
-
-  getSimulatorResultMeta(analysis) {
-    return t('contentSimResultMeta', [
-      this.formatSignedBalanceText(analysis.raw),
-      this.formatSignedBalanceText(analysis.afterTolerance),
-    ]);
-  },
-
-  getSimulatorResultTooltip(analysis) {
-    const parts = [t('contentSimTooltipExplain')];
-
-    if (analysis.status === 'outside_negative') {
-      parts.push(
-        t('contentSimTooltipOutsideNeg', [
-          this.formatFriendlyDuration(Math.abs(analysis.raw)),
-        ])
-      );
-    } else if (analysis.status === 'outside_positive') {
-      parts.push(
-        t('contentSimTooltipOvertime', [
-          this.formatSignedBalanceText(analysis.estimatedOvertimeSeconds),
-        ])
-      );
-    } else if (analysis.status === 'at_limit') {
-      parts.push(t('contentDayBalanceTooltipAtLimitExtra'));
-    } else {
-      parts.push(t('contentSimTooltipWithin'));
+    if (withinTolerance && analysis.raw < 0) {
+      return {
+        label: t('contentSimLabelMissingRaw'),
+        value: t('contentSimValueRaw', [rawText]),
+        meta: t('contentSimMetaWithin', [statusText, afterText]),
+        consequence: t('contentSimConsequenceNoDeduct'),
+        tooltip: t('contentSimTooltipWithinNegative', [friendlyRaw]),
+      };
     }
 
-    parts.push(this.getSimulatorResultMeta(analysis));
-    return parts.filter(Boolean).join(' ');
+    if (analysis.status === 'outside_positive') {
+      const overtimeText = this.formatSignedBalanceText(analysis.estimatedOvertimeSeconds);
+      return {
+        label: t('contentSimOvertimeToday'),
+        value: overtimeText,
+        meta: t('contentSimResultMeta', [rawText, afterText]),
+        consequence: t('contentSimConsequenceOvertime'),
+        tooltip: t('contentSimTooltipOutsidePositive', [friendlyRaw]),
+      };
+    }
+
+    return {
+      label: t('contentSimStatusMissing'),
+      value: afterText,
+      meta: t('contentSimResultMeta', [rawText, afterText]),
+      consequence: t('contentSimConsequenceMayDeduct'),
+      tooltip: t('contentSimTooltipOutsideNegative', [friendlyRaw]),
+    };
   },
 
   updateSimulatorResult(back, settings) {
     const resultEl = back.querySelector('.eed-sim-result');
     if (!resultEl) return;
 
+    const labelEl = resultEl.querySelector('.eed-sim-result-label');
+    const valueEl = resultEl.querySelector('.eed-sim-result-value');
+    const metaEl = resultEl.querySelector('.eed-sim-result-meta');
+    const consequenceEl = resultEl.querySelector('.eed-sim-result-consequence');
+
     const times = this.readSimulatorTimesFromBack(back);
     if (!times) {
       resultEl.className = 'eed-sim-result eed-sim-result--invalid';
-      const labelEl = resultEl.querySelector('.eed-sim-result-label');
-      const valueEl = resultEl.querySelector('.eed-sim-result-value');
-      const metaEl = resultEl.querySelector('.eed-sim-result-meta');
       if (labelEl) labelEl.textContent = t('contentSimInvalidTimes');
       if (valueEl) valueEl.textContent = '--:--:--';
       if (metaEl) metaEl.textContent = '';
+      if (consequenceEl) consequenceEl.textContent = '';
       this.setTooltipTarget(resultEl, t('contentSimInvalidTimes'));
       return;
     }
 
     const analysis = this.buildSimulatorAnalysis(times, settings);
+    const view = this.getSimulatorResultView(analysis);
     const statusClass = {
       within_safe: 'within-safe',
       at_limit: 'at-limit',
@@ -2281,17 +2297,25 @@ const EASydots = {
       outside_positive: 'outside-positive',
     }[analysis.status];
 
-    resultEl.className = `eed-sim-result eed-sim-result--${statusClass}`;
+    const toneClass =
+      analysis.raw === 0
+        ? 'balanced'
+        : analysis.raw > 0
+          ? analysis.status === 'outside_positive'
+            ? 'outside-positive'
+            : 'raw-positive'
+          : analysis.status === 'outside_negative'
+            ? 'outside-negative'
+            : 'raw-negative';
 
-    const labelEl = resultEl.querySelector('.eed-sim-result-label');
-    const valueEl = resultEl.querySelector('.eed-sim-result-value');
-    const metaEl = resultEl.querySelector('.eed-sim-result-meta');
+    resultEl.className = `eed-sim-result eed-sim-result--${statusClass} eed-sim-result--${toneClass}`;
 
-    if (labelEl) labelEl.textContent = this.getSimulatorResultLabel(analysis);
-    if (valueEl) valueEl.textContent = this.getSimulatorResultValue(analysis);
-    if (metaEl) metaEl.textContent = this.getSimulatorResultMeta(analysis);
+    if (labelEl) labelEl.textContent = view.label;
+    if (valueEl) valueEl.textContent = view.value;
+    if (metaEl) metaEl.textContent = view.meta;
+    if (consequenceEl) consequenceEl.textContent = view.consequence;
 
-    this.setTooltipTarget(resultEl, this.getSimulatorResultTooltip(analysis));
+    this.setTooltipTarget(resultEl, view.tooltip);
   },
 
   getEmployerSimCloseButtonHtml() {
@@ -2354,6 +2378,7 @@ const EASydots = {
           <span class="eed-sim-result-label"></span>
           <span class="eed-sim-result-value"></span>
           <span class="eed-sim-result-meta"></span>
+          <span class="eed-sim-result-consequence"></span>
         </div>
       </div>
     `;

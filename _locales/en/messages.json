@@ -620,8 +620,16 @@
     "description": "Simulator final exit field"
   },
   "contentSimOvertimeToday": {
-    "message": "Overtime today",
+    "message": "Estimated overtime",
     "description": "Overtime label on the simulator"
+  },
+  "contentSimLabelExtraRaw": {
+    "message": "Extra raw time",
+    "description": "Label when raw is positive within tolerance"
+  },
+  "contentSimLabelMissingRaw": {
+    "message": "Missing raw time",
+    "description": "Label when raw is negative within tolerance"
   },
   "contentSimStatusWithin": {
     "message": "Within tolerance",
@@ -631,39 +639,89 @@
     "message": "At the limit",
     "description": "At limit status on the simulator"
   },
+  "contentSimStatusOutside": {
+    "message": "Outside tolerance",
+    "description": "Outside tolerance status on the simulator"
+  },
   "contentSimStatusMissing": {
     "message": "Missing time",
     "description": "Negative outside tolerance status on the simulator"
   },
+  "contentSimValueRaw": {
+    "message": "$VALUE$ raw",
+    "description": "Highlighted raw value on the simulator",
+    "placeholders": {
+      "value": { "content": "$1", "example": "+00:01:00" }
+    }
+  },
   "contentSimResultMeta": {
     "message": "Raw: $RAW$ · After tolerance: $AFTER$",
-    "description": "Simulator result meta line",
+    "description": "Simulator result meta line outside tolerance",
     "placeholders": {
       "raw": { "content": "$1", "example": "+01:13:00" },
       "after": { "content": "$2", "example": "+01:13:00" }
     }
   },
-  "contentSimTooltipExplain": {
-    "message": "The simulator uses the times you enter and applies the configured daily tolerance. Raw balance is calculated second by second.",
-    "description": "Base tooltip for simulator result"
+  "contentSimMetaWithin": {
+    "message": "$STATUS$ · After tolerance: $AFTER$",
+    "description": "Simulator result meta line within tolerance",
+    "placeholders": {
+      "status": { "content": "$1", "example": "Within tolerance" },
+      "after": { "content": "$2", "example": "00:00:00" }
+    }
   },
-  "contentSimTooltipWithin": {
-    "message": "With these times, the day stays within daily tolerance.",
-    "description": "Tooltip when simulation is within tolerance"
+  "contentSimConsequenceNoOvertime": {
+    "message": "Should not count as overtime",
+    "description": "Consequence for positive within tolerance"
   },
-  "contentSimTooltipOutsideNeg": {
-    "message": "With these times, you would be $AMOUNT$ negative, outside daily tolerance.",
-    "description": "Tooltip when simulation is negative outside tolerance",
+  "contentSimConsequenceNoDeduct": {
+    "message": "Should not deduct",
+    "description": "Consequence for negative within tolerance"
+  },
+  "contentSimConsequenceMayDeduct": {
+    "message": "Outside tolerance. May deduct",
+    "description": "Consequence for negative outside tolerance"
+  },
+  "contentSimConsequenceOvertime": {
+    "message": "Should count as overtime",
+    "description": "Consequence for positive outside tolerance"
+  },
+  "contentSimConsequenceBalanced": {
+    "message": "Workday on schedule",
+    "description": "Consequence when raw balance is zero"
+  },
+  "contentSimTooltipWithinPositive": {
+    "message": "You will have $AMOUNT$ raw extra, but since it is within the configured daily tolerance, the after-tolerance value is $AFTER$ and should not count as overtime.",
+    "description": "Tooltip for positive within tolerance",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "1min" },
+      "after": { "content": "$2", "example": "00:00:00" }
+    }
+  },
+  "contentSimTooltipWithinNegative": {
+    "message": "You will have $AMOUNT$ raw missing, but since it is within the configured daily tolerance, it should not deduct.",
+    "description": "Tooltip for negative within tolerance",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "8min" }
+    }
+  },
+  "contentSimTooltipOutsidePositive": {
+    "message": "You will have $AMOUNT$ raw extra. Since it exceeds daily tolerance, the full amount should count as overtime.",
+    "description": "Tooltip for positive outside tolerance",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "11min" }
+    }
+  },
+  "contentSimTooltipOutsideNegative": {
+    "message": "You will have $AMOUNT$ raw missing. Since it exceeds daily tolerance, the full amount may deduct.",
+    "description": "Tooltip for negative outside tolerance",
     "placeholders": {
       "amount": { "content": "$1", "example": "12min" }
     }
   },
-  "contentSimTooltipOvertime": {
-    "message": "Estimated overtime: $AMOUNT$.",
-    "description": "Tooltip when simulation generates overtime",
-    "placeholders": {
-      "amount": { "content": "$1", "example": "+01:13:00" }
-    }
+  "contentSimTooltipBalanced": {
+    "message": "With these times, raw balance is zero and there is no overtime or deduction.",
+    "description": "Tooltip when raw balance is zero"
   },
   "contentSimInvalidTimes": {
     "message": "Enter valid times (HH:mm or HH:mm:ss).",
@@ -1063,6 +1121,10 @@
   },
   "changelogV120Item6": {
     "message": "Workday simulator on the back of the Employer information card",
+    "description": "Changelog v1.2.0 item"
+  },
+  "changelogV120Item7": {
+    "message": "Simulator summary with raw balance, status, and practical outcome",
     "description": "Changelog v1.2.0 item"
   },
   "changelogV111Item1": {

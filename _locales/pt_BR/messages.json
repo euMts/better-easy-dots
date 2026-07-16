@@ -620,8 +620,16 @@
     "description": "Campo saída final do simulador"
   },
   "contentSimOvertimeToday": {
-    "message": "Extras hoje",
+    "message": "Extras estimadas",
     "description": "Label de horas extras no simulador"
+  },
+  "contentSimLabelExtraRaw": {
+    "message": "A mais",
+    "description": "Label quando o bruto é positivo dentro da tolerância"
+  },
+  "contentSimLabelMissingRaw": {
+    "message": "A menos",
+    "description": "Label quando o bruto é negativo dentro da tolerância"
   },
   "contentSimStatusWithin": {
     "message": "Dentro da tolerância",
@@ -631,39 +639,89 @@
     "message": "No limite",
     "description": "Status no limite no simulador"
   },
+  "contentSimStatusOutside": {
+    "message": "Fora da tolerância",
+    "description": "Status fora da tolerância no simulador"
+  },
   "contentSimStatusMissing": {
     "message": "Tempo faltante",
     "description": "Status negativo fora da tolerância no simulador"
   },
+  "contentSimValueRaw": {
+    "message": "$VALUE$ bruto",
+    "description": "Valor bruto destacado no simulador",
+    "placeholders": {
+      "value": { "content": "$1", "example": "+00:01:00" }
+    }
+  },
   "contentSimResultMeta": {
     "message": "Bruto: $RAW$ · Após tolerância: $AFTER$",
-    "description": "Meta do resultado do simulador",
+    "description": "Meta do resultado do simulador fora da tolerância",
     "placeholders": {
       "raw": { "content": "$1", "example": "+01:13:00" },
       "after": { "content": "$2", "example": "+01:13:00" }
     }
   },
-  "contentSimTooltipExplain": {
-    "message": "O simulador usa os horários informados e aplica a tolerância diária configurada. O saldo bruto é calculado segundo por segundo.",
-    "description": "Tooltip base do resultado do simulador"
+  "contentSimMetaWithin": {
+    "message": "$STATUS$ · Após tolerância: $AFTER$",
+    "description": "Meta do resultado do simulador dentro da tolerância",
+    "placeholders": {
+      "status": { "content": "$1", "example": "Dentro da tolerância" },
+      "after": { "content": "$2", "example": "00:00:00" }
+    }
   },
-  "contentSimTooltipWithin": {
-    "message": "Com esses horários, o dia fica dentro da tolerância diária.",
-    "description": "Tooltip quando a simulação fica dentro da tolerância"
+  "contentSimConsequenceNoOvertime": {
+    "message": "Não deve contar como hora extra",
+    "description": "Consequência para positivo dentro da tolerância"
   },
-  "contentSimTooltipOutsideNeg": {
-    "message": "Com esses horários, você ficaria $AMOUNT$ negativo, fora da tolerância diária.",
-    "description": "Tooltip quando a simulação fica negativa fora da tolerância",
+  "contentSimConsequenceNoDeduct": {
+    "message": "Não deve descontar",
+    "description": "Consequência para negativo dentro da tolerância"
+  },
+  "contentSimConsequenceMayDeduct": {
+    "message": "Fora da tolerância. Pode descontar",
+    "description": "Consequência para negativo fora da tolerância"
+  },
+  "contentSimConsequenceOvertime": {
+    "message": "Deve contar como hora extra",
+    "description": "Consequência para positivo fora da tolerância"
+  },
+  "contentSimConsequenceBalanced": {
+    "message": "Jornada no ponto",
+    "description": "Consequência quando o bruto é zero"
+  },
+  "contentSimTooltipWithinPositive": {
+    "message": "Você terá $AMOUNT$ bruto a mais, mas como está dentro da tolerância diária configurada, o valor após tolerância é $AFTER$ e não deve contar como hora extra.",
+    "description": "Tooltip positivo dentro da tolerância",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "1min" },
+      "after": { "content": "$2", "example": "00:00:00" }
+    }
+  },
+  "contentSimTooltipWithinNegative": {
+    "message": "Você terá $AMOUNT$ bruto a menos, mas como está dentro da tolerância diária configurada, não deve descontar.",
+    "description": "Tooltip negativo dentro da tolerância",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "8min" }
+    }
+  },
+  "contentSimTooltipOutsidePositive": {
+    "message": "Você terá $AMOUNT$ bruto a mais. Como passou da tolerância diária, o valor inteiro deve contar como hora extra.",
+    "description": "Tooltip positivo fora da tolerância",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "11min" }
+    }
+  },
+  "contentSimTooltipOutsideNegative": {
+    "message": "Você terá $AMOUNT$ bruto a menos. Como passou da tolerância diária, o valor inteiro pode descontar.",
+    "description": "Tooltip negativo fora da tolerância",
     "placeholders": {
       "amount": { "content": "$1", "example": "12min" }
     }
   },
-  "contentSimTooltipOvertime": {
-    "message": "Horas extras estimadas: $AMOUNT$.",
-    "description": "Tooltip quando a simulação gera hora extra",
-    "placeholders": {
-      "amount": { "content": "$1", "example": "+01:13:00" }
-    }
+  "contentSimTooltipBalanced": {
+    "message": "Com esses horários, o saldo bruto fica zerado e não há hora extra nem desconto.",
+    "description": "Tooltip quando o bruto é zero"
   },
   "contentSimInvalidTimes": {
     "message": "Informe horários válidos (HH:mm ou HH:mm:ss).",
@@ -1063,6 +1121,10 @@
   },
   "changelogV120Item6": {
     "message": "Simulador de jornada no verso do card Informações do empregador",
+    "description": "Item do changelog v1.2.0"
+  },
+  "changelogV120Item7": {
+    "message": "Resumo do simulador com bruto, status e consequência prática",
     "description": "Item do changelog v1.2.0"
   },
   "changelogV111Item1": {

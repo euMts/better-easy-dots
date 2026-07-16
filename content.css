@@ -1299,8 +1299,9 @@ table:has(#table_registro_horario) th.eed-diff-header,
 .card-box.eed-employer-sim-card .eed-sim-result {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  margin-top: 1px;
+  gap: 1px;
+  margin-top: 2px;
+  flex-shrink: 0;
   min-width: 0;
   overflow: hidden;
   cursor: help;
@@ -1320,24 +1321,34 @@ table:has(#table_registro_horario) th.eed-diff-header,
 
 .card-box.eed-employer-sim-card .eed-sim-result-value {
   font-family: 'SF Mono', 'Courier New', monospace;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1.1;
-  white-space: nowrap;
-}
-
-.card-box.eed-employer-sim-card .eed-sim-result-meta {
-  font-size: 9px;
-  font-weight: 500;
-  line-height: 1.15;
-  opacity: 0.88;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.card-box.eed-employer-sim-card .eed-sim-result-meta,
+.card-box.eed-employer-sim-card .eed-sim-result-consequence {
+  font-size: 8px;
+  font-weight: 500;
+  line-height: 1.15;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-result-consequence {
+  font-weight: 600;
+  opacity: 0.95;
+}
+
 .card-box.eed-employer-sim-card .eed-sim-result--within-safe .eed-sim-result-value,
-.card-box.eed-employer-sim-card .eed-sim-result--at-limit .eed-sim-result-value {
+.card-box.eed-employer-sim-card .eed-sim-result--at-limit .eed-sim-result-value,
+.card-box.eed-employer-sim-card .eed-sim-result--balanced .eed-sim-result-value,
+.card-box.eed-employer-sim-card .eed-sim-result--raw-positive .eed-sim-result-value {
   color: #fff;
 }
 
@@ -1346,6 +1357,7 @@ table:has(#table_registro_horario) th.eed-diff-header,
 }
 
 .card-box.eed-employer-sim-card .eed-sim-result--outside-negative .eed-sim-result-value,
+.card-box.eed-employer-sim-card .eed-sim-result--raw-negative .eed-sim-result-value,
 .card-box.eed-employer-sim-card .eed-sim-result--invalid .eed-sim-result-value {
   color: #ffe0e0;
 }
