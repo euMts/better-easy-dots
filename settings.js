@@ -12,7 +12,8 @@ const EED_DEFAULT_SETTINGS = {
   saida: '18:00',
   intervaloInicio: '12:00',
   intervaloFim: '13:00',
-  toleranciaAtraso: 5,
+  toleranciaAtraso: 10,
+  margemSegurancaTolerancia: 1,
   horariosConfigurados: false,
   easydotsUrl:
     typeof EED_DEFAULT_EASYDOTS_URL !== 'undefined'
@@ -149,6 +150,7 @@ const EEDSettings = {
   },
 
   normalize(stored = {}) {
+    const parsedMargin = parseInt(stored.margemSegurancaTolerancia, 10);
     const settings = {
       entrada: stored.entrada ?? EED_DEFAULT_SETTINGS.entrada,
       saida: stored.saida ?? EED_DEFAULT_SETTINGS.saida,
@@ -158,6 +160,15 @@ const EEDSettings = {
         60,
         Math.max(1, parseInt(stored.toleranciaAtraso, 10) || EED_DEFAULT_SETTINGS.toleranciaAtraso)
       ),
+      margemSegurancaTolerancia: Math.min(
+        60,
+        Math.max(
+          0,
+          Number.isFinite(parsedMargin)
+            ? parsedMargin
+            : EED_DEFAULT_SETTINGS.margemSegurancaTolerancia
+        )
+      ),
       horariosConfigurados: Boolean(stored.horariosConfigurados),
       easydotsUrl: this.normalizeEasydotsUrl(stored.easydotsUrl ?? EED_DEFAULT_SETTINGS.easydotsUrl),
     };
@@ -166,7 +177,15 @@ const EEDSettings = {
   },
 
   canUseStorage() {
-    return typeof chrome !== 'undefined' && Boolean(chrome.storage?.local);
+    try {
+      return (
+        typeof chrome !== 'undefined' &&
+        Boolean(chrome.runtime?.id) &&
+        Boolean(chrome.storage?.local)
+      );
+    } catch {
+      return false;
+    }
   },
 
   async readStoredSettings() {

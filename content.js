@@ -20,6 +20,89 @@ const EASydots = {
   jornadaFeedbackTimeout: null,
   jornadaImportReady: false,
   jornadaSyncTimer: null,
+  pageObserver: null,
+  tableObserver: null,
+  hourBankObservers: [],
+  extensionDead: false,
+
+  isExtensionAlive() {
+    if (this.extensionDead) return false;
+
+    try {
+      // Accessing chrome.runtime after reload throws in some Chrome versions.
+      const runtime = chrome?.runtime;
+      if (!runtime || !runtime.id) {
+        this.markExtensionDead();
+        return false;
+      }
+      return true;
+    } catch {
+      this.markExtensionDead();
+      return false;
+    }
+  },
+
+  markExtensionDead() {
+    if (this.extensionDead) return;
+    this.extensionDead = true;
+
+    clearTimeout(this.updateTimer);
+    clearTimeout(this.jornadaSyncTimer);
+    clearTimeout(this.jornadaFeedbackTimeout);
+    this.updateTimer = null;
+    this.jornadaSyncTimer = null;
+    this.jornadaFeedbackTimeout = null;
+
+    try {
+      this.pageObserver?.disconnect();
+    } catch {
+      /* ignore */
+    }
+    try {
+      this.tableObserver?.disconnect();
+    } catch {
+      /* ignore */
+    }
+
+    (this.hourBankObservers || []).forEach((observer) => {
+      try {
+        observer.disconnect();
+      } catch {
+        /* ignore */
+      }
+    });
+    this.hourBankObservers = [];
+    this.pageObserver = null;
+    this.tableObserver = null;
+  },
+
+  getExtensionAssetUrl(path) {
+    try {
+      if (!this.isExtensionAlive()) return '';
+      return chrome.runtime.getURL(path);
+    } catch {
+      this.markExtensionDead();
+      return '';
+    }
+  },
+
+  sendRuntimeMessage(message) {
+    try {
+      if (!this.isExtensionAlive()) return;
+
+      const sendMessage = chrome?.runtime?.sendMessage;
+      if (typeof sendMessage !== 'function') return;
+
+      const result = sendMessage.call(chrome.runtime, message);
+      if (result && typeof result.catch === 'function') {
+        result.catch(() => {
+          this.markExtensionDead();
+        });
+      }
+    } catch {
+      this.markExtensionDead();
+    }
+  },
 
   getRegisterButtonHtml() {
     return `<button type="button" id="btnRegister" class="btn waves-effect m-l-5 loading" style="background-color: #8234e8; color: white; height: 85px; width: 240px; font-size: 1.3em; font-weight: bold;"><i class="md-alarm"></i> ${t('contentRegisterButton')}</button>`;
@@ -124,32 +207,8 @@ const EASydots = {
       return t('contentDayBalanceTooltipNotConfigured');
     }
 
-    const expectedDaily = this.calculateExpectedDailyWork(settings);
-    const worked = this.calculateWorkedSeconds(records);
-    const workedText = this.formatDuration(worked);
-    const expectedText = this.formatDuration(expectedDaily);
-
-    if (!this.isWorkDayComplete(records, settings)) {
-      const remaining = Math.max(0, expectedDaily - worked);
-      return t('contentDayBalanceTooltipIncomplete', [
-        workedText,
-        expectedText,
-        this.formatDuration(remaining),
-      ]);
-    }
-
-    const balance = this.calculateDayBalance(records, settings);
-    const balanceText = this.formatDuration(balance);
-
-    if (balance === 0) {
-      return t('contentDayBalanceTooltipCompleteNeutral', [expectedText]);
-    }
-
-    if (balance > 0) {
-      return t('contentDayBalanceTooltipCompletePositive', [balanceText, expectedText]);
-    }
-
-    return t('contentDayBalanceTooltipCompleteNegative', [balanceText, expectedText]);
+    const analysis = this.buildDayBalanceAnalysis(records, settings);
+    return this.buildDayBalanceTooltipText(analysis, settings);
   },
 
   calculateExpectedDailyWork(settings) {
@@ -209,6 +268,273 @@ const EASydots = {
     return worked - expectedDaily;
   },
 
+  applyDailyTolerance(balanceSeconds, toleranceSeconds) {
+    if (Math.abs(balanceSeconds) <= toleranceSeconds) {
+      return 0;
+    }
+
+    return balanceSeconds;
+  },
+
+  getToleranceSafeLimitSeconds(toleranceSeconds, safetyMarginSeconds) {
+    return Math.max(0, toleranceSeconds - safetyMarginSeconds);
+  },
+
+  calculateNegativeCompensationOptions(projectedBalanceSeconds, toleranceSeconds, safetyMarginSeconds) {
+    const missingSeconds = Math.abs(projectedBalanceSeconds);
+    const theoreticalLimit = toleranceSeconds;
+    const safeLimit = this.getToleranceSafeLimitSeconds(toleranceSeconds, safetyMarginSeconds);
+
+    return {
+      secondsToToleranceLimit: Math.max(0, missingSeconds - theoreticalLimit),
+      secondsToSafeLimit: Math.max(0, missingSeconds - safeLimit),
+      secondsToZero: missingSeconds,
+    };
+  },
+
+  getToleranceSeconds(settings) {
+    return Math.max(0, Number(settings.toleranciaAtraso) * 60);
+  },
+
+  getSafetyMarginSeconds(settings) {
+    const margin = Number(settings.margemSegurancaTolerancia);
+    return Math.max(0, (Number.isFinite(margin) ? margin : 1) * 60);
+  },
+
+  classifyDailyBalanceStatus(rawBalanceSeconds, toleranceSeconds, safeLimitSeconds) {
+    const abs = Math.abs(rawBalanceSeconds);
+
+    if (abs <= safeLimitSeconds) return 'within_safe';
+    if (abs <= toleranceSeconds) return 'at_limit';
+    if (rawBalanceSeconds < 0) return 'outside_negative';
+    return 'outside_positive';
+  },
+
+  projectDayBalanceWithConfiguredSchedule(records, settings) {
+    const remaining = this.getRemainingExpectedPunches(records, settings);
+    if (!remaining.length) {
+      return this.calculateDayBalance(records, settings);
+    }
+
+    const simulated = records.map((record) => ({
+      type: record.type,
+      time: record.time,
+    }));
+
+    remaining.forEach((punch) => {
+      simulated.push({
+        type: punch.type,
+        time: this.formatExpectedTimeForTooltip(punch.expected),
+      });
+    });
+
+    return this.calculateDayBalance(simulated, settings);
+  },
+
+  isFinalExitPunch(punch, settings) {
+    return punch.type === 'saida' && punch.expected === settings.saida;
+  },
+
+  buildExitOptions(rawBalanceSeconds, settings) {
+    if (rawBalanceSeconds >= 0) return null;
+
+    const toleranceSeconds = this.getToleranceSeconds(settings);
+    const safetyMarginSeconds = this.getSafetyMarginSeconds(settings);
+    const compensation = this.calculateNegativeCompensationOptions(
+      rawBalanceSeconds,
+      toleranceSeconds,
+      safetyMarginSeconds
+    );
+    const baseExitSeconds = this.timeToSeconds(settings.saida);
+
+    return {
+      compensation,
+      configured: this.formatExpectedTimeForTooltip(settings.saida),
+      minTolerance: this.secondsToTimeString(
+        baseExitSeconds + compensation.secondsToToleranceLimit
+      ),
+      safe: this.secondsToTimeString(baseExitSeconds + compensation.secondsToSafeLimit),
+      zero: this.secondsToTimeString(baseExitSeconds + compensation.secondsToZero),
+    };
+  },
+
+  buildDayBalanceAnalysis(records, settings) {
+    const complete = this.isWorkDayComplete(records, settings);
+    const rawCurrent = this.calculateDayBalance(records, settings);
+    const rawProjected = complete
+      ? rawCurrent
+      : this.projectDayBalanceWithConfiguredSchedule(records, settings);
+
+    const toleranceSeconds = this.getToleranceSeconds(settings);
+    const safetyMarginSeconds = this.getSafetyMarginSeconds(settings);
+    const safeLimitSeconds = this.getToleranceSafeLimitSeconds(
+      toleranceSeconds,
+      safetyMarginSeconds
+    );
+    const considered = this.applyDailyTolerance(rawProjected, toleranceSeconds);
+    const status = this.classifyDailyBalanceStatus(
+      rawProjected,
+      toleranceSeconds,
+      safeLimitSeconds
+    );
+    const exits = this.buildExitOptions(rawProjected, settings);
+    const estimatedOvertimeSeconds =
+      rawProjected > toleranceSeconds ? rawProjected : 0;
+
+    return {
+      complete,
+      rawCurrent,
+      rawProjected,
+      considered,
+      status,
+      toleranceSeconds,
+      safetyMarginSeconds,
+      safeLimitSeconds,
+      exits,
+      estimatedOvertimeSeconds,
+    };
+  },
+
+  formatSignedBalanceText(totalSeconds) {
+    const { text } = this.formatBalance(totalSeconds);
+    return text.replace(/\s+/g, '');
+  },
+
+  buildDayBalanceStatusLabel(status) {
+    if (status === 'within_safe') return t('contentDayBalanceStatusWithinSafe');
+    if (status === 'at_limit') return t('contentDayBalanceStatusAtLimit');
+    if (status === 'outside_negative') return t('contentDayBalanceStatusOutside');
+    return t('contentDayBalanceStatusOvertime');
+  },
+
+  buildDayBalanceStatusCompactLabel(status) {
+    if (status === 'within_safe') return t('contentDayBalanceStatusCompactWithinSafe');
+    if (status === 'at_limit') return t('contentDayBalanceStatusCompactAtLimit');
+    if (status === 'outside_negative') return t('contentDayBalanceStatusCompactOutside');
+    return t('contentDayBalanceStatusCompactOvertime');
+  },
+
+  buildDayBalanceMetaLine(analysis) {
+    const parts = [
+      t('contentDayBalanceRawLabel', [
+        this.formatSignedBalanceText(analysis.rawProjected),
+      ]),
+      this.buildDayBalanceStatusCompactLabel(analysis.status),
+    ];
+
+    if (analysis.estimatedOvertimeSeconds > 0) {
+      parts.push(
+        t('contentDayBalanceOvertimeCompact', [
+          this.formatSignedBalanceText(analysis.estimatedOvertimeSeconds),
+        ])
+      );
+    }
+
+    if (
+      !analysis.complete &&
+      analysis.exits &&
+      (analysis.status === 'outside_negative' || analysis.status === 'at_limit')
+    ) {
+      parts.push(t('contentDayBalanceSafeSuggestion', [analysis.exits.safe]));
+    }
+
+    return parts.join(' · ');
+  },
+
+  buildDayBalanceCreativeMessage(analysis, settings) {
+    const configuredExit = this.formatExpectedTimeForTooltip(settings.saida);
+    const amount = this.formatFriendlyDuration(Math.abs(analysis.rawProjected));
+
+    if (analysis.status === 'within_safe') {
+      return t('contentDayBalanceMsgWithinSafe', [configuredExit]);
+    }
+
+    if (analysis.status === 'at_limit') {
+      const safeExit = analysis.exits?.safe || configuredExit;
+      return t('contentDayBalanceMsgAtLimit', [configuredExit, safeExit]);
+    }
+
+    if (analysis.status === 'outside_negative') {
+      const safeExit = analysis.exits?.safe || configuredExit;
+      return t('contentDayBalanceMsgOutsideNeg', [configuredExit, amount, safeExit]);
+    }
+
+    return t('contentDayBalanceMsgOutsidePos', [configuredExit, amount]);
+  },
+
+  buildDayBalanceDetailsLine(analysis) {
+    if (!analysis.exits || analysis.status === 'within_safe') return '';
+
+    return t('contentDayBalanceMsgExitDetails', [
+      analysis.exits.minTolerance,
+      analysis.exits.safe,
+      analysis.exits.zero,
+    ]);
+  },
+
+  buildDayBalanceTooltipText(analysis, settings) {
+    const parts = [t('contentDayBalanceTooltipExplain')];
+
+    const meta = this.buildDayBalanceMetaLine(analysis);
+    if (meta) {
+      parts.push(meta);
+    }
+
+    if (settings) {
+      parts.push(this.buildDayBalanceCreativeMessage(analysis, settings));
+    }
+
+    if (analysis.status === 'at_limit') {
+      parts.push(t('contentDayBalanceTooltipAtLimitExtra'));
+    }
+
+    if (analysis.exits && (analysis.status === 'outside_negative' || analysis.status === 'at_limit')) {
+      parts.push(this.buildDayBalanceDetailsLine(analysis));
+    }
+
+    if (analysis.estimatedOvertimeSeconds > 0) {
+      parts.push(
+        t('contentDayBalanceOvertimeToday', [
+          this.formatSignedBalanceText(analysis.estimatedOvertimeSeconds),
+        ])
+      );
+    }
+
+    return parts.filter(Boolean).join(' ');
+  },
+
+  getSuggestionTooltipForPunch(punch, settings, analysis, suggestedTime) {
+    if (this.isFinalExitPunch(punch, settings)) {
+      if (analysis.status === 'within_safe') {
+        return t('contentSuggestionTooltipKept');
+      }
+
+      if (analysis.status === 'outside_positive') {
+        return t('contentSuggestionTooltipOvertime');
+      }
+
+      if (analysis.exits) {
+        const configuredExit = analysis.exits.configured;
+        const amount = this.formatFriendlyDuration(Math.abs(analysis.rawProjected));
+        return [
+          t('contentSuggestionTooltipSafeExit', [configuredExit, amount]),
+          t('contentSuggestionTooltipExitOptions', [
+            analysis.exits.minTolerance,
+            analysis.exits.safe,
+            analysis.exits.zero,
+          ]),
+        ].join(' ');
+      }
+
+      return t('contentSuggestionTooltipSafeExit', [
+        this.formatExpectedTimeForTooltip(settings.saida),
+        this.formatFriendlyDuration(Math.abs(analysis.rawProjected)),
+      ]);
+    }
+
+    return t('contentSuggestionTooltipConfigured');
+  },
+
   timeToMinutes(timeStr) {
     return this.timeToSeconds(timeStr) / 60;
   },
@@ -248,6 +574,8 @@ const EASydots = {
   },
 
   scheduleUpdateRecordsView(force = false) {
+    if (!this.isExtensionAlive()) return;
+
     clearTimeout(this.updateTimer);
     this.updateTimer = setTimeout(() => {
       this.updateRecordsView(force);
@@ -309,7 +637,9 @@ const EASydots = {
   getDifferenceTooltip(kind, diffSeconds, expectedTime) {
     const expectedLabel = this.formatExpectedTimeForTooltip(expectedTime);
     const absSeconds = Math.abs(diffSeconds);
-    if (absSeconds === 0) return t('contentDiffTooltipOnTime', [expectedLabel]);
+    if (absSeconds === 0) {
+      return `${t('contentDiffTooltipOnTime', [expectedLabel])} ${t('contentDiffTooltipDailyNote')}`;
+    }
 
     const isEntradaKind = kind === 'workEntry' || kind === 'breakEnd';
     const isEarly = isEntradaKind ? diffSeconds > 0 : diffSeconds < 0;
@@ -360,7 +690,11 @@ const EASydots = {
     const unit = useSeconds ? 'second' : 'minute';
     const amount = useSeconds ? absSeconds : Math.floor(absSeconds / 60);
     const [oneKey, manyKey] = keyMap[kind][isEarly ? 'early' : 'late'][unit];
-    return t(amount === 1 ? oneKey : manyKey, amount === 1 ? [expectedLabel] : [String(amount), expectedLabel]);
+    const base = t(
+      amount === 1 ? oneKey : manyKey,
+      amount === 1 ? [expectedLabel] : [String(amount), expectedLabel]
+    );
+    return `${base} ${t('contentDiffTooltipDailyNote')}`;
   },
 
   ensureDiffColumnHeader(recordsRoot) {
@@ -411,22 +745,26 @@ const EASydots = {
     valueEl.querySelector('.eed-day-balance-hint-link')?.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      chrome.runtime.sendMessage({ action: 'openSettings' });
+      this.sendRuntimeMessage({ action: 'openSettings' });
     });
   },
 
   setTooltipTarget(el, tooltip) {
+    if (!el) return;
+
+    // Never set `title` — it triggers the native browser tooltip after a delay.
+    el.removeAttribute('title');
+
     if (tooltip) {
       el.setAttribute('data-eed-tooltip', tooltip);
-      if (el.title !== tooltip) {
-        el.title = tooltip;
-      }
-    } else {
-      el.removeAttribute('data-eed-tooltip');
-      el.removeAttribute('title');
-      if (this.diffTooltipAnchor === el) {
-        this.hideDiffTooltip();
-      }
+      el.setAttribute('aria-label', tooltip);
+      return;
+    }
+
+    el.removeAttribute('data-eed-tooltip');
+    el.removeAttribute('aria-label');
+    if (this.diffTooltipAnchor === el) {
+      this.hideDiffTooltip();
     }
   },
 
@@ -583,42 +921,35 @@ const EASydots = {
     );
   },
 
-  getSuggestedTimeForPunch(records, settings, punch) {
-    if (this.isEntrada(punch.type)) {
-      return this.formatExpectedTimeForTooltip(punch.expected);
+  getSuggestedTimeForPunch(records, settings, punch, analysis = null) {
+    const configuredTime = this.formatExpectedTimeForTooltip(punch.expected);
+
+    if (!this.isFinalExitPunch(punch, settings)) {
+      return configuredTime;
     }
 
-    const lastRecord = records[records.length - 1];
-    if (!lastRecord || !this.isEntrada(lastRecord.type)) {
-      return this.formatExpectedTimeForTooltip(punch.expected);
+    if (
+      analysis &&
+      (analysis.status === 'outside_negative' || analysis.status === 'at_limit') &&
+      analysis.exits?.safe
+    ) {
+      return analysis.exits.safe;
     }
 
-    const lastEntradaSeconds = this.timeToSeconds(lastRecord.time);
-
-    if (this.isLunchExitPunch(punch, settings)) {
-      const morningSegmentSeconds =
-        this.timeToSeconds(settings.intervaloInicio) - this.timeToSeconds(settings.entrada);
-      return this.secondsToTimeString(lastEntradaSeconds + morningSegmentSeconds);
-    }
-
-    const expectedDaily = this.calculateExpectedDailyWork(settings);
-    const workedCompleted = this.calculateWorkedSeconds(records);
-    const remainingSeconds = expectedDaily - workedCompleted;
-
-    return this.secondsToTimeString(lastEntradaSeconds + remainingSeconds);
+    return configuredTime;
   },
 
   getSuggestedPunchTimes(records, settings) {
     const remaining = this.getRemainingExpectedPunches(records, settings);
-    const simulatedRecords = records.map((record) => ({ ...record }));
+    const analysis = this.buildDayBalanceAnalysis(records, settings);
     const suggestions = [];
 
     remaining.forEach((punch) => {
-      const suggestedTime = this.getSuggestedTimeForPunch(simulatedRecords, settings, punch);
-      suggestions.push({ punch, suggestedTime });
-      simulatedRecords.push({
-        type: punch.type,
-        time: suggestedTime,
+      const suggestedTime = this.getSuggestedTimeForPunch(records, settings, punch, analysis);
+      suggestions.push({
+        punch,
+        suggestedTime,
+        tooltip: this.getSuggestionTooltipForPunch(punch, settings, analysis, suggestedTime),
       });
     });
 
@@ -646,7 +977,7 @@ const EASydots = {
     const balanceRow = table.querySelector('#eed-day-balance-row');
     const sourceLabel = records[records.length - 1]?.source || t('contentSourceFallback');
 
-    suggestions.forEach(({ punch, suggestedTime }) => {
+    suggestions.forEach(({ punch, suggestedTime, tooltip }) => {
       const row = document.createElement('tr');
       row.className = 'eed-suggestion-row';
 
@@ -654,9 +985,14 @@ const EASydots = {
         <td><span class="eed-suggestion-tag">${t('contentSuggestionTag')}</span> ${punch.label}</td>
         <td>${sourceLabel}</td>
         <td><i class="${punch.icon} eed-suggestion-icon"></i></td>
-        <td>${suggestedTime}</td>
+        <td class="eed-suggestion-time">${suggestedTime}</td>
         <td></td>
       `;
+
+      const timeCell = row.querySelector('.eed-suggestion-time');
+      if (timeCell && tooltip) {
+        this.setTooltipTarget(timeCell, tooltip);
+      }
 
       if (balanceRow) {
         table.insertBefore(row, balanceRow);
@@ -797,6 +1133,8 @@ const EASydots = {
   },
 
   async renderDayBalance(settings, tableEl) {
+    if (!this.isExtensionAlive()) return;
+
     const table = tableEl || document.querySelector(this.SELECTORS.recordsTable);
     if (!table) return;
 
@@ -816,7 +1154,11 @@ const EASydots = {
     const loadedSettings = settings || await EEDSettings.load();
     const scheduleConfigured = EEDSettings.isScheduleConfigured(loadedSettings);
 
-    if (balanceRow && !balanceRow.querySelector('.eed-day-balance-card')) {
+    if (
+      balanceRow &&
+      (!balanceRow.querySelector('.eed-day-balance-card') ||
+        !balanceRow.querySelector('.eed-day-balance-meta'))
+    ) {
       balanceRow.remove();
       balanceRow = null;
     }
@@ -828,14 +1170,18 @@ const EASydots = {
       balanceRow.innerHTML = `
         <td colspan="5" class="eed-day-balance-wrap">
           <div class="eed-day-balance-card fadeInUp animated">
-            <div class="eed-day-balance-main">
-              <span class="eed-day-balance-label">${t('contentDayBalanceLabel')}</span>
+            <div class="eed-day-balance-left">
+              <span class="eed-day-balance-title">${t('contentDayBalanceLabel')}</span>
               <button type="button" class="eed-day-balance-credit">
-                <img src="${chrome.runtime.getURL('icons/easy-easy-dots.png')}" alt="" class="eed-day-balance-credit-icon" aria-hidden="true">
+                <img src="${this.getExtensionAssetUrl('icons/easy-easy-dots.png')}" alt="" class="eed-day-balance-credit-icon" aria-hidden="true">
                 ${t('contentCreditByline')}
               </button>
+              <div class="eed-day-balance-meta"></div>
             </div>
-            <div class="eed-day-balance-value"></div>
+            <div class="eed-day-balance-right">
+              <div class="eed-day-balance-value"></div>
+              <div class="eed-day-balance-considered-label"></div>
+            </div>
           </div>
         </td>
       `;
@@ -847,11 +1193,29 @@ const EASydots = {
       table.appendChild(balanceRow);
     }
 
+    const card = balanceRow.querySelector('.eed-day-balance-card');
     const valueEl = balanceRow.querySelector('.eed-day-balance-value');
+    const consideredLabelEl = balanceRow.querySelector('.eed-day-balance-considered-label');
+    const metaEl = balanceRow.querySelector('.eed-day-balance-meta');
+
+    const clearStatusClasses = () => {
+      card?.classList.remove(
+        'eed-day-balance-card--within-safe',
+        'eed-day-balance-card--at-limit',
+        'eed-day-balance-card--outside-negative',
+        'eed-day-balance-card--outside-positive'
+      );
+    };
 
     if (!scheduleConfigured) {
+      clearStatusClasses();
+      if (consideredLabelEl) consideredLabelEl.textContent = '';
+      if (metaEl) {
+        metaEl.textContent = '';
+        metaEl.hidden = true;
+      }
       this.renderScheduleHint(valueEl);
-      this.setTooltipTarget(valueEl, t('contentDayBalanceTooltipNotConfigured'));
+      this.setTooltipTarget(card || valueEl, t('contentDayBalanceTooltipNotConfigured'));
 
       this.adjustRecordsContainer(scrollContainer, true);
       return;
@@ -859,30 +1223,54 @@ const EASydots = {
 
     delete valueEl.dataset.eedScheduleHint;
 
-    const totalSeconds = this.calculateDayBalance(records, loadedSettings);
-    const { text, sign } = this.formatBalance(totalSeconds);
-    const nextClass = `eed-day-balance-value eed-day-balance-${sign}`;
+    const analysis = this.buildDayBalanceAnalysis(records, loadedSettings);
+    const { text } = this.formatBalance(analysis.considered);
+    const statusClass = {
+      within_safe: 'within-safe',
+      at_limit: 'at-limit',
+      outside_negative: 'outside-negative',
+      outside_positive: 'outside-positive',
+    }[analysis.status];
 
+    const nextValueClass = `eed-day-balance-value eed-day-balance-${statusClass}`;
     if (valueEl.textContent !== text) {
       valueEl.textContent = text;
     }
-
-    if (valueEl.className !== nextClass) {
-      valueEl.className = nextClass;
+    if (valueEl.className !== nextValueClass) {
+      valueEl.className = nextValueClass;
     }
 
-    this.setTooltipTarget(valueEl, this.getDayBalanceTooltip(records, loadedSettings));
+    clearStatusClasses();
+    card?.classList.add(`eed-day-balance-card--${statusClass}`);
+
+    if (consideredLabelEl) {
+      consideredLabelEl.textContent = t('contentDayBalanceConsideredLabel');
+    }
+
+    if (metaEl) {
+      const metaText = this.buildDayBalanceMetaLine(analysis);
+      metaEl.textContent = metaText;
+      metaEl.hidden = !metaText;
+      metaEl.className = `eed-day-balance-meta eed-day-balance-meta--${statusClass}`;
+    }
+
+    this.setTooltipTarget(
+      card || valueEl,
+      this.buildDayBalanceTooltipText(analysis, loadedSettings)
+    );
 
     this.adjustRecordsContainer(scrollContainer, true);
   },
 
   async updateRecordsView(force = false) {
-    if (this.isUpdating) return;
+    if (this.isUpdating || !this.isExtensionAlive()) return;
 
     const table = document.querySelector(this.SELECTORS.recordsTable);
     if (!table || typeof EEDSettings === 'undefined') return;
 
     const settings = await EEDSettings.load();
+    if (!this.isExtensionAlive()) return;
+
     const records = this.getRecords();
     const nextState = this.getViewStateFingerprint(settings, records);
 
@@ -900,20 +1288,22 @@ const EASydots = {
   },
 
   syncBadge() {
-    if (!chrome.runtime?.sendMessage) return;
+    if (!this.isExtensionAlive()) return;
 
     const recordCount = this.getRecords().length;
-    chrome.runtime.sendMessage({ action: 'syncBadge', recordCount }).catch(() => {});
+    this.sendRuntimeMessage({ action: 'syncBadge', recordCount });
   },
 
   observeRecordsTable() {
+    if (!this.isExtensionAlive()) return;
+
     const table = document.querySelector(this.SELECTORS.recordsTable);
     if (!table || table.dataset.eedObserved) return;
 
     table.dataset.eedObserved = 'true';
 
     const observer = new MutationObserver((mutations) => {
-      if (this.isUpdating) return;
+      if (!this.isExtensionAlive() || this.isUpdating) return;
 
       const isRelevant = mutations.some((mutation) => {
         const target = mutation.target;
@@ -956,6 +1346,7 @@ const EASydots = {
       }
     });
 
+    this.tableObserver = observer;
     observer.observe(table, { childList: true, subtree: true, characterData: true });
     this.updateRecordsView(true);
   },
@@ -1094,6 +1485,8 @@ const EASydots = {
   },
 
   scheduleJornadaImportSync() {
+    if (!this.isExtensionAlive()) return;
+
     clearTimeout(this.jornadaSyncTimer);
     this.jornadaSyncTimer = window.setTimeout(() => {
       this.syncJornadaImportState().catch(() => {});
@@ -1174,7 +1567,7 @@ const EASydots = {
   },
 
   ensureJornadaImport() {
-    if (this.jornadaImportReady) return;
+    if (this.jornadaImportReady || !this.isExtensionAlive()) return;
 
     const input = document.querySelector(this.SELECTORS.jornadaInput);
     if (!input) return;
@@ -1199,9 +1592,9 @@ const EASydots = {
     importButton.type = 'button';
     importButton.id = 'eed-jornada-import';
     importButton.className = 'eed-jornada-import';
-    importButton.title = t('contentJornadaImportTitle');
+    importButton.setAttribute('aria-label', t('contentJornadaImportTitle'));
     importButton.innerHTML = `
-      <img src="${chrome.runtime.getURL('icons/easy-easy-dots.png')}" alt="" class="eed-jornada-import-icon" aria-hidden="true">
+      <img src="${this.getExtensionAssetUrl('icons/easy-easy-dots.png')}" alt="" class="eed-jornada-import-icon" aria-hidden="true">
       <span class="eed-jornada-import-spinner" hidden aria-hidden="true"></span>
       <span class="eed-jornada-import-check" hidden aria-hidden="true">✓</span>
       <span class="eed-jornada-import-label">${t('contentJornadaImport')}</span>
@@ -1583,6 +1976,7 @@ const EASydots = {
     let lastText = valueEl.textContent;
 
     const observer = new MutationObserver(() => {
+      if (!this.isExtensionAlive()) return;
       if (flip.dataset.eedFlipped !== 'true') return;
 
       const nextText = valueEl.textContent;
@@ -1592,14 +1986,26 @@ const EASydots = {
       try {
         this.updateHourBankBackValues(flip);
       } catch (error) {
+        if (this.isContextInvalidatedError(error)) {
+          this.markExtensionDead();
+          return;
+        }
         console.warn('[Better Easy Dots] Erro ao atualizar planejador:', error);
       }
     });
 
+    this.hourBankObservers.push(observer);
     observer.observe(valueEl, { characterData: true, subtree: true, childList: true });
   },
 
+  isContextInvalidatedError(error) {
+    const message = String(error?.message || error || '');
+    return message.includes('Extension context invalidated');
+  },
+
   initBalanceCardPlanner() {
+    if (!this.isExtensionAlive()) return;
+
     try {
       const card = this.findHourBankCard();
       if (!card) return;
@@ -1630,7 +2036,6 @@ const EASydots = {
       `;
 
       const front = flip.querySelector('.eed-hour-bank-front');
-      const back = flip.querySelector('.eed-hour-bank-back');
 
       front.appendChild(barWidget);
 
@@ -1644,15 +2049,22 @@ const EASydots = {
       this.bindHourBankEvents(flip, card);
       this.observeHourBankBalance(flip);
     } catch (error) {
+      if (this.isContextInvalidatedError(error)) {
+        this.markExtensionDead();
+        return;
+      }
       console.warn('[Better Easy Dots] Erro ao inicializar planejador:', error);
     }
   },
 
   ensureHourBankCard() {
+    if (!this.isExtensionAlive()) return;
     this.initBalanceCardPlanner();
   },
 
   injectSidebarSettingsItem() {
+    if (!this.isExtensionAlive()) return;
+
     this.removeLegacyNavbarItem();
 
     if (document.querySelector(this.SELECTORS.settingsMenuItem)) return;
@@ -1660,11 +2072,13 @@ const EASydots = {
     const menuList = document.querySelector(this.SELECTORS.sidebarMenu);
     if (!menuList) return;
 
-    const iconUrl = chrome.runtime.getURL('icons/easy-easy-dots.png');
+    const iconUrl = this.getExtensionAssetUrl('icons/easy-easy-dots.png');
+    if (!iconUrl) return;
+
     const li = document.createElement('li');
     li.id = 'eed-sidebar-settings';
     li.innerHTML = `
-      <a href="#" class="waves-effect eed-sidebar-settings-link" title="${t('contentSidebarSettingsTitle')}">
+      <a href="#" class="waves-effect eed-sidebar-settings-link" aria-label="${t('contentSidebarSettingsTitle')}">
         <span class="eed-sidebar-settings-main">
           <img src="${iconUrl}" alt="" class="eed-sidebar-settings-icon" aria-hidden="true">
           <span class="eed-sidebar-settings-label">${t('contentSidebarSettingsLabel')}</span>
@@ -1675,7 +2089,7 @@ const EASydots = {
 
     li.querySelector('a').addEventListener('click', (event) => {
       event.preventDefault();
-      chrome.runtime.sendMessage({ action: 'openSettings' });
+      this.sendRuntimeMessage({ action: 'openSettings' });
     });
 
     menuList.appendChild(li);
@@ -1694,46 +2108,79 @@ function mutationOriginatesFromHourBankCard(mutation) {
 }
 
 function init() {
+  if (!EASydots.isExtensionAlive()) return;
+
   EEDSettings.rememberSiteUrl(window.location.href).catch(() => {});
 
-  EASydots.injectSidebarSettingsItem();
-  EASydots.ensureRegisterButton();
-  EASydots.observeRecordsTable();
-  EASydots.ensureJornadaImport();
-  EASydots.ensureHourBankCard();
-
-  const observer = new MutationObserver((mutations) => {
+  try {
     EASydots.injectSidebarSettingsItem();
     EASydots.ensureRegisterButton();
     EASydots.observeRecordsTable();
-
-    const hasExternalMutation = mutations.some((mutation) => !mutationOriginatesFromHourBankCard(mutation));
-    if (hasExternalMutation) {
-      EASydots.ensureHourBankCard();
+    EASydots.ensureJornadaImport();
+    EASydots.ensureHourBankCard();
+  } catch (error) {
+    if (EASydots.isContextInvalidatedError(error)) {
+      EASydots.markExtensionDead();
+      return;
     }
+    throw error;
+  }
 
-    if (
-      !EASydots.jornadaImportReady &&
-      document.querySelector(EASydots.SELECTORS.jornadaInput) &&
-      !document.querySelector(EASydots.SELECTORS.jornadaImport)
-    ) {
-      EASydots.ensureJornadaImport();
+  const observer = new MutationObserver((mutations) => {
+    try {
+      if (!EASydots.isExtensionAlive()) return;
+
+      EASydots.injectSidebarSettingsItem();
+      EASydots.ensureRegisterButton();
+      EASydots.observeRecordsTable();
+
+      const hasExternalMutation = mutations.some(
+        (mutation) => !mutationOriginatesFromHourBankCard(mutation)
+      );
+      if (hasExternalMutation) {
+        EASydots.ensureHourBankCard();
+      }
+
+      if (
+        !EASydots.jornadaImportReady &&
+        document.querySelector(EASydots.SELECTORS.jornadaInput) &&
+        !document.querySelector(EASydots.SELECTORS.jornadaImport)
+      ) {
+        EASydots.ensureJornadaImport();
+      }
+    } catch (error) {
+      if (EASydots.isContextInvalidatedError(error)) {
+        EASydots.markExtensionDead();
+      }
     }
   });
 
+  EASydots.pageObserver = observer;
   observer.observe(document.body, { childList: true, subtree: true });
   EASydots.syncBadge();
 }
 
-if (chrome.storage?.onChanged) {
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes['eed-settings']) {
-      EASydots.cachedSettings = null;
-      EASydots.lastViewState = '';
-      EASydots.scheduleUpdateRecordsView(true);
-      EASydots.scheduleJornadaImportSync();
-    }
-  });
+try {
+  if (chrome?.storage?.onChanged) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      try {
+        if (!EASydots.isExtensionAlive()) return;
+
+        if (area === 'local' && changes['eed-settings']) {
+          EASydots.cachedSettings = null;
+          EASydots.lastViewState = '';
+          EASydots.scheduleUpdateRecordsView(true);
+          EASydots.scheduleJornadaImportSync();
+        }
+      } catch (error) {
+        if (EASydots.isContextInvalidatedError(error)) {
+          EASydots.markExtensionDead();
+        }
+      }
+    });
+  }
+} catch {
+  /* Extension context may already be invalidated */
 }
 
 init();

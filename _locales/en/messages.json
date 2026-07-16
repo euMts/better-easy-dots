@@ -72,12 +72,16 @@
     "description": "Break section hint"
   },
   "settingsToleranceTitle": {
-    "message": "Late tolerance",
+    "message": "Daily tolerance",
     "description": "Tolerance section title"
   },
   "settingsToleranceHint": {
-    "message": "Enter how many minutes late you allow for clock-in.",
-    "description": "Tolerance section hint"
+    "message": "Differences within this limit in the total daily balance are treated as 00:00. If the limit is exceeded, the full raw balance may count as deduction or overtime.",
+    "description": "Daily tolerance section hint"
+  },
+  "settingsSafetyMarginHint": {
+    "message": "Avoids recommendations exactly at the tolerance limit. With a 10min tolerance and a 1min margin, the safe recommendation tries to keep the balance at most at -9min.",
+    "description": "Tolerance safety margin hint"
   },
   "settingsUrlTitle": {
     "message": "Easydots URL",
@@ -106,6 +110,14 @@
   "settingsLabelMinutes": {
     "message": "Minutes",
     "description": "Minutes field label"
+  },
+  "settingsLabelDailyTolerance": {
+    "message": "Daily tolerance (minutes)",
+    "description": "Daily tolerance field label"
+  },
+  "settingsLabelSafetyMargin": {
+    "message": "Tolerance safety margin",
+    "description": "Safety margin field label"
   },
   "settingsLabelAddress": {
     "message": "Address",
@@ -144,8 +156,12 @@
     "description": "Break end minutes aria-label"
   },
   "settingsAriaTolerance": {
-    "message": "Late tolerance in minutes",
-    "description": "Tolerance aria-label"
+    "message": "Daily tolerance in minutes",
+    "description": "Daily tolerance aria-label"
+  },
+  "settingsAriaSafetyMargin": {
+    "message": "Tolerance safety margin in minutes",
+    "description": "Safety margin aria-label"
   },
   "settingsAriaEasydotsUrl": {
     "message": "Easydots URL",
@@ -202,8 +218,12 @@
     "description": "Break end before start error"
   },
   "settingsErrorToleranceRange": {
-    "message": "Late tolerance must be between 1 and 60 minutes.",
+    "message": "Daily tolerance must be between 1 and 60 minutes.",
     "description": "Tolerance out of range error"
+  },
+  "settingsErrorSafetyMarginRange": {
+    "message": "Safety margin must be between 0 and 60 minutes.",
+    "description": "Safety margin out of range error"
   },
   "settingsErrorUrlRequired": {
     "message": "Enter the Easydots address.",
@@ -244,6 +264,170 @@
   "contentDayBalanceLabel": {
     "message": "Daily balance",
     "description": "Daily balance label"
+  },
+  "contentDayBalanceConsideredLabel": {
+    "message": "after tolerance",
+    "description": "Label for balance after applying daily tolerance"
+  },
+  "contentDayBalanceRawLabel": {
+    "message": "Raw: $BALANCE$",
+    "description": "Raw balance label on the card",
+    "placeholders": {
+      "balance": { "content": "$1", "example": "-00:08:00" }
+    }
+  },
+  "contentDayBalanceStatusWithinSafe": {
+    "message": "Within daily tolerance",
+    "description": "Status when balance is within safe tolerance"
+  },
+  "contentDayBalanceStatusCompactWithinSafe": {
+    "message": "Within tolerance",
+    "description": "Compact status within tolerance"
+  },
+  "contentDayBalanceStatusAtLimit": {
+    "message": "At the daily tolerance limit",
+    "description": "Status when balance is at the tolerance limit"
+  },
+  "contentDayBalanceStatusCompactAtLimit": {
+    "message": "At the limit",
+    "description": "Compact status at tolerance limit"
+  },
+  "contentDayBalanceStatusOutside": {
+    "message": "Outside daily tolerance",
+    "description": "Status when negative balance is outside tolerance"
+  },
+  "contentDayBalanceStatusCompactOutside": {
+    "message": "Outside tolerance",
+    "description": "Compact status outside tolerance"
+  },
+  "contentDayBalanceStatusOvertime": {
+    "message": "Valid overtime",
+    "description": "Status when overtime exceeds tolerance"
+  },
+  "contentDayBalanceStatusCompactOvertime": {
+    "message": "Valid overtime",
+    "description": "Compact overtime status"
+  },
+  "contentDayBalanceOvertimeToday": {
+    "message": "Estimated overtime today: $AMOUNT$",
+    "description": "Estimated overtime today label",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "+00:11:00" }
+    }
+  },
+  "contentDayBalanceOvertimeCompact": {
+    "message": "Overtime today: $AMOUNT$",
+    "description": "Compact overtime today label",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "+00:11:00" }
+    }
+  },
+  "contentDayBalanceSafeSuggestion": {
+    "message": "Safe suggestion: $TIME$",
+    "description": "Safe exit suggestion on the card",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:13:00" }
+    }
+  },
+  "contentDayBalanceNoCompensation": {
+    "message": "No compensation needed",
+    "description": "Message when projection stays within tolerance"
+  },
+  "contentDayBalanceMsgWithinSafe": {
+    "message": "If you leave at $EXIT$, your day stays within daily tolerance. No compensation needed.",
+    "description": "Creative message within tolerance",
+    "placeholders": {
+      "exit": { "content": "$1", "example": "18:10:00" }
+    }
+  },
+  "contentDayBalanceMsgAtLimit": {
+    "message": "If you leave at $EXIT$, you are at the tolerance limit. For more safety, consider leaving at $SAFE$.",
+    "description": "Creative message at tolerance limit",
+    "placeholders": {
+      "exit": { "content": "$1", "example": "18:10:00" },
+      "safe": { "content": "$2", "example": "18:11:00" }
+    }
+  },
+  "contentDayBalanceMsgOutsideNeg": {
+    "message": "If you leave at $EXIT$, you will be $AMOUNT$ negative, outside daily tolerance. Safe recommended exit: $SAFE$.",
+    "description": "Creative message outside negative tolerance",
+    "placeholders": {
+      "exit": { "content": "$1", "example": "18:10:00" },
+      "amount": { "content": "$2", "example": "12min" },
+      "safe": { "content": "$3", "example": "18:13:00" }
+    }
+  },
+  "contentDayBalanceMsgOutsidePos": {
+    "message": "If you leave at $EXIT$, you will have $AMOUNT$ positive. Since it exceeds daily tolerance, it should count as overtime.",
+    "description": "Creative overtime message",
+    "placeholders": {
+      "exit": { "content": "$1", "example": "18:10:00" },
+      "amount": { "content": "$2", "example": "11min" }
+    }
+  },
+  "contentDayBalanceMsgExitDetails": {
+    "message": "Minimum by tolerance: $MIN$ · Safe: $SAFE$ · Zero: $ZERO$.",
+    "description": "Exit options details line",
+    "placeholders": {
+      "min": { "content": "$1", "example": "18:12:00" },
+      "safe": { "content": "$2", "example": "18:13:00" },
+      "zero": { "content": "$3", "example": "18:22:00" }
+    }
+  },
+  "contentDayBalanceTooltipExplain": {
+    "message": "Raw balance is calculated second by second. Considered balance applies the daily tolerance configured by the user.",
+    "description": "Base tooltip explaining raw vs considered"
+  },
+  "contentDayBalanceTooltipAtLimitExtra": {
+    "message": "This value is at the tolerance limit. To avoid deduction risk, use the configured safety margin.",
+    "description": "Extra tooltip at tolerance limit"
+  },
+  "contentSuggestionTooltipKept": {
+    "message": "Exit kept at the configured time. The daily projection stays within daily tolerance.",
+    "description": "Tooltip when configured exit is kept"
+  },
+  "contentSuggestionTooltipConfigured": {
+    "message": "Configured time. No compensation needed under daily tolerance.",
+    "description": "Tooltip for configured time without micro-compensation"
+  },
+  "contentSuggestionTooltipSafeExit": {
+    "message": "If you leave at $EXIT$, you will be $AMOUNT$ negative, outside daily tolerance.",
+    "description": "Tooltip intro for exit outside tolerance",
+    "placeholders": {
+      "exit": { "content": "$1", "example": "18:10:00" },
+      "amount": { "content": "$2", "example": "12min" }
+    }
+  },
+  "contentSuggestionTooltipExitOptions": {
+    "message": "Minimum by tolerance: $MIN$. Safe recommended: $SAFE$. Exit to fully zero: $ZERO$.",
+    "description": "Tooltip with minimum, safe and zero exits",
+    "placeholders": {
+      "min": { "content": "$1", "example": "18:12:00" },
+      "safe": { "content": "$2", "example": "18:13:00" },
+      "zero": { "content": "$3", "example": "18:22:00" }
+    }
+  },
+  "contentSuggestionTooltipMinTolerance": {
+    "message": "Minimum by tolerance: $TIME$.",
+    "description": "Tooltip for minimum exit by tolerance",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:12:00" }
+    }
+  },
+  "contentSuggestionTooltipZero": {
+    "message": "Exit to fully zero: $TIME$.",
+    "description": "Tooltip for mathematical zero exit",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:22:00" }
+    }
+  },
+  "contentSuggestionTooltipOvertime": {
+    "message": "The projection exceeds daily tolerance. This time should count as overtime.",
+    "description": "Tooltip when projection generates overtime"
+  },
+  "contentDiffTooltipDailyNote": {
+    "message": "Record difference. Tolerance is applied to the total daily balance.",
+    "description": "Note on per-punch difference tooltips"
   },
   "contentDayBalanceTooltipNotConfigured": {
     "message": "Set your schedule in the extension to see your daily balance.",
@@ -290,11 +474,11 @@
     "description": "Aria-label for the interactive hour bank card"
   },
   "contentHourBankHoverHint": {
-    "message": "Plan compensation",
+    "message": "Plan hour bank compensation",
     "description": "Hint shown when hovering the hour bank card"
   },
   "contentHourBankPlanTitle": {
-    "message": "Plan compensation",
+    "message": "Hour bank compensation",
     "description": "Back face title for the hour bank card"
   },
   "contentHourBankDeficitLabel": {
@@ -770,6 +954,26 @@
   "changelogOpenSettings": {
     "message": "Open settings",
     "description": "Secondary changelog page button"
+  },
+  "changelogV120Item1": {
+    "message": "Daily tolerance on day balance, with raw and considered balances",
+    "description": "Changelog v1.2.0 item"
+  },
+  "changelogV120Item2": {
+    "message": "Configurable safety margin and suggestions without micro-compensation",
+    "description": "Changelog v1.2.0 item"
+  },
+  "changelogV120Item3": {
+    "message": "Estimated overtime and visual tolerance states",
+    "description": "Changelog v1.2.0 item"
+  },
+  "changelogV120Item4": {
+    "message": "More compact day balance card with a subtle hover",
+    "description": "Changelog v1.2.0 item"
+  },
+  "changelogV120Item5": {
+    "message": "Custom tooltips without the native browser balloon",
+    "description": "Changelog v1.2.0 item"
   },
   "changelogV111Item1": {
     "message": "“Plan compensation” hint always visible on the hour bank card",

@@ -1,9 +1,17 @@
 function t(key, substitutions) {
-  const message =
-    substitutions !== undefined
-      ? chrome.i18n.getMessage(key, substitutions)
-      : chrome.i18n.getMessage(key);
-  return message || key;
+  try {
+    if (typeof chrome === 'undefined' || !chrome.runtime?.id || !chrome.i18n?.getMessage) {
+      return key;
+    }
+
+    const message =
+      substitutions !== undefined
+        ? chrome.i18n.getMessage(key, substitutions)
+        : chrome.i18n.getMessage(key);
+    return message || key;
+  } catch {
+    return key;
+  }
 }
 
 function applyI18n(root = document) {

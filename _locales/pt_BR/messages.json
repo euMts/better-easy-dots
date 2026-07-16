@@ -72,12 +72,16 @@
     "description": "Dica da seção de intervalo"
   },
   "settingsToleranceTitle": {
-    "message": "Tolerância de atraso",
+    "message": "Tolerância diária",
     "description": "Título da seção de tolerância"
   },
   "settingsToleranceHint": {
-    "message": "Informe a tolerância você tem para atraso na entrada.",
-    "description": "Dica da seção de tolerância"
+    "message": "Diferenças dentro desse limite no saldo total do dia são consideradas como 00:00. Se passar do limite, o saldo bruto inteiro pode contar como desconto ou hora extra.",
+    "description": "Dica da seção de tolerância diária"
+  },
+  "settingsSafetyMarginHint": {
+    "message": "Evita recomendações exatamente no limite da tolerância. Com tolerância de 10min e margem de 1min, a recomendação segura tenta manter o saldo no máximo em -9min.",
+    "description": "Dica da margem de segurança da tolerância"
   },
   "settingsUrlTitle": {
     "message": "URL do Easydots",
@@ -106,6 +110,14 @@
   "settingsLabelMinutes": {
     "message": "Minutos",
     "description": "Rótulo do campo de minutos"
+  },
+  "settingsLabelDailyTolerance": {
+    "message": "Tolerância diária (minutos)",
+    "description": "Rótulo do campo de tolerância diária"
+  },
+  "settingsLabelSafetyMargin": {
+    "message": "Margem de segurança",
+    "description": "Rótulo do campo de margem de segurança"
   },
   "settingsLabelAddress": {
     "message": "Endereço",
@@ -144,8 +156,12 @@
     "description": "Aria-label dos minutos de fim do intervalo"
   },
   "settingsAriaTolerance": {
-    "message": "Tolerância de atraso em minutos",
-    "description": "Aria-label da tolerância de atraso"
+    "message": "Tolerância diária em minutos",
+    "description": "Aria-label da tolerância diária"
+  },
+  "settingsAriaSafetyMargin": {
+    "message": "Margem de segurança da tolerância em minutos",
+    "description": "Aria-label da margem de segurança"
   },
   "settingsAriaEasydotsUrl": {
     "message": "URL do Easydots",
@@ -202,8 +218,12 @@
     "description": "Erro quando fim do intervalo é antes do início"
   },
   "settingsErrorToleranceRange": {
-    "message": "A tolerância de atraso deve ser entre 1 e 60 minutos.",
+    "message": "A tolerância diária deve ser entre 1 e 60 minutos.",
     "description": "Erro de tolerância fora do intervalo"
+  },
+  "settingsErrorSafetyMarginRange": {
+    "message": "A margem de segurança deve ser entre 0 e 60 minutos.",
+    "description": "Erro de margem de segurança fora do intervalo"
   },
   "settingsErrorUrlRequired": {
     "message": "Informe o endereço do Easydots.",
@@ -244,6 +264,170 @@
   "contentDayBalanceLabel": {
     "message": "Saldo do dia",
     "description": "Rótulo do saldo diário"
+  },
+  "contentDayBalanceConsideredLabel": {
+    "message": "após tolerância",
+    "description": "Rótulo do saldo após aplicar a tolerância diária"
+  },
+  "contentDayBalanceRawLabel": {
+    "message": "Bruto: $BALANCE$",
+    "description": "Rótulo do saldo bruto no card",
+    "placeholders": {
+      "balance": { "content": "$1", "example": "-00:08:00" }
+    }
+  },
+  "contentDayBalanceStatusWithinSafe": {
+    "message": "Dentro da tolerância diária",
+    "description": "Status quando o saldo está dentro da tolerância segura"
+  },
+  "contentDayBalanceStatusCompactWithinSafe": {
+    "message": "Dentro da tolerância",
+    "description": "Status compacto dentro da tolerância"
+  },
+  "contentDayBalanceStatusAtLimit": {
+    "message": "No limite da tolerância diária",
+    "description": "Status quando o saldo está no limite da tolerância"
+  },
+  "contentDayBalanceStatusCompactAtLimit": {
+    "message": "No limite",
+    "description": "Status compacto no limite da tolerância"
+  },
+  "contentDayBalanceStatusOutside": {
+    "message": "Fora da tolerância diária",
+    "description": "Status quando o saldo negativo está fora da tolerância"
+  },
+  "contentDayBalanceStatusCompactOutside": {
+    "message": "Fora da tolerância",
+    "description": "Status compacto fora da tolerância"
+  },
+  "contentDayBalanceStatusOvertime": {
+    "message": "Hora extra válida",
+    "description": "Status quando há hora extra além da tolerância"
+  },
+  "contentDayBalanceStatusCompactOvertime": {
+    "message": "Hora extra válida",
+    "description": "Status compacto de hora extra"
+  },
+  "contentDayBalanceOvertimeToday": {
+    "message": "Horas extras estimadas hoje: $AMOUNT$",
+    "description": "Label de horas extras estimadas do dia",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "+00:11:00" }
+    }
+  },
+  "contentDayBalanceOvertimeCompact": {
+    "message": "Extras hoje: $AMOUNT$",
+    "description": "Label compacta de horas extras do dia",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "+00:11:00" }
+    }
+  },
+  "contentDayBalanceSafeSuggestion": {
+    "message": "Sugestão segura: $TIME$",
+    "description": "Sugestão de saída segura no card",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:13:00" }
+    }
+  },
+  "contentDayBalanceNoCompensation": {
+    "message": "Nenhuma compensação necessária",
+    "description": "Mensagem quando a projeção fica dentro da tolerância"
+  },
+  "contentDayBalanceMsgWithinSafe": {
+    "message": "Se sair às $EXIT$, seu dia fica dentro da tolerância diária. Nenhuma compensação necessária.",
+    "description": "Mensagem criativa dentro da tolerância",
+    "placeholders": {
+      "exit": { "content": "$1", "example": "18:10:00" }
+    }
+  },
+  "contentDayBalanceMsgAtLimit": {
+    "message": "Se sair às $EXIT$, você fica no limite da tolerância. Para maior segurança, considere sair às $SAFE$.",
+    "description": "Mensagem criativa no limite da tolerância",
+    "placeholders": {
+      "exit": { "content": "$1", "example": "18:10:00" },
+      "safe": { "content": "$2", "example": "18:11:00" }
+    }
+  },
+  "contentDayBalanceMsgOutsideNeg": {
+    "message": "Se sair às $EXIT$, ficará $AMOUNT$ negativo, fora da tolerância diária. Saída segura recomendada: $SAFE$.",
+    "description": "Mensagem criativa fora da tolerância negativa",
+    "placeholders": {
+      "exit": { "content": "$1", "example": "18:10:00" },
+      "amount": { "content": "$2", "example": "12min" },
+      "safe": { "content": "$3", "example": "18:13:00" }
+    }
+  },
+  "contentDayBalanceMsgOutsidePos": {
+    "message": "Se sair às $EXIT$, você terá $AMOUNT$ positivos. Como passou da tolerância diária, deve contar como hora extra.",
+    "description": "Mensagem criativa de hora extra",
+    "placeholders": {
+      "exit": { "content": "$1", "example": "18:10:00" },
+      "amount": { "content": "$2", "example": "11min" }
+    }
+  },
+  "contentDayBalanceMsgExitDetails": {
+    "message": "Mínimo pela tolerância: $MIN$ · Seguro: $SAFE$ · Zerar: $ZERO$.",
+    "description": "Detalhes das saídas calculadas",
+    "placeholders": {
+      "min": { "content": "$1", "example": "18:12:00" },
+      "safe": { "content": "$2", "example": "18:13:00" },
+      "zero": { "content": "$3", "example": "18:22:00" }
+    }
+  },
+  "contentDayBalanceTooltipExplain": {
+    "message": "O saldo bruto é calculado segundo por segundo. O saldo considerado aplica a tolerância diária configurada pelo usuário.",
+    "description": "Tooltip base explicando bruto vs considerado"
+  },
+  "contentDayBalanceTooltipAtLimitExtra": {
+    "message": "Este valor está no limite da tolerância. Para evitar risco de desconto, recomenda-se usar a margem de segurança configurada.",
+    "description": "Tooltip extra no limite da tolerância"
+  },
+  "contentSuggestionTooltipKept": {
+    "message": "Saída mantida no horário configurado. A projeção do dia fica dentro da tolerância diária.",
+    "description": "Tooltip quando a saída configurada é mantida"
+  },
+  "contentSuggestionTooltipConfigured": {
+    "message": "Horário configurado. Nenhuma compensação necessária pela tolerância diária.",
+    "description": "Tooltip de horário configurado sem microcompensação"
+  },
+  "contentSuggestionTooltipSafeExit": {
+    "message": "Se sair às $EXIT$, ficará $AMOUNT$ negativo, fora da tolerância diária.",
+    "description": "Tooltip intro da saída fora da tolerância",
+    "placeholders": {
+      "exit": { "content": "$1", "example": "18:10:00" },
+      "amount": { "content": "$2", "example": "12min" }
+    }
+  },
+  "contentSuggestionTooltipExitOptions": {
+    "message": "Mínimo pela tolerância: $MIN$. Seguro recomendado: $SAFE$. Zerar matematicamente: $ZERO$.",
+    "description": "Tooltip com mínimo, seguro e zerar",
+    "placeholders": {
+      "min": { "content": "$1", "example": "18:12:00" },
+      "safe": { "content": "$2", "example": "18:13:00" },
+      "zero": { "content": "$3", "example": "18:22:00" }
+    }
+  },
+  "contentSuggestionTooltipMinTolerance": {
+    "message": "Mínimo pela tolerância: $TIME$.",
+    "description": "Tooltip da saída mínima pela tolerância",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:12:00" }
+    }
+  },
+  "contentSuggestionTooltipZero": {
+    "message": "Zerar matematicamente: $TIME$.",
+    "description": "Tooltip da saída para zerar matematicamente",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:22:00" }
+    }
+  },
+  "contentSuggestionTooltipOvertime": {
+    "message": "A projeção passa da tolerância diária. Esse tempo deve contar como hora extra.",
+    "description": "Tooltip quando a projeção gera hora extra"
+  },
+  "contentDiffTooltipDailyNote": {
+    "message": "Diferença do registro. A tolerância é aplicada no saldo total do dia.",
+    "description": "Nota nos tooltips de diferença por batida"
   },
   "contentDayBalanceTooltipNotConfigured": {
     "message": "Configure seus horários na extensão para ver o saldo do dia.",
@@ -290,11 +474,11 @@
     "description": "Aria-label do card interativo de banco de horas"
   },
   "contentHourBankHoverHint": {
-    "message": "Planejar compensação",
+    "message": "Planejar compensação do banco",
     "description": "Hint exibido ao passar o mouse no card de banco de horas"
   },
   "contentHourBankPlanTitle": {
-    "message": "Planejar compensação",
+    "message": "Compensação do banco de horas",
     "description": "Título do verso do card de banco de horas"
   },
   "contentHourBankDeficitLabel": {
@@ -770,6 +954,26 @@
   "changelogOpenSettings": {
     "message": "Ver configurações",
     "description": "Botão secundário da página de changelog"
+  },
+  "changelogV120Item1": {
+    "message": "Tolerância diária no saldo do dia, com saldo bruto e considerado",
+    "description": "Item do changelog v1.2.0"
+  },
+  "changelogV120Item2": {
+    "message": "Margem de segurança configurável e sugestões sem microcompensação",
+    "description": "Item do changelog v1.2.0"
+  },
+  "changelogV120Item3": {
+    "message": "Horas extras estimadas e estados visuais da tolerância",
+    "description": "Item do changelog v1.2.0"
+  },
+  "changelogV120Item4": {
+    "message": "Card do saldo do dia mais compacto e com hover discreto",
+    "description": "Item do changelog v1.2.0"
+  },
+  "changelogV120Item5": {
+    "message": "Tooltips customizados sem o balão nativo do navegador",
+    "description": "Item do changelog v1.2.0"
   },
   "changelogV111Item1": {
     "message": "Dica “Planejar compensação” sempre visível no card do banco de horas",

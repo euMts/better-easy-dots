@@ -57,6 +57,13 @@
   line-height: 1.4;
 }
 
+.eed-settings-section-hint-secondary {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #777;
+  line-height: 1.4;
+}
+
 .eed-settings-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -14,7 +14,7 @@ try {
 } catch {
   versionEl.textContent = 'v1.1.0';
 }
-versionEl.title = t('changelogView');
+versionEl.setAttribute('aria-label', t('changelogView'));
 
 function openStore() {
   chrome.tabs.create({ url: EED_EXTENSION_URL });

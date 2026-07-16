@@ -82,11 +82,19 @@ const EEDSettingsUI = {
         <div class="eed-settings-section fadeInUp animated eed-animate-delay-2">
           <h3 class="eed-settings-section-title">${t('settingsToleranceTitle')}</h3>
           <p class="eed-settings-section-hint">${t('settingsToleranceHint')}</p>
-          <label class="eed-settings-field" data-field="toleranciaAtraso">
-            <span class="eed-settings-label">${t('settingsLabelMinutes')}</span>
-            <input type="text" id="eed-input-tolerancia" class="eed-settings-input" inputmode="numeric" placeholder="5" maxlength="2" aria-label="${t('settingsAriaTolerance')}">
-            <span class="eed-settings-error" data-error-for="toleranciaAtraso" role="alert" hidden></span>
-          </label>
+          <div class="eed-settings-grid">
+            <label class="eed-settings-field" data-field="toleranciaAtraso">
+              <span class="eed-settings-label">${t('settingsLabelDailyTolerance')}</span>
+              <input type="text" id="eed-input-tolerancia" class="eed-settings-input" inputmode="numeric" placeholder="10" maxlength="2" aria-label="${t('settingsAriaTolerance')}">
+              <span class="eed-settings-error" data-error-for="toleranciaAtraso" role="alert" hidden></span>
+            </label>
+            <label class="eed-settings-field" data-field="margemSegurancaTolerancia">
+              <span class="eed-settings-label">${t('settingsLabelSafetyMargin')}</span>
+              <input type="text" id="eed-input-margem-seguranca" class="eed-settings-input" inputmode="numeric" placeholder="1" maxlength="2" aria-label="${t('settingsAriaSafetyMargin')}">
+              <span class="eed-settings-error" data-error-for="margemSegurancaTolerancia" role="alert" hidden></span>
+            </label>
+          </div>
+          <p class="eed-settings-section-hint eed-settings-section-hint-secondary">${t('settingsSafetyMarginHint')}</p>
         </div>
 
         <div class="eed-settings-section fadeInUp animated eed-animate-delay-4">
@@ -133,6 +141,7 @@ const EEDSettingsUI = {
     });
 
     this.bindToleranceInput(this.root.querySelector('#eed-input-tolerancia'));
+    this.bindSafetyMarginInput(this.root.querySelector('#eed-input-margem-seguranca'));
     this.bindFieldErrorClearing();
 
     this.root.querySelector('#eed-settings-form')?.addEventListener('submit', (event) => {
@@ -192,6 +201,21 @@ const EEDSettingsUI = {
 
     input.addEventListener('blur', () => {
       input.value = String(this.formatTolerance(input.value));
+    });
+  },
+
+  bindSafetyMarginInput(input) {
+    if (!input) return;
+
+    input.addEventListener('focus', () => input.select());
+    input.addEventListener('click', () => input.select());
+
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/\D/g, '').slice(0, 2);
+    });
+
+    input.addEventListener('blur', () => {
+      input.value = String(this.formatSafetyMargin(input.value));
     });
   },
 
@@ -293,6 +317,12 @@ const EEDSettingsUI = {
     return Math.min(60, Math.max(1, parseInt(value, 10) || 1));
   },
 
+  formatSafetyMargin(value) {
+    const parsed = parseInt(value, 10);
+    if (!Number.isFinite(parsed)) return 1;
+    return Math.min(60, Math.max(0, parsed));
+  },
+
   formatSegment(value, max) {
     const parsed = Math.min(max, Math.max(0, parseInt(value, 10) || 0));
     return String(parsed).padStart(2, '0');
@@ -330,6 +360,9 @@ const EEDSettingsUI = {
       intervaloInicio: this.getTimeFromGroup('intervalo-inicio'),
       intervaloFim: this.getTimeFromGroup('intervalo-fim'),
       toleranciaAtraso: this.formatTolerance(this.root.querySelector('#eed-input-tolerancia').value),
+      margemSegurancaTolerancia: this.formatSafetyMargin(
+        this.root.querySelector('#eed-input-margem-seguranca').value
+      ),
       easydotsUrl: this.root.querySelector('#eed-input-easydots-url').value.trim(),
     };
   },
@@ -340,6 +373,9 @@ const EEDSettingsUI = {
     this.setTimeOnGroup('intervalo-inicio', settings.intervaloInicio);
     this.setTimeOnGroup('intervalo-fim', settings.intervaloFim);
     this.root.querySelector('#eed-input-tolerancia').value = String(settings.toleranciaAtraso);
+    this.root.querySelector('#eed-input-margem-seguranca').value = String(
+      settings.margemSegurancaTolerancia
+    );
     this.root.querySelector('#eed-input-easydots-url').value = settings.easydotsUrl || '';
   },
 
@@ -372,6 +408,10 @@ const EEDSettingsUI = {
 
     if (values.toleranciaAtraso < 1 || values.toleranciaAtraso > 60) {
       errors.toleranciaAtraso = t('settingsErrorToleranceRange');
+    }
+
+    if (values.margemSegurancaTolerancia < 0 || values.margemSegurancaTolerancia > 60) {
+      errors.margemSegurancaTolerancia = t('settingsErrorSafetyMarginRange');
     }
 
     if (!values.easydotsUrl) {
