@@ -2,7 +2,7 @@
 
 Checklist do que **ainda falta** antes de publicar na Chrome Web Store.
 
-**Empacotar:** `./package.sh` → `better-easy-dots.zip` (v1.3.0, `manifest.prod.json`, sem localhost)
+**Empacotar:** `./package.sh` → `builds/better-easy-dots-v1.3.0.zip` (`manifest.prod.json`, sem localhost)
 
 **Loja (rascunho):** [Better Easy Dots](https://chromewebstore.google.com/detail/better-easy-dots/cfnehkkbmplomaianjpfiaoonmpekbbb) · ID `cfnehkkbmplomaianjpfiaoonmpekbbb`
 

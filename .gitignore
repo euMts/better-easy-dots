@@ -4,3 +4,4 @@
 website/
 *.zip
 *.sh
+builds/
