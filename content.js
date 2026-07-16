@@ -702,7 +702,13 @@ const EASydots = {
     const tableEl = recordsRoot?.closest?.('table') || recordsRoot;
     const headerRow =
       tableEl.querySelector('thead tr') || tableEl.querySelector('th')?.closest('tr');
-    if (!headerRow || headerRow.querySelector('.eed-diff-header')) return;
+    if (!headerRow) return;
+
+    const existing = headerRow.querySelector('.eed-diff-header');
+    if (existing) {
+      existing.textContent = t('contentDiffColumnHeader');
+      return;
+    }
 
     const headerCell = document.createElement('th');
     headerCell.className = 'eed-diff-header';
@@ -1198,6 +1204,19 @@ const EASydots = {
     const valueEl = balanceRow.querySelector('.eed-day-balance-value');
     const consideredLabelEl = balanceRow.querySelector('.eed-day-balance-considered-label');
     const metaEl = balanceRow.querySelector('.eed-day-balance-meta');
+    const titleEl = balanceRow.querySelector('.eed-day-balance-title');
+    const creditBtn = balanceRow.querySelector('.eed-day-balance-credit');
+
+    if (titleEl) {
+      titleEl.textContent = t('contentDayBalanceLabel');
+    }
+
+    if (creditBtn) {
+      const icon = creditBtn.querySelector('img');
+      creditBtn.replaceChildren();
+      if (icon) creditBtn.appendChild(icon);
+      creditBtn.append(document.createTextNode(t('contentCreditByline')));
+    }
 
     const clearStatusClasses = () => {
       card?.classList.remove(
@@ -2653,8 +2672,14 @@ function mutationOriginatesFromEnhancedCard(mutation) {
   );
 }
 
-function init() {
+async function init() {
   if (!EASydots.isExtensionAlive()) return;
+
+  try {
+    await initI18nFromStorage();
+  } catch {
+    /* keep chrome.i18n fallback */
+  }
 
   EEDSettings.rememberSiteUrl(window.location.href).catch(() => {});
 
@@ -2715,10 +2740,28 @@ try {
         if (!EASydots.isExtensionAlive()) return;
 
         if (area === 'local' && changes['eed-settings']) {
-          EASydots.cachedSettings = null;
-          EASydots.lastViewState = '';
-          EASydots.scheduleUpdateRecordsView(true);
-          EASydots.scheduleJornadaImportSync();
+          const previousLanguage = changes['eed-settings'].oldValue?.language;
+          const nextLanguage = changes['eed-settings'].newValue?.language;
+
+          const applySettingsChange = async () => {
+            if (previousLanguage !== nextLanguage) {
+              await initI18n(nextLanguage);
+              document.querySelector(EASydots.SELECTORS.settingsMenuItem)?.remove();
+              document.querySelector('#eed-day-balance-row')?.remove();
+              EASydots.injectSidebarSettingsItem();
+            }
+
+            EASydots.cachedSettings = null;
+            EASydots.lastViewState = '';
+            EASydots.scheduleUpdateRecordsView(true);
+            EASydots.scheduleJornadaImportSync();
+          };
+
+          applySettingsChange().catch((error) => {
+            if (EASydots.isContextInvalidatedError(error)) {
+              EASydots.markExtensionDead();
+            }
+          });
         }
       } catch (error) {
         if (EASydots.isContextInvalidatedError(error)) {

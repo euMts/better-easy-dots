@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/README-Português_(BR)-green" alt="README in Portuguese"></a>
-  <img src="https://img.shields.io/badge/version-1.2.0-purple" alt="Version 1.2.0">
+  <img src="https://img.shields.io/badge/version-1.3.0-purple" alt="Version 1.3.0">
   <img src="https://img.shields.io/badge/Manifest-V3-blue" alt="Manifest V3">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="MIT License"></a>
 </p>
@@ -76,20 +76,28 @@ The extension icon in the Chrome toolbar shows the number of records for the day
 
 ## Screenshots
 
-### Records table
+### Punch suggestion and balance outside tolerance
 
-Daily balance, **Difference** column, and tolerance-based colors:
+**Difference** column, status colors, and a clock-out suggestion with raw balance outside tolerance:
 
 <p align="center">
-  <img src="screenshots/en/1.jpg" alt="Records table with daily balance, difference column, and colored times" width="720">
+  <img src="screenshots/en/1.jpg" alt="Records table with clock-out suggestion and daily balance outside tolerance" width="720">
+</p>
+
+### Complete day within tolerance
+
+Four recorded punches and a daily balance cleared after applying daily tolerance:
+
+<p align="center">
+  <img src="screenshots/en/2.jpg" alt="Records table with a complete day and balance within tolerance" width="720">
 </p>
 
 ### Settings
 
-Work hours, break times, tolerance, and Easydots URL:
+Work hours, break times, daily tolerance, safety margin, and language:
 
 <p align="center">
-  <img src="screenshots/en/2.jpg" alt="Better Easy Dots settings page" width="720">
+  <img src="screenshots/en/3.jpg" alt="Better Easy Dots settings page" width="720">
 </p>
 
 ---
@@ -173,7 +181,7 @@ No data is sent to extension servers.
 
 - **Browser:** Google Chrome (Manifest V3)
 - **Sites:** `https://*.easydots.com.br/*` (default: `https://sys.easydots.com.br/`), `https://*.acspontodigital.com.br/*` (legacy)
-- **Current version:** `1.2.0`
+- **Current version:** `1.3.0`
 
 The extension depends on the current Easydots HTML structure (`#table_registro_horario`, `#btnRegister`, navbar). Site updates may require selector adjustments.
 

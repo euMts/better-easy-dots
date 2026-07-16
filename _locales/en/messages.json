@@ -91,6 +91,34 @@
     "message": "Your company's access address. It is detected automatically from the Easydots page you use.",
     "description": "URL section hint"
   },
+  "settingsLanguageTitle": {
+    "message": "Language",
+    "description": "Language section title"
+  },
+  "settingsLanguageHint": {
+    "message": "Choose the extension language. Browser default follows Chrome's UI language.",
+    "description": "Language section hint"
+  },
+  "settingsLabelLanguage": {
+    "message": "Interface language",
+    "description": "Language field label"
+  },
+  "settingsAriaLanguage": {
+    "message": "Interface language",
+    "description": "Language select aria-label"
+  },
+  "settingsLanguageOptionSystem": {
+    "message": "Browser default",
+    "description": "Language option: follow browser"
+  },
+  "settingsLanguageOptionPtBR": {
+    "message": "Português (Brasil)",
+    "description": "Language option: Brazilian Portuguese"
+  },
+  "settingsLanguageOptionEn": {
+    "message": "English",
+    "description": "Language option: English"
+  },
   "settingsLabelEntry": {
     "message": "Clock in",
     "description": "Entry field label"
@@ -1098,6 +1126,10 @@
   "changelogOpenSettings": {
     "message": "Open settings",
     "description": "Secondary changelog page button"
+  },
+  "changelogV130Item1": {
+    "message": "Language selector in settings (Portuguese, English, or browser default)",
+    "description": "Changelog v1.3.0 item"
   },
   "changelogV120Item1": {
     "message": "Daily tolerance on day balance, with raw and considered balances",

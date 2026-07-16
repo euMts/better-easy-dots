@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="README.en.md"><img src="https://img.shields.io/badge/README-English-blue" alt="README in English"></a>
-  <img src="https://img.shields.io/badge/versão-1.2.0-purple" alt="Versão 1.2.0">
+  <img src="https://img.shields.io/badge/versão-1.3.0-purple" alt="Versão 1.3.0">
   <img src="https://img.shields.io/badge/Manifest-V3-blue" alt="Manifest V3">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licença-MIT-lightgrey" alt="Licença MIT"></a>
 </p>
@@ -76,20 +76,28 @@ O ícone da extensão na barra do Chrome mostra a quantidade de registros do dia
 
 ## Capturas de tela
 
-### Tabela de registros
+### Sugestão de batida e saldo fora da tolerância
 
-Saldo do dia, coluna **Diferença** e cores por tolerância:
+Coluna **Diferença**, cores por status e sugestão de saída com saldo bruto fora da tolerância:
 
 <p align="center">
-  <img src="screenshots/pt/1.jpg" alt="Tabela de registros com saldo do dia, coluna Diferença e cores nos horários" width="720">
+  <img src="screenshots/pt/1.jpg" alt="Tabela de registros com sugestão de saída e saldo do dia fora da tolerância" width="720">
+</p>
+
+### Dia completo dentro da tolerância
+
+Quatro batidas registradas e saldo do dia zerado após a tolerância diária:
+
+<p align="center">
+  <img src="screenshots/pt/2.jpg" alt="Tabela de registros com dia completo e saldo dentro da tolerância" width="720">
 </p>
 
 ### Configurações
 
-Horários de trabalho, intervalo, tolerância e URL do Easydots:
+Horários de trabalho, intervalo, tolerância diária, margem de segurança e idioma:
 
 <p align="center">
-  <img src="screenshots/pt/2.jpg" alt="Página de configurações da extensão Better Easy Dots" width="720">
+  <img src="screenshots/pt/3.jpg" alt="Página de configurações da extensão Better Easy Dots" width="720">
 </p>
 
 ---
@@ -173,7 +181,7 @@ Nenhum dado é transmitido para servidores da extensão.
 
 - **Navegador:** Google Chrome (Manifest V3)
 - **Sites:** `https://*.easydots.com.br/*` (padrão: `https://sys.easydots.com.br/`), `https://*.acspontodigital.com.br/*` (legado)
-- **Versão atual:** `1.2.0`
+- **Versão atual:** `1.3.0`
 
 A extensão depende da estrutura HTML atual do Easydots (`#table_registro_horario`, `#btnRegister`, navbar). Atualizações no site podem exigir ajustes nos seletores.
 

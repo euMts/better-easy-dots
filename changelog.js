@@ -1,6 +1,15 @@
 const EED_CHANGELOG_STORAGE_KEY = 'eedLastSeenChangelogVersion';
 
+/** Last version already on the Chrome Web Store. Every newer entry gets the New badge. */
+const EED_CHANGELOG_LAST_SHIPPED_VERSION = '1.1.0';
+
 const EED_CHANGELOG_ENTRIES = [
+  {
+    version: '1.3.0',
+    items: [
+      'changelogV130Item1',
+    ],
+  },
   {
     version: '1.2.0',
     items: [
@@ -69,9 +78,9 @@ const EED_CHANGELOG_ENTRIES = [
 
 function eedGetCurrentVersion() {
   try {
-    return chrome.runtime?.getManifest?.()?.version || '1.2.0';
+    return chrome.runtime?.getManifest?.()?.version || '1.3.0';
   } catch {
-    return '1.2.0';
+    return '1.3.0';
   }
 }
 
@@ -110,6 +119,28 @@ function eedGetLatestChangelogVersion() {
   return EED_CHANGELOG_ENTRIES[0]?.version ?? eedGetCurrentVersion();
 }
 
+function eedCompareSemver(a, b) {
+  const parse = (value) =>
+    String(value || '0')
+      .split('.')
+      .map((part) => parseInt(part, 10) || 0);
+
+  const left = parse(a);
+  const right = parse(b);
+  const length = Math.max(left.length, right.length);
+
+  for (let i = 0; i < length; i += 1) {
+    const diff = (left[i] || 0) - (right[i] || 0);
+    if (diff !== 0) return diff > 0 ? 1 : -1;
+  }
+
+  return 0;
+}
+
+function eedIsChangelogVersionNew(version) {
+  return eedCompareSemver(version, EED_CHANGELOG_LAST_SHIPPED_VERSION) > 0;
+}
+
 function eedRenderChangelogEntries(root) {
   if (!root) return;
 
@@ -119,15 +150,16 @@ function eedRenderChangelogEntries(root) {
 
   root.innerHTML = EED_CHANGELOG_ENTRIES.map((entry) => {
     const isLatest = entry.version === latestVersion;
+    const isNew = eedIsChangelogVersionNew(entry.version);
     const items = entry.items
       .map((itemKey) => `<li class="eed-changelog-item">${translate(itemKey)}</li>`)
       .join('');
 
     return `
-      <section class="eed-changelog-version${isLatest ? ' eed-changelog-version--latest' : ''}">
+      <section class="eed-changelog-version${isLatest || isNew ? ' eed-changelog-version--latest' : ''}">
         <div class="eed-changelog-version-head">
           <h2 class="eed-changelog-version-label">v${entry.version}</h2>
-          ${isLatest ? `<span class="eed-changelog-badge">${newBadge}</span>` : ''}
+          ${isNew ? `<span class="eed-changelog-badge">${newBadge}</span>` : ''}
         </div>
         <ul class="eed-changelog-list">${items}</ul>
       </section>
@@ -135,9 +167,11 @@ function eedRenderChangelogEntries(root) {
   }).join('');
 }
 
-function eedInitChangelogPage() {
+async function eedInitChangelogPage() {
   try {
-    document.documentElement.lang = chrome.i18n.getUILanguage();
+    await initI18nFromStorage();
+
+    document.documentElement.lang = getActiveDocumentLang();
     document.title = `${t('changelogTitle')} — ${t('popupTitle')}`;
     applyI18n();
 

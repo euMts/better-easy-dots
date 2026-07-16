@@ -91,6 +91,34 @@
     "message": "Endereço de acesso da sua empresa. É detectado automaticamente pela página em que você usa o Easydots.",
     "description": "Dica da seção de URL"
   },
+  "settingsLanguageTitle": {
+    "message": "Idioma",
+    "description": "Título da seção de idioma"
+  },
+  "settingsLanguageHint": {
+    "message": "Escolha o idioma da extensão. O padrão do navegador segue o idioma da interface do Chrome.",
+    "description": "Dica da seção de idioma"
+  },
+  "settingsLabelLanguage": {
+    "message": "Idioma da interface",
+    "description": "Rótulo do campo de idioma"
+  },
+  "settingsAriaLanguage": {
+    "message": "Idioma da interface",
+    "description": "Aria-label do seletor de idioma"
+  },
+  "settingsLanguageOptionSystem": {
+    "message": "Padrão do navegador",
+    "description": "Opção de idioma: seguir o navegador"
+  },
+  "settingsLanguageOptionPtBR": {
+    "message": "Português (Brasil)",
+    "description": "Opção de idioma: português do Brasil"
+  },
+  "settingsLanguageOptionEn": {
+    "message": "English",
+    "description": "Opção de idioma: inglês"
+  },
   "settingsLabelEntry": {
     "message": "Entrada",
     "description": "Rótulo do campo de entrada"
@@ -1098,6 +1126,10 @@
   "changelogOpenSettings": {
     "message": "Ver configurações",
     "description": "Botão secundário da página de changelog"
+  },
+  "changelogV130Item1": {
+    "message": "Seletor de idioma nas configurações (português, inglês ou padrão do navegador)",
+    "description": "Item do changelog v1.3.0"
   },
   "changelogV120Item1": {
     "message": "Tolerância diária no saldo do dia, com saldo bruto e considerado",

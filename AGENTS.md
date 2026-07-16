@@ -109,7 +109,9 @@ Atualizar fallback:
 return chrome.runtime?.getManifest?.()?.version || '1.2.0';
 ```
 
-A versão mais recente do array recebe o badge **Novo** / **New** automaticamente na página `changelog.html`.
+- Qualquer versão **maior** que `EED_CHANGELOG_LAST_SHIPPED_VERSION` recebe o badge **Novo** / **New** (independente de `eedLastSeenChangelogVersion`).
+- `eedLastSeenChangelogVersion` controla só a abertura automática do changelog.
+- Após publicar na loja, atualize `EED_CHANGELOG_LAST_SHIPPED_VERSION` para a versão publicada.
 
 ### 2. `_locales/pt_BR/messages.json`
 

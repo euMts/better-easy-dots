@@ -1,4 +1,4 @@
-importScripts('changelog.js');
+importScripts('i18n.js', 'changelog.js');
 
 async function setBadge(recordCount) {
   if (!recordCount) {
@@ -62,6 +62,14 @@ chrome.runtime.onInstalled.addListener((details) => {
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message.action === 'getLocaleMessages') {
+    const locale = EED_SUPPORTED_LOCALES.includes(message.locale) ? message.locale : 'pt_BR';
+    eedFetchLocaleJson(locale)
+      .then((messages) => sendResponse({ ok: true, messages }))
+      .catch((error) => sendResponse({ ok: false, error: String(error?.message || error) }));
+    return true;
+  }
+
   if (message.action === 'openSettings') {
     openSettingsPage()
       .then((tabId) => sendResponse({ success: true, tabId }))

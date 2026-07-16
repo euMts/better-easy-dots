@@ -15,6 +15,7 @@ const EED_DEFAULT_SETTINGS = {
   toleranciaAtraso: 10,
   margemSegurancaTolerancia: 1,
   horariosConfigurados: false,
+  language: typeof EED_LANGUAGE_SYSTEM !== 'undefined' ? EED_LANGUAGE_SYSTEM : 'system',
   easydotsUrl:
     typeof EED_DEFAULT_EASYDOTS_URL !== 'undefined'
       ? EED_DEFAULT_EASYDOTS_URL
@@ -74,6 +75,13 @@ const EEDSettings = {
     } catch {
       return false;
     }
+  },
+
+  normalizeLanguage(value) {
+    if (value === 'pt_BR' || value === 'en' || value === 'system') {
+      return value;
+    }
+    return EED_DEFAULT_SETTINGS.language;
   },
 
   isValidTime(value) {
@@ -170,6 +178,7 @@ const EEDSettings = {
         )
       ),
       horariosConfigurados: Boolean(stored.horariosConfigurados),
+      language: this.normalizeLanguage(stored.language ?? EED_DEFAULT_SETTINGS.language),
       easydotsUrl: this.normalizeEasydotsUrl(stored.easydotsUrl ?? EED_DEFAULT_SETTINGS.easydotsUrl),
     };
 

@@ -97,6 +97,19 @@ const EEDSettingsUI = {
           <p class="eed-settings-section-hint eed-settings-section-hint-secondary">${t('settingsSafetyMarginHint')}</p>
         </div>
 
+        <div class="eed-settings-section fadeInUp animated eed-animate-delay-3">
+          <h3 class="eed-settings-section-title">${t('settingsLanguageTitle')}</h3>
+          <p class="eed-settings-section-hint">${t('settingsLanguageHint')}</p>
+          <label class="eed-settings-field" data-field="language">
+            <span class="eed-settings-label">${t('settingsLabelLanguage')}</span>
+            <select id="eed-input-language" class="eed-settings-input eed-settings-select" aria-label="${t('settingsAriaLanguage')}">
+              <option value="system">${t('settingsLanguageOptionSystem')}</option>
+              <option value="pt_BR">${t('settingsLanguageOptionPtBR')}</option>
+              <option value="en">${t('settingsLanguageOptionEn')}</option>
+            </select>
+          </label>
+        </div>
+
         <div class="eed-settings-section fadeInUp animated eed-animate-delay-4">
           <h3 class="eed-settings-section-title">${t('settingsUrlTitle')}</h3>
           <p class="eed-settings-section-hint">${t('settingsUrlHint')}</p>
@@ -363,6 +376,7 @@ const EEDSettingsUI = {
       margemSegurancaTolerancia: this.formatSafetyMargin(
         this.root.querySelector('#eed-input-margem-seguranca').value
       ),
+      language: this.root.querySelector('#eed-input-language').value,
       easydotsUrl: this.root.querySelector('#eed-input-easydots-url').value.trim(),
     };
   },
@@ -376,6 +390,8 @@ const EEDSettingsUI = {
     this.root.querySelector('#eed-input-margem-seguranca').value = String(
       settings.margemSegurancaTolerancia
     );
+    this.root.querySelector('#eed-input-language').value =
+      settings.language || EED_DEFAULT_SETTINGS.language;
     this.root.querySelector('#eed-input-easydots-url').value = settings.easydotsUrl || '';
   },
 
@@ -449,10 +465,17 @@ const EEDSettingsUI = {
   },
 
   async handleReset() {
+    const previousLanguage = this.savedSettings?.language;
     const defaults = await EEDSettings.reset();
     this.savedSettings = defaults;
     this.clearFormErrors();
     this.setFormValues(defaults);
+
+    if (defaults.language !== previousLanguage) {
+      window.location.reload();
+      return;
+    }
+
     this.showToast(t('settingsToastReset'), 'success');
   },
 
@@ -467,13 +490,20 @@ const EEDSettingsUI = {
 
     this.clearFormErrors();
 
-    await EEDSettings.save(values);
-    this.savedSettings = values;
-    this.setFormValues(values);
+    const languageChanged = values.language !== this.savedSettings?.language;
+    const saved = await EEDSettings.save(values);
+    this.savedSettings = saved;
+    this.setFormValues(saved);
+
+    if (languageChanged) {
+      window.location.reload();
+      return;
+    }
+
     this.showToast(t('settingsToastSaved'), 'success');
 
     if (typeof this.options.onSave === 'function') {
-      this.options.onSave(values);
+      this.options.onSave(saved);
     }
   },
 
