@@ -2,7 +2,7 @@
 
 Checklist do que **ainda falta** antes de publicar na Chrome Web Store.
 
-**Empacotar:** `./package.sh` → `builds/better-easy-dots-v1.3.0.zip` (`manifest.prod.json`, sem localhost)
+**Empacotar:** `./package.sh` → `builds/better-easy-dots-v1.3.1.zip` (`manifest.prod.json`, sem localhost)
 
 **Loja (rascunho):** [Better Easy Dots](https://chromewebstore.google.com/detail/better-easy-dots/cfnehkkbmplomaianjpfiaoonmpekbbb) · ID `cfnehkkbmplomaianjpfiaoonmpekbbb`
 
@@ -46,7 +46,7 @@ Checklist do que **ainda falta** antes de publicar na Chrome Web Store.
 ## Pós-publicação
 
 - [ ] Links da Chrome Web Store abrem a página pública da extensão
-- [ ] Tag git `v1.3.0` alinhada ao `manifest.json`
+- [ ] Tag git `v1.3.1` alinhada ao `manifest.json`
 - [ ] Changelog breve da release
 
 ---

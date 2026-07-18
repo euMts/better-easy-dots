@@ -12,8 +12,12 @@ const EASydots = {
     jornadaImport: '#eed-jornada-import',
   },
 
+  EED_DEBUG: false,
   isUpdating: false,
   updateTimer: null,
+  enhanceTimer: null,
+  phase2Timer: null,
+  phase3Timer: null,
   cachedSettings: null,
   lastViewState: '',
   jornadaImportBusy: false,
@@ -21,9 +25,13 @@ const EASydots = {
   jornadaImportReady: false,
   jornadaSyncTimer: null,
   pageObserver: null,
+  pageObserverRoot: null,
   tableObserver: null,
   hourBankObservers: [],
   extensionDead: false,
+  initOnceDone: false,
+  ENHANCE_DEBOUNCE_MS: 150,
+  UPDATE_DEBOUNCE_MS: 150,
 
   isExtensionAlive() {
     if (this.extensionDead) return false;
@@ -42,14 +50,52 @@ const EASydots = {
     }
   },
 
+  debugLog(...args) {
+    if (this.EED_DEBUG) console.log('[Better Easy Dots]', ...args);
+  },
+
+  warnFeature(name, error) {
+    if (this.isContextInvalidatedError(error)) {
+      this.markExtensionDead();
+      return;
+    }
+    console.warn(`[Better Easy Dots] Erro em ${name}:`, error);
+  },
+
+  runIdle(callback, timeout = 1500) {
+    if (typeof window.requestIdleCallback === 'function') {
+      return window.requestIdleCallback(callback, { timeout });
+    }
+    return window.setTimeout(callback, 250);
+  },
+
+  cancelIdle(handle) {
+    if (handle == null) return;
+    if (typeof window.cancelIdleCallback === 'function') {
+      try {
+        window.cancelIdleCallback(handle);
+        return;
+      } catch {
+        /* fall through to clearTimeout */
+      }
+    }
+    clearTimeout(handle);
+  },
+
   markExtensionDead() {
     if (this.extensionDead) return;
     this.extensionDead = true;
 
     clearTimeout(this.updateTimer);
+    clearTimeout(this.enhanceTimer);
+    clearTimeout(this.phase2Timer);
     clearTimeout(this.jornadaSyncTimer);
     clearTimeout(this.jornadaFeedbackTimeout);
+    this.cancelIdle(this.phase3Timer);
     this.updateTimer = null;
+    this.enhanceTimer = null;
+    this.phase2Timer = null;
+    this.phase3Timer = null;
     this.jornadaSyncTimer = null;
     this.jornadaFeedbackTimeout = null;
 
@@ -73,6 +119,7 @@ const EASydots = {
     });
     this.hourBankObservers = [];
     this.pageObserver = null;
+    this.pageObserverRoot = null;
     this.tableObserver = null;
   },
 
@@ -579,8 +626,9 @@ const EASydots = {
 
     clearTimeout(this.updateTimer);
     this.updateTimer = setTimeout(() => {
+      this.updateTimer = null;
       this.updateRecordsView(force);
-    }, 50);
+    }, this.UPDATE_DEBOUNCE_MS);
   },
 
   TIME_STATUS_CLASSES: ['eed-time-ok', 'eed-time-warning', 'eed-time-late'],
@@ -1034,89 +1082,117 @@ const EASydots = {
   },
 
   async applyRecordColorsWithState(settings, table) {
-    this.ensureDiffColumnHeader(table);
-    this.installDiffTooltips(table);
+    try {
+      this.ensureDiffColumnHeader(table);
+      this.installDiffTooltips(table);
+    } catch (error) {
+      this.warnFeature('diff/tooltips', error);
+      if (!this.isExtensionAlive()) return;
+    }
 
     const rows = table.querySelectorAll('tr');
     const balanceRow = table.querySelector('#eed-day-balance-row');
     balanceRow?.querySelector('.eed-day-balance-wrap')?.setAttribute('colspan', '5');
 
     if (!EEDSettings.isScheduleConfigured(settings)) {
-      rows.forEach((row) => {
-        if (row.id === 'eed-day-balance-row' || row.classList.contains('eed-suggestion-row')) return;
-        const timeCell = row.querySelectorAll('td')[3];
-        timeCell?.classList.remove(...this.TIME_STATUS_CLASSES);
-        const diffCell = this.ensureDiffCell(row);
-        if (diffCell) this.clearDiffCell(diffCell);
-      });
-      this.clearSuggestionRows(table);
-      await this.renderDayBalance(settings, table);
+      try {
+        rows.forEach((row) => {
+          if (row.id === 'eed-day-balance-row' || row.classList.contains('eed-suggestion-row')) return;
+          const timeCell = row.querySelectorAll('td')[3];
+          timeCell?.classList.remove(...this.TIME_STATUS_CLASSES);
+          const diffCell = this.ensureDiffCell(row);
+          if (diffCell) this.clearDiffCell(diffCell);
+        });
+        this.clearSuggestionRows(table);
+      } catch (error) {
+        this.warnFeature('cores (sem jornada)', error);
+      }
+
+      try {
+        await this.renderDayBalance(settings, table);
+      } catch (error) {
+        this.warnFeature('saldo do dia', error);
+      }
       return;
     }
 
     const records = this.getRecords();
 
-    let entradaIndex = 0;
-    let saidaIndex = 0;
+    try {
+      let entradaIndex = 0;
+      let saidaIndex = 0;
 
-    const totalSaidas = records.filter((record) => this.isSaida(record.type)).length;
+      const totalSaidas = records.filter((record) => this.isSaida(record.type)).length;
 
-    rows.forEach((row) => {
-      if (row.id === 'eed-day-balance-row' || row.classList.contains('eed-suggestion-row')) return;
+      rows.forEach((row) => {
+        if (row.id === 'eed-day-balance-row' || row.classList.contains('eed-suggestion-row')) return;
 
-      const cells = row.querySelectorAll('td');
-      if (cells.length < 4) return;
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 4) return;
 
-      const type = cells[0].textContent.trim();
-      const timeCell = cells[3];
-      const recordedTime = timeCell.textContent.trim();
-      const diffCell = this.ensureDiffCell(row);
+        const type = cells[0].textContent.trim();
+        const timeCell = cells[3];
+        const recordedTime = timeCell.textContent.trim();
+        const diffCell = this.ensureDiffCell(row);
 
-      if (!this.isEntrada(type) && !this.isSaida(type)) {
-        timeCell.classList.remove(...this.TIME_STATUS_CLASSES);
-        if (diffCell) this.clearDiffCell(diffCell);
-        return;
-      }
+        if (!this.isEntrada(type) && !this.isSaida(type)) {
+          timeCell.classList.remove(...this.TIME_STATUS_CLASSES);
+          if (diffCell) this.clearDiffCell(diffCell);
+          return;
+        }
 
-      const expectedTime = this.getExpectedTime(
-        type,
-        entradaIndex,
-        saidaIndex,
-        totalSaidas,
-        settings
-      );
-      const recordKind = this.getRecordKind(
-        type,
-        entradaIndex,
-        saidaIndex,
-        totalSaidas,
-        settings
-      );
-
-      if (this.isEntrada(type)) entradaIndex += 1;
-      else saidaIndex += 1;
-
-      const status = this.getRecordStatus(
-        type,
-        recordedTime,
-        expectedTime,
-        settings.toleranciaAtraso
-      );
-      this.setTimeCellStatus(timeCell, status);
-
-      if (diffCell) {
-        const diffSeconds = this.calculateDifferenceSeconds(type, recordedTime, expectedTime);
-        this.setDiffCell(
-          diffCell,
-          this.formatDifferenceText(diffSeconds),
-          status,
-          this.getDifferenceTooltip(recordKind, diffSeconds, expectedTime)
+        const expectedTime = this.getExpectedTime(
+          type,
+          entradaIndex,
+          saidaIndex,
+          totalSaidas,
+          settings
         );
-      }
-    });
+        const recordKind = this.getRecordKind(
+          type,
+          entradaIndex,
+          saidaIndex,
+          totalSaidas,
+          settings
+        );
 
-    this.renderSuggestionRows(settings, table, records);
-    await this.renderDayBalance(settings, table);
+        if (this.isEntrada(type)) entradaIndex += 1;
+        else saidaIndex += 1;
+
+        const status = this.getRecordStatus(
+          type,
+          recordedTime,
+          expectedTime,
+          settings.toleranciaAtraso
+        );
+        this.setTimeCellStatus(timeCell, status);
+
+        if (diffCell) {
+          const diffSeconds = this.calculateDifferenceSeconds(type, recordedTime, expectedTime);
+          this.setDiffCell(
+            diffCell,
+            this.formatDifferenceText(diffSeconds),
+            status,
+            this.getDifferenceTooltip(recordKind, diffSeconds, expectedTime)
+          );
+        }
+      });
+    } catch (error) {
+      this.warnFeature('cores dos registros', error);
+      if (!this.isExtensionAlive()) return;
+    }
+
+    try {
+      this.renderSuggestionRows(settings, table, records);
+    } catch (error) {
+      this.warnFeature('sugestões de saída', error);
+    }
+
+    try {
+      await this.renderDayBalance(settings, table);
+    } catch (error) {
+      this.warnFeature('saldo do dia', error);
+    }
   },
 
   adjustRecordsContainer(scrollContainer, hasBalance) {
@@ -1619,6 +1695,7 @@ const EASydots = {
       <span class="eed-jornada-import-check" hidden aria-hidden="true">✓</span>
       <span class="eed-jornada-import-label">${t('contentJornadaImport')}</span>
     `;
+    importButton.dataset.eedListenerAttached = 'true';
     importButton.addEventListener('click', (event) => {
       event.preventDefault();
       this.importJornadaFromInput().catch(() => {});
@@ -2649,10 +2726,14 @@ const EASydots = {
       </a>
     `;
 
-    li.querySelector('a').addEventListener('click', (event) => {
-      event.preventDefault();
-      this.sendRuntimeMessage({ action: 'openSettings' });
-    });
+    const settingsAnchor = li.querySelector('a');
+    if (settingsAnchor && settingsAnchor.dataset.eedListenerAttached !== 'true') {
+      settingsAnchor.dataset.eedListenerAttached = 'true';
+      settingsAnchor.addEventListener('click', (event) => {
+        event.preventDefault();
+        this.sendRuntimeMessage({ action: 'openSettings' });
+      });
+    }
 
     menuList.appendChild(li);
 
@@ -2660,6 +2741,195 @@ const EASydots = {
     if (settingsLink && typeof Waves !== 'undefined' && typeof Waves.attach === 'function') {
       Waves.attach(settingsLink);
     }
+  },
+
+  findDashboardRoot() {
+    const table = document.querySelector(this.SELECTORS.recordsTable);
+    if (table) {
+      return (
+        table.closest('.content-page, .content, #wrapper, .container-fluid, main, #content') ||
+        table.parentElement ||
+        null
+      );
+    }
+
+    const dashboardCard = document.querySelector('.card-box--dashboard');
+    if (dashboardCard) {
+      return (
+        dashboardCard.closest(
+          '.content-page, .content, #wrapper, .container-fluid, main, #content'
+        ) ||
+        dashboardCard.parentElement ||
+        null
+      );
+    }
+
+    return null;
+  },
+
+  hasCoreTargets() {
+    return Boolean(
+      document.querySelector(this.SELECTORS.recordsTable) ||
+        document.querySelector('.card-box--dashboard') ||
+        document.querySelector(this.SELECTORS.sidebarMenu)
+    );
+  },
+
+  scheduleEnhance(reason = 'mutation') {
+    if (!this.isExtensionAlive()) return;
+
+    this.debugLog('scheduleEnhance', reason);
+    clearTimeout(this.enhanceTimer);
+    this.enhanceTimer = setTimeout(() => {
+      this.enhanceTimer = null;
+      this.updateBetterEasyDots(reason);
+    }, this.ENHANCE_DEBOUNCE_MS);
+  },
+
+  schedulePhase2() {
+    if (!this.isExtensionAlive() || this.jornadaImportReady) return;
+    if (this.phase2Timer) return;
+
+    this.phase2Timer = setTimeout(() => {
+      this.phase2Timer = null;
+      if (!this.isExtensionAlive() || this.jornadaImportReady) return;
+
+      try {
+        this.ensureJornadaImport();
+      } catch (error) {
+        this.warnFeature('importar jornada', error);
+      }
+    }, 50);
+  },
+
+  schedulePhase3() {
+    if (!this.isExtensionAlive()) return;
+
+    const hourBankReady = Boolean(
+      document.querySelector('[data-eed-planner-initialized="true"]')
+    );
+    const simReady = Boolean(
+      document.querySelector('[data-eed-employer-sim-initialized="true"]')
+    );
+    if (hourBankReady && simReady) return;
+    if (this.phase3Timer != null) return;
+
+    this.phase3Timer = this.runIdle(() => {
+      this.phase3Timer = null;
+      if (!this.isExtensionAlive()) return;
+
+      try {
+        this.ensureHourBankCard();
+      } catch (error) {
+        this.warnFeature('banco de horas', error);
+      }
+
+      try {
+        this.ensureEmployerSimulator();
+      } catch (error) {
+        this.warnFeature('simulador', error);
+      }
+    });
+  },
+
+  maybeNarrowPageObserver() {
+    if (!this.isExtensionAlive() || !this.pageObserver) return;
+
+    if (this.pageObserverRoot && this.pageObserverRoot !== document.body) {
+      if (!document.body.contains(this.pageObserverRoot)) {
+        this.debugLog('observed root detached, fallback to body');
+        this.attachPageObserver(document.body);
+      }
+      return;
+    }
+
+    const root = this.findDashboardRoot();
+    if (root && root !== document.body) {
+      this.debugLog('narrow page observer to dashboard root');
+      this.attachPageObserver(root);
+    }
+  },
+
+  attachPageObserver(root = document.body) {
+    if (!this.isExtensionAlive() || !root) return;
+
+    if (this.pageObserver && this.pageObserverRoot === root) return;
+
+    try {
+      this.pageObserver?.disconnect();
+    } catch {
+      /* ignore */
+    }
+
+    const observer = new MutationObserver((mutations) => {
+      try {
+        if (!this.isExtensionAlive()) return;
+
+        const hasExternalMutation = mutations.some(
+          (mutation) => !mutationOriginatesFromEnhancedCard(mutation)
+        );
+        if (!hasExternalMutation) return;
+
+        this.scheduleEnhance('dom');
+      } catch (error) {
+        if (this.isContextInvalidatedError(error)) {
+          this.markExtensionDead();
+        }
+      }
+    });
+
+    this.pageObserver = observer;
+    this.pageObserverRoot = root;
+    observer.observe(root, { childList: true, subtree: true });
+    this.debugLog('page observer attached', root === document.body ? 'body' : root);
+  },
+
+  initBetterEasyDotsOnce() {
+    if (this.initOnceDone || !this.isExtensionAlive()) return;
+    this.initOnceDone = true;
+    this.debugLog('initOnce');
+
+    this.attachPageObserver(document.body);
+  },
+
+  updateBetterEasyDots(reason = 'manual') {
+    if (!this.isExtensionAlive()) return;
+    this.debugLog('updateBetterEasyDots', reason);
+
+    // Phase 1 — critical path: table colors + balance
+    try {
+      this.injectSidebarSettingsItem();
+    } catch (error) {
+      this.warnFeature('sidebar', error);
+    }
+
+    try {
+      this.ensureRegisterButton();
+    } catch (error) {
+      this.warnFeature('botão registrar', error);
+    }
+
+    try {
+      this.observeRecordsTable();
+    } catch (error) {
+      this.warnFeature('tabela de registros', error);
+    }
+
+    if (!this.hasCoreTargets()) {
+      this.debugLog('core targets missing, waiting for DOM');
+      if (this.pageObserverRoot !== document.body) {
+        this.attachPageObserver(document.body);
+      }
+      return;
+    }
+
+    // Phase 2 — suggestions-related UI (jornada import feeds schedule)
+    this.schedulePhase2();
+
+    // Phase 3 — heavier visual extras when idle
+    this.schedulePhase3();
+
+    this.maybeNarrowPageObserver();
   },
 };
 
@@ -2684,52 +2954,16 @@ async function init() {
   EEDSettings.rememberSiteUrl(window.location.href).catch(() => {});
 
   try {
-    EASydots.injectSidebarSettingsItem();
-    EASydots.ensureRegisterButton();
-    EASydots.observeRecordsTable();
-    EASydots.ensureJornadaImport();
-    EASydots.ensureHourBankCard();
-    EASydots.ensureEmployerSimulator();
+    EASydots.initBetterEasyDotsOnce();
+    EASydots.updateBetterEasyDots('boot');
   } catch (error) {
     if (EASydots.isContextInvalidatedError(error)) {
       EASydots.markExtensionDead();
       return;
     }
-    throw error;
+    console.warn('[Better Easy Dots] Erro na inicialização:', error);
   }
 
-  const observer = new MutationObserver((mutations) => {
-    try {
-      if (!EASydots.isExtensionAlive()) return;
-
-      EASydots.injectSidebarSettingsItem();
-      EASydots.ensureRegisterButton();
-      EASydots.observeRecordsTable();
-
-      const hasExternalMutation = mutations.some(
-        (mutation) => !mutationOriginatesFromEnhancedCard(mutation)
-      );
-      if (hasExternalMutation) {
-        EASydots.ensureHourBankCard();
-        EASydots.ensureEmployerSimulator();
-      }
-
-      if (
-        !EASydots.jornadaImportReady &&
-        document.querySelector(EASydots.SELECTORS.jornadaInput) &&
-        !document.querySelector(EASydots.SELECTORS.jornadaImport)
-      ) {
-        EASydots.ensureJornadaImport();
-      }
-    } catch (error) {
-      if (EASydots.isContextInvalidatedError(error)) {
-        EASydots.markExtensionDead();
-      }
-    }
-  });
-
-  EASydots.pageObserver = observer;
-  observer.observe(document.body, { childList: true, subtree: true });
   EASydots.syncBadge();
 }
 

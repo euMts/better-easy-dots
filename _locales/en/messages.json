@@ -1127,6 +1127,14 @@
     "message": "Open settings",
     "description": "Secondary changelog page button"
   },
+  "changelogV131Item1": {
+    "message": "More reliable loading on slower PCs, without needing multiple refreshes",
+    "description": "Changelog v1.3.1 item"
+  },
+  "changelogV131Item2": {
+    "message": "Lighter startup: less reprocessing and secondary features run in the background",
+    "description": "Changelog v1.3.1 item"
+  },
   "changelogV130Item1": {
     "message": "Language selector in settings (Portuguese, English, or browser default)",
     "description": "Changelog v1.3.0 item"

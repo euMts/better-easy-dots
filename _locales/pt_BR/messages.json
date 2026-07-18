@@ -1127,6 +1127,14 @@
     "message": "Ver configurações",
     "description": "Botão secundário da página de changelog"
   },
+  "changelogV131Item1": {
+    "message": "Carregamento mais confiável em PCs mais lentos, sem precisar dar F5 várias vezes",
+    "description": "Item do changelog v1.3.1"
+  },
+  "changelogV131Item2": {
+    "message": "Inicialização mais leve: menos reprocessamento e features secundárias em segundo plano",
+    "description": "Item do changelog v1.3.1"
+  },
   "changelogV130Item1": {
     "message": "Seletor de idioma nas configurações (português, inglês ou padrão do navegador)",
     "description": "Item do changelog v1.3.0"
