@@ -502,8 +502,8 @@
     "description": "Aria-label do card interativo de banco de horas"
   },
   "contentHourBankHoverHint": {
-    "message": "Planejar compensação do banco",
-    "description": "Hint exibido ao passar o mouse no card de banco de horas"
+    "message": "Planejar compensação",
+    "description": "Hint exibido no card de banco de horas (estado não virado)"
   },
   "contentHourBankPlanTitle": {
     "message": "Compensação do banco de horas",
@@ -653,15 +653,15 @@
   },
   "contentSimLabelExtraRaw": {
     "message": "A mais",
-    "description": "Label quando o bruto é positivo dentro da tolerância"
+    "description": "Legado: bruto positivo (não usar como título principal)"
   },
   "contentSimLabelMissingRaw": {
     "message": "A menos",
-    "description": "Label quando o bruto é negativo dentro da tolerância"
+    "description": "Legado: bruto negativo (não usar como título principal)"
   },
   "contentSimStatusWithin": {
     "message": "Dentro da tolerância",
-    "description": "Status dentro da tolerância no simulador"
+    "description": "Título quando impacto após tolerância é zero"
   },
   "contentSimStatusAtLimit": {
     "message": "No limite",
@@ -673,7 +673,7 @@
   },
   "contentSimStatusMissing": {
     "message": "Tempo faltante",
-    "description": "Status negativo fora da tolerância no simulador"
+    "description": "Título quando impacto após tolerância é negativo"
   },
   "contentSimValueRaw": {
     "message": "$VALUE$ bruto",
@@ -684,7 +684,7 @@
   },
   "contentSimResultMeta": {
     "message": "Bruto: $RAW$ · Após tolerância: $AFTER$",
-    "description": "Meta do resultado do simulador fora da tolerância",
+    "description": "Meta legado do resultado do simulador",
     "placeholders": {
       "raw": { "content": "$1", "example": "+01:13:00" },
       "after": { "content": "$2", "example": "+01:13:00" }
@@ -692,22 +692,40 @@
   },
   "contentSimMetaWithin": {
     "message": "$STATUS$ · Após tolerância: $AFTER$",
-    "description": "Meta do resultado do simulador dentro da tolerância",
+    "description": "Meta legado dentro da tolerância",
     "placeholders": {
       "status": { "content": "$1", "example": "Dentro da tolerância" },
       "after": { "content": "$2", "example": "00:00:00" }
     }
   },
+  "contentSimMetaImpact": {
+    "message": "Impacto: $IMPACT$",
+    "description": "Linha de impacto após tolerância no simulador",
+    "placeholders": {
+      "impact": { "content": "$1", "example": "00:00:00" }
+    }
+  },
+  "contentSimMetaRawOnly": {
+    "message": "Bruto: $RAW$",
+    "description": "Linha secundária com saldo bruto no simulador",
+    "placeholders": {
+      "raw": { "content": "$1", "example": "+00:17:12" }
+    }
+  },
   "contentSimConsequenceNoOvertime": {
     "message": "Não deve contar como hora extra",
-    "description": "Consequência para positivo dentro da tolerância"
+    "description": "Consequência legado para positivo dentro da tolerância"
   },
   "contentSimConsequenceNoDeduct": {
     "message": "Não deve descontar",
-    "description": "Consequência para negativo dentro da tolerância"
+    "description": "Consequência legado para negativo dentro da tolerância"
+  },
+  "contentSimConsequenceNoBankChange": {
+    "message": "Não altera o banco",
+    "description": "Consequência quando impacto após tolerância é zero"
   },
   "contentSimConsequenceMayDeduct": {
-    "message": "Fora da tolerância. Pode descontar",
+    "message": "Pode descontar",
     "description": "Consequência para negativo fora da tolerância"
   },
   "contentSimConsequenceOvertime": {
@@ -719,36 +737,37 @@
     "description": "Consequência quando o bruto é zero"
   },
   "contentSimTooltipWithinPositive": {
-    "message": "Você terá $AMOUNT$ bruto a mais, mas como está dentro da tolerância diária configurada, o valor após tolerância é $AFTER$ e não deve contar como hora extra.",
+    "message": "Saldo bruto: +$AMOUNT$. Como está dentro da tolerância diária, o impacto após tolerância é $AFTER$ e o banco de horas não muda.",
     "description": "Tooltip positivo dentro da tolerância",
     "placeholders": {
-      "amount": { "content": "$1", "example": "1min" },
+      "amount": { "content": "$1", "example": "8min" },
       "after": { "content": "$2", "example": "00:00:00" }
     }
   },
   "contentSimTooltipWithinNegative": {
-    "message": "Você terá $AMOUNT$ bruto a menos, mas como está dentro da tolerância diária configurada, não deve descontar.",
+    "message": "Saldo bruto: -$AMOUNT$. Como está dentro da tolerância diária, o impacto após tolerância é $AFTER$ e o banco de horas não muda.",
     "description": "Tooltip negativo dentro da tolerância",
     "placeholders": {
-      "amount": { "content": "$1", "example": "8min" }
+      "amount": { "content": "$1", "example": "8min" },
+      "after": { "content": "$2", "example": "00:00:00" }
     }
   },
   "contentSimTooltipOutsidePositive": {
-    "message": "Você terá $AMOUNT$ bruto a mais. Como passou da tolerância diária, o valor inteiro deve contar como hora extra.",
+    "message": "Esse tempo deve contar como hora extra e abater o banco. Extra estimada: $AMOUNT$.",
     "description": "Tooltip positivo fora da tolerância",
     "placeholders": {
-      "amount": { "content": "$1", "example": "11min" }
+      "amount": { "content": "$1", "example": "17min 12s" }
     }
   },
   "contentSimTooltipOutsideNegative": {
-    "message": "Você terá $AMOUNT$ bruto a menos. Como passou da tolerância diária, o valor inteiro pode descontar.",
+    "message": "Esse tempo pode aumentar sua dívida no banco. Falta estimada: $AMOUNT$.",
     "description": "Tooltip negativo fora da tolerância",
     "placeholders": {
       "amount": { "content": "$1", "example": "12min" }
     }
   },
   "contentSimTooltipBalanced": {
-    "message": "Com esses horários, o saldo bruto fica zerado e não há hora extra nem desconto.",
+    "message": "Com esses horários, o saldo bruto fica zerado e não há hora extra nem desconto. O banco de horas não muda.",
     "description": "Tooltip quando o bruto é zero"
   },
   "contentSimInvalidTimes": {
@@ -758,6 +777,80 @@
   "contentSimScheduleRequired": {
     "message": "Configure seus horários na extensão para simular a jornada.",
     "description": "Aviso quando horários não estão configurados"
+  },
+  "contentSimBankAfterLabel": {
+    "message": "Banco após simulação",
+    "description": "Label legado do impacto no banco de horas no simulador"
+  },
+  "contentSimBankCompactLine": {
+    "message": "Banco: $VALUE$ · $DETAIL$",
+    "description": "Linha compacta do banco após simulação",
+    "placeholders": {
+      "value": { "content": "$1", "example": "-05:09:14" },
+      "detail": { "content": "$2", "example": "sem impacto" }
+    }
+  },
+  "contentSimBankNotFound": {
+    "message": "Banco de horas não encontrado.",
+    "description": "Aviso discreto quando o saldo do banco não pôde ser lido"
+  },
+  "contentSimBankNoChange": {
+    "message": "sem impacto",
+    "description": "Detalhe quando a simulação não altera o banco"
+  },
+  "contentSimBankDetailReduce": {
+    "message": "Abate: $AMOUNT$",
+    "description": "Detalhe de abatimento no banco",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "00:17:12" }
+    }
+  },
+  "contentSimBankDetailIncrease": {
+    "message": "Aumenta dívida: $AMOUNT$",
+    "description": "Detalhe de aumento da dívida no banco",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "00:12:00" }
+    }
+  },
+  "contentSimBankTooltipNoEffect": {
+    "message": "Esses horários ficam dentro da tolerância e não devem abater o banco de horas.",
+    "description": "Tooltip quando após tolerância é zero"
+  },
+  "contentSimBankTooltipIncreasesDebt": {
+    "message": "Esses horários podem aumentar sua dívida em $AMOUNT$.",
+    "description": "Tooltip quando a simulação negativa aumenta a dívida",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "12min" }
+    }
+  },
+  "contentSimBankTooltipPartialPay": {
+    "message": "Abate $ABATED$ do banco. Ainda faltam $REMAINING$.",
+    "description": "Tooltip quando abate parcialmente o banco negativo",
+    "placeholders": {
+      "abated": { "content": "$1", "example": "17min 12s" },
+      "remaining": { "content": "$2", "example": "5h 51min 55s" }
+    }
+  },
+  "contentSimBankTooltipClearsDebt": {
+    "message": "Abate $AMOUNT$ do banco e zera a dívida.",
+    "description": "Tooltip quando a simulação zera o banco negativo",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "17min 12s" }
+    }
+  },
+  "contentSimBankTooltipTurnsPositive": {
+    "message": "Seu banco ficaria positivo em $AMOUNT$.",
+    "description": "Tooltip quando banco negativo vira positivo",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "10min" }
+    }
+  },
+  "contentSimBankTooltipStaysPositive": {
+    "message": "Seu banco ficaria positivo em $AMOUNT$.",
+    "description": "Tooltip quando banco zero/positivo aumenta",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "1h 17min 12s" }
+    }
   },
   "contentScheduleHintBefore": {
     "message": "Configure entrada, saída e intervalo",
@@ -1126,6 +1219,22 @@
   "changelogOpenSettings": {
     "message": "Ver configurações",
     "description": "Botão secundário da página de changelog"
+  },
+  "changelogV140Item1": {
+    "message": "Simulador de jornada mostra o impacto das extras no saldo do banco de horas",
+    "description": "Item do changelog v1.4.0"
+  },
+  "changelogV140Item2": {
+    "message": "Textos do simulador mais claros: título baseado no impacto após tolerância, sem confundir com hora extra",
+    "description": "Item do changelog v1.4.0"
+  },
+  "changelogV140Item3": {
+    "message": "Flip do simulador ocupa a altura inteira do card, sem cortar título, inputs ou resultado",
+    "description": "Item do changelog v1.4.0"
+  },
+  "changelogV140Item4": {
+    "message": "Simulador: texto “sem impacto” visível e alinhamento visual com o card de banco de horas",
+    "description": "Item do changelog v1.4.0"
   },
   "changelogV131Item1": {
     "message": "Carregamento mais confiável em PCs mais lentos, sem precisar dar F5 várias vezes",

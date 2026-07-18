@@ -502,8 +502,8 @@
     "description": "Aria-label for the interactive hour bank card"
   },
   "contentHourBankHoverHint": {
-    "message": "Plan hour bank compensation",
-    "description": "Hint shown when hovering the hour bank card"
+    "message": "Plan compensation",
+    "description": "Hint shown on the hour bank card (unflipped state)"
   },
   "contentHourBankPlanTitle": {
     "message": "Hour bank compensation",
@@ -653,15 +653,15 @@
   },
   "contentSimLabelExtraRaw": {
     "message": "Extra raw time",
-    "description": "Label when raw is positive within tolerance"
+    "description": "Legacy: positive raw (do not use as main title)"
   },
   "contentSimLabelMissingRaw": {
     "message": "Missing raw time",
-    "description": "Label when raw is negative within tolerance"
+    "description": "Legacy: negative raw (do not use as main title)"
   },
   "contentSimStatusWithin": {
     "message": "Within tolerance",
-    "description": "Within tolerance status on the simulator"
+    "description": "Title when after-tolerance impact is zero"
   },
   "contentSimStatusAtLimit": {
     "message": "At the limit",
@@ -673,7 +673,7 @@
   },
   "contentSimStatusMissing": {
     "message": "Missing time",
-    "description": "Negative outside tolerance status on the simulator"
+    "description": "Title when after-tolerance impact is negative"
   },
   "contentSimValueRaw": {
     "message": "$VALUE$ raw",
@@ -684,7 +684,7 @@
   },
   "contentSimResultMeta": {
     "message": "Raw: $RAW$ · After tolerance: $AFTER$",
-    "description": "Simulator result meta line outside tolerance",
+    "description": "Legacy simulator result meta line",
     "placeholders": {
       "raw": { "content": "$1", "example": "+01:13:00" },
       "after": { "content": "$2", "example": "+01:13:00" }
@@ -692,22 +692,40 @@
   },
   "contentSimMetaWithin": {
     "message": "$STATUS$ · After tolerance: $AFTER$",
-    "description": "Simulator result meta line within tolerance",
+    "description": "Legacy simulator meta within tolerance",
     "placeholders": {
       "status": { "content": "$1", "example": "Within tolerance" },
       "after": { "content": "$2", "example": "00:00:00" }
     }
   },
+  "contentSimMetaImpact": {
+    "message": "Impact: $IMPACT$",
+    "description": "After-tolerance impact line on the simulator",
+    "placeholders": {
+      "impact": { "content": "$1", "example": "00:00:00" }
+    }
+  },
+  "contentSimMetaRawOnly": {
+    "message": "Raw: $RAW$",
+    "description": "Secondary raw balance line on the simulator",
+    "placeholders": {
+      "raw": { "content": "$1", "example": "+00:17:12" }
+    }
+  },
   "contentSimConsequenceNoOvertime": {
     "message": "Should not count as overtime",
-    "description": "Consequence for positive within tolerance"
+    "description": "Legacy consequence for positive within tolerance"
   },
   "contentSimConsequenceNoDeduct": {
     "message": "Should not deduct",
-    "description": "Consequence for negative within tolerance"
+    "description": "Legacy consequence for negative within tolerance"
+  },
+  "contentSimConsequenceNoBankChange": {
+    "message": "Does not change the time bank",
+    "description": "Consequence when after-tolerance impact is zero"
   },
   "contentSimConsequenceMayDeduct": {
-    "message": "Outside tolerance. May deduct",
+    "message": "May deduct",
     "description": "Consequence for negative outside tolerance"
   },
   "contentSimConsequenceOvertime": {
@@ -719,36 +737,37 @@
     "description": "Consequence when raw balance is zero"
   },
   "contentSimTooltipWithinPositive": {
-    "message": "You will have $AMOUNT$ raw extra, but since it is within the configured daily tolerance, the after-tolerance value is $AFTER$ and should not count as overtime.",
+    "message": "Raw balance: +$AMOUNT$. Since it is within daily tolerance, the after-tolerance impact is $AFTER$ and the time bank does not change.",
     "description": "Tooltip for positive within tolerance",
     "placeholders": {
-      "amount": { "content": "$1", "example": "1min" },
+      "amount": { "content": "$1", "example": "8min" },
       "after": { "content": "$2", "example": "00:00:00" }
     }
   },
   "contentSimTooltipWithinNegative": {
-    "message": "You will have $AMOUNT$ raw missing, but since it is within the configured daily tolerance, it should not deduct.",
+    "message": "Raw balance: -$AMOUNT$. Since it is within daily tolerance, the after-tolerance impact is $AFTER$ and the time bank does not change.",
     "description": "Tooltip for negative within tolerance",
     "placeholders": {
-      "amount": { "content": "$1", "example": "8min" }
+      "amount": { "content": "$1", "example": "8min" },
+      "after": { "content": "$2", "example": "00:00:00" }
     }
   },
   "contentSimTooltipOutsidePositive": {
-    "message": "You will have $AMOUNT$ raw extra. Since it exceeds daily tolerance, the full amount should count as overtime.",
+    "message": "This time should count as overtime and reduce the time bank. Estimated overtime: $AMOUNT$.",
     "description": "Tooltip for positive outside tolerance",
     "placeholders": {
-      "amount": { "content": "$1", "example": "11min" }
+      "amount": { "content": "$1", "example": "17min 12s" }
     }
   },
   "contentSimTooltipOutsideNegative": {
-    "message": "You will have $AMOUNT$ raw missing. Since it exceeds daily tolerance, the full amount may deduct.",
+    "message": "This time may increase your time-bank debt. Estimated missing time: $AMOUNT$.",
     "description": "Tooltip for negative outside tolerance",
     "placeholders": {
       "amount": { "content": "$1", "example": "12min" }
     }
   },
   "contentSimTooltipBalanced": {
-    "message": "With these times, raw balance is zero and there is no overtime or deduction.",
+    "message": "With these times, raw balance is zero and there is no overtime or deduction. The time bank does not change.",
     "description": "Tooltip when raw balance is zero"
   },
   "contentSimInvalidTimes": {
@@ -758,6 +777,80 @@
   "contentSimScheduleRequired": {
     "message": "Configure your schedule in the extension to simulate the workday.",
     "description": "Notice when schedule is not configured"
+  },
+  "contentSimBankAfterLabel": {
+    "message": "Time bank after simulation",
+    "description": "Legacy label for time-bank impact in the simulator"
+  },
+  "contentSimBankCompactLine": {
+    "message": "Bank: $VALUE$ · $DETAIL$",
+    "description": "Compact time-bank line after simulation",
+    "placeholders": {
+      "value": { "content": "$1", "example": "-05:09:14" },
+      "detail": { "content": "$2", "example": "no impact" }
+    }
+  },
+  "contentSimBankNotFound": {
+    "message": "Time bank not found.",
+    "description": "Discrete notice when time-bank balance could not be read"
+  },
+  "contentSimBankNoChange": {
+    "message": "no impact",
+    "description": "Detail when simulation does not change the time bank"
+  },
+  "contentSimBankDetailReduce": {
+    "message": "Reduces: $AMOUNT$",
+    "description": "Detail for time-bank reduction",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "00:17:12" }
+    }
+  },
+  "contentSimBankDetailIncrease": {
+    "message": "Increases debt: $AMOUNT$",
+    "description": "Detail for time-bank debt increase",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "00:12:00" }
+    }
+  },
+  "contentSimBankTooltipNoEffect": {
+    "message": "These times stay within tolerance and should not reduce the time bank.",
+    "description": "Tooltip when after-tolerance is zero"
+  },
+  "contentSimBankTooltipIncreasesDebt": {
+    "message": "These times may increase your debt by $AMOUNT$.",
+    "description": "Tooltip when a negative simulation increases debt",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "12min" }
+    }
+  },
+  "contentSimBankTooltipPartialPay": {
+    "message": "Reduces the time bank by $ABATED$. Still owed: $REMAINING$.",
+    "description": "Tooltip when partially paying down a negative time bank",
+    "placeholders": {
+      "abated": { "content": "$1", "example": "17min 12s" },
+      "remaining": { "content": "$2", "example": "5h 51min 55s" }
+    }
+  },
+  "contentSimBankTooltipClearsDebt": {
+    "message": "Reduces the time bank by $AMOUNT$ and clears the debt.",
+    "description": "Tooltip when simulation clears a negative time bank",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "17min 12s" }
+    }
+  },
+  "contentSimBankTooltipTurnsPositive": {
+    "message": "Your time bank would be positive by $AMOUNT$.",
+    "description": "Tooltip when negative bank becomes positive",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "10min" }
+    }
+  },
+  "contentSimBankTooltipStaysPositive": {
+    "message": "Your time bank would be positive by $AMOUNT$.",
+    "description": "Tooltip when zero/positive bank increases",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "1h 17min 12s" }
+    }
   },
   "contentScheduleHintBefore": {
     "message": "Set clock-in, clock-out, and break by",
@@ -1126,6 +1219,22 @@
   "changelogOpenSettings": {
     "message": "Open settings",
     "description": "Secondary changelog page button"
+  },
+  "changelogV140Item1": {
+    "message": "Workday simulator shows overtime impact on the time-bank balance",
+    "description": "Changelog v1.4.0 item"
+  },
+  "changelogV140Item2": {
+    "message": "Clearer simulator copy: title based on after-tolerance impact, without looking like overtime by mistake",
+    "description": "Changelog v1.4.0 item"
+  },
+  "changelogV140Item3": {
+    "message": "Simulator flip fills the full card height without clipping the title, inputs, or result",
+    "description": "Changelog v1.4.0 item"
+  },
+  "changelogV140Item4": {
+    "message": "Simulator: visible “no impact” label and visual alignment with the time-bank card",
+    "description": "Changelog v1.4.0 item"
   },
   "changelogV131Item1": {
     "message": "More reliable loading on slower PCs, without needing multiple refreshes",

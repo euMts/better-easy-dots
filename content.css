@@ -708,10 +708,27 @@ table:has(#table_registro_horario) th.eed-diff-header,
   margin: 0;
 }
 
-.card-box.eed-hour-bank-card .eed-hour-bank-hover-hint {
-  position: absolute;
-  right: 12px;
-  bottom: 8px;
+/* Front action badges sit in a row just above the card <hr> on both flip cards */
+.card-box.eed-hour-bank-card .eed-front-hint-row,
+.card-box.eed-employer-sim-card .eed-front-hint-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  margin: -2px 0 2px;
+  padding: 0 8px;
+  min-height: 0;
+  pointer-events: none;
+}
+
+.card-box.eed-hour-bank-card .eed-card-front-action-hint,
+.card-box.eed-employer-sim-card .eed-card-front-action-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  max-width: 100%;
   padding: 2px 8px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.16);
@@ -721,8 +738,11 @@ table:has(#table_registro_horario) th.eed-diff-header,
   font-weight: 600;
   letter-spacing: 0.02em;
   line-height: 1.3;
-  opacity: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   pointer-events: none;
+  box-sizing: border-box;
 }
 
 .card-box.eed-hour-bank-card .eed-hour-bank-back {
@@ -1071,6 +1091,7 @@ table:has(#table_registro_horario) th.eed-diff-header,
 
 /* Employer workday simulator flip card */
 .card-box.eed-employer-sim-card {
+  position: relative;
   overflow: hidden;
   cursor: pointer;
   box-sizing: border-box;
@@ -1096,7 +1117,7 @@ table:has(#table_registro_horario) th.eed-diff-header,
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 0;
+  min-height: 100%;
   outline: none;
   perspective: 1000px;
   box-sizing: border-box;
@@ -1105,9 +1126,11 @@ table:has(#table_registro_horario) th.eed-diff-header,
 .card-box.eed-employer-sim-card .eed-employer-sim-flip-inner {
   position: relative;
   width: 100%;
-  min-height: 0;
+  height: 100%;
+  min-height: 100%;
   transform-style: preserve-3d;
-  transition: transform 0.55s ease;
+  transition: transform 0.45s ease;
+  box-sizing: border-box;
 }
 
 .card-box.eed-employer-sim-card .eed-employer-sim-flip-inner.eed-employer-sim-flipped {
@@ -1126,12 +1149,18 @@ table:has(#table_registro_horario) th.eed-diff-header,
   pointer-events: none;
 }
 
+.card-box.eed-employer-sim-card .eed-employer-sim-front,
+.card-box.eed-employer-sim-card .eed-employer-sim-back {
+  box-sizing: border-box;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+}
+
 .card-box.eed-employer-sim-card .eed-employer-sim-front {
   position: relative;
   z-index: 2;
   width: 100%;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
 
 .card-box.eed-employer-sim-card .eed-employer-sim-front .bar-widget {
@@ -1142,36 +1171,14 @@ table:has(#table_registro_horario) th.eed-diff-header,
   pointer-events: none;
 }
 
-.card-box.eed-employer-sim-card .eed-employer-sim-hover-hint {
-  position: absolute;
-  right: 12px;
-  bottom: 8px;
-  z-index: 3;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
-  color: rgba(255, 255, 255, 0.95);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  line-height: 1.3;
-  opacity: 1;
-  pointer-events: none;
-}
-
 .card-box.eed-employer-sim-card .eed-employer-sim-back {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
   transform: rotateY(180deg);
   background: transparent;
   color: #fff;
-  box-sizing: border-box;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
 
 .card-box.eed-employer-sim-card.eed-employer-sim-is-flipped {
@@ -1179,17 +1186,9 @@ table:has(#table_registro_horario) th.eed-diff-header,
   cursor: default;
 }
 
-.card-box.eed-employer-sim-card.eed-employer-sim-is-flipped .eed-employer-sim-flip,
-.card-box.eed-employer-sim-card.eed-employer-sim-is-flipped .eed-employer-sim-flip-inner,
-.card-box.eed-employer-sim-card.eed-employer-sim-is-flipped .eed-employer-sim-back {
-  width: 100%;
-  height: 100%;
-  min-height: 100%;
-}
-
 .card-box.eed-employer-sim-card .eed-employer-sim-close {
   position: absolute;
-  top: 4px;
+  top: 6px;
   right: 6px;
   z-index: 3;
   display: inline-flex;
@@ -1218,27 +1217,45 @@ table:has(#table_registro_horario) th.eed-diff-header,
 .card-box.eed-employer-sim-card .eed-sim-content {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 3px;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 5px;
   box-sizing: border-box;
   width: 100%;
   height: 100%;
+  min-height: 0;
   overflow: hidden;
-  padding: 6px 28px 6px 8px;
+  padding: 8px 12px 6px;
+  color: #fff;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 18px;
+  padding-right: 28px;
+  box-sizing: border-box;
 }
 
 .card-box.eed-employer-sim-card .eed-sim-title {
   margin: 0;
+  padding: 0;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  line-height: 1.1;
-  color: rgba(255, 255, 255, 0.95);
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.88);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding-right: 4px;
 }
 
 .card-box.eed-employer-sim-card .eed-sim-hint {
@@ -1252,8 +1269,9 @@ table:has(#table_registro_horario) th.eed-diff-header,
 .card-box.eed-employer-sim-card .eed-sim-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2px 6px;
-  flex: 0 0 auto;
+  column-gap: 8px;
+  row-gap: 3px;
+  flex-shrink: 0;
 }
 
 .card-box.eed-employer-sim-card .eed-sim-fields--simple {
@@ -1269,7 +1287,7 @@ table:has(#table_registro_horario) th.eed-diff-header,
   font-size: 8px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  line-height: 1.1;
+  line-height: 1.05;
   color: rgba(255, 255, 255, 0.85);
   text-transform: uppercase;
 }
@@ -1286,8 +1304,8 @@ table:has(#table_registro_horario) th.eed-diff-header,
   font-family: 'SF Mono', 'Courier New', monospace;
   font-size: 11px;
   font-weight: 600;
-  line-height: 1.2;
-  height: 20px;
+  line-height: 1.15;
+  height: 18px;
   outline: none;
 }
 
@@ -1300,8 +1318,9 @@ table:has(#table_registro_horario) th.eed-diff-header,
   display: flex;
   flex-direction: column;
   gap: 1px;
-  margin-top: 2px;
-  flex-shrink: 0;
+  margin-top: 1px;
+  flex: 1 1 auto;
+  min-height: 0;
   min-width: 0;
   overflow: hidden;
   cursor: help;
@@ -1312,28 +1331,30 @@ table:has(#table_registro_horario) th.eed-diff-header,
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  line-height: 1.1;
+  line-height: 1.05;
   opacity: 0.9;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 
 .card-box.eed-employer-sim-card .eed-sim-result-value {
   font-family: 'SF Mono', 'Courier New', monospace;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.05;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 
 .card-box.eed-employer-sim-card .eed-sim-result-meta,
 .card-box.eed-employer-sim-card .eed-sim-result-consequence {
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 500;
-  line-height: 1.15;
+  line-height: 1.1;
   opacity: 0.9;
   white-space: nowrap;
   overflow: hidden;
@@ -1343,27 +1364,65 @@ table:has(#table_registro_horario) th.eed-diff-header,
 .card-box.eed-employer-sim-card .eed-sim-result-consequence {
   font-weight: 600;
   opacity: 0.95;
+  flex-shrink: 0;
 }
 
-.card-box.eed-employer-sim-card .eed-sim-result--within-safe .eed-sim-result-value,
-.card-box.eed-employer-sim-card .eed-sim-result--at-limit .eed-sim-result-value,
-.card-box.eed-employer-sim-card .eed-sim-result--balanced .eed-sim-result-value,
-.card-box.eed-employer-sim-card .eed-sim-result--raw-positive .eed-sim-result-value {
-  color: #fff;
+.card-box.eed-employer-sim-card .eed-sim-bank {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 1px;
+  min-width: 0;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  white-space: nowrap;
+  cursor: help;
 }
 
-.card-box.eed-employer-sim-card .eed-sim-result--outside-positive .eed-sim-result-value {
+.card-box.eed-employer-sim-card .eed-sim-bank[hidden] {
+  display: none;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-bank-line {
+  display: block;
+  min-width: 0;
+  flex: 1 1 auto;
+  font-size: 8px;
+  font-weight: 500;
+  line-height: 1.15;
+  opacity: 0.92;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-bank--better .eed-sim-bank-line,
+.card-box.eed-employer-sim-card .eed-sim-bank--surplus .eed-sim-bank-line {
   color: #d8ffe8;
 }
 
-.card-box.eed-employer-sim-card .eed-sim-result--outside-negative .eed-sim-result-value,
-.card-box.eed-employer-sim-card .eed-sim-result--raw-negative .eed-sim-result-value,
-.card-box.eed-employer-sim-card .eed-sim-result--invalid .eed-sim-result-value {
+.card-box.eed-employer-sim-card .eed-sim-bank--worse .eed-sim-bank-line {
   color: #ffe0e0;
 }
 
-.card-box.eed-employer-sim-card .eed-sim-result--at-limit .eed-sim-result-label {
-  color: #ffe8bf;
+.card-box.eed-employer-sim-card .eed-sim-bank--balanced .eed-sim-bank-line,
+.card-box.eed-employer-sim-card .eed-sim-bank--unchanged .eed-sim-bank-line,
+.card-box.eed-employer-sim-card .eed-sim-bank--missing .eed-sim-bank-line {
+  color: #fff;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-result--within .eed-sim-result-value {
+  color: #fff;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-result--overtime .eed-sim-result-value {
+  color: #d8ffe8;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-result--missing .eed-sim-result-value,
+.card-box.eed-employer-sim-card .eed-sim-result--invalid .eed-sim-result-value {
+  color: #ffe0e0;
 }
 
 @media (prefers-reduced-motion: reduce) {

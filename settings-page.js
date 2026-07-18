@@ -11,7 +11,7 @@
   try {
     versionEl.textContent = `v${chrome.runtime.getManifest().version}`;
   } catch {
-    versionEl.textContent = 'v1.3.1';
+    versionEl.textContent = 'v1.4.0';
   }
   versionEl.setAttribute('aria-label', t('changelogView'));
 

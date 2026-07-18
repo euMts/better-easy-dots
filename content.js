@@ -924,6 +924,29 @@ const EASydots = {
     window.addEventListener('resize', this.handleDiffTooltipReposition);
   },
 
+  installSimulatorTooltips(card) {
+    if (!card || card.dataset.eedSimTooltipsReady === 'true') return;
+    card.dataset.eedSimTooltipsReady = 'true';
+
+    card.addEventListener('mouseover', (event) => {
+      const target = event.target.closest('[data-eed-tooltip]');
+      if (!target || !card.contains(target)) return;
+      this.showDiffTooltip(target);
+    });
+
+    card.addEventListener('mouseout', (event) => {
+      const target = event.target.closest('[data-eed-tooltip]');
+      if (!target) return;
+
+      const related = event.relatedTarget;
+      if (related && target.contains(related)) return;
+
+      if (this.diffTooltipAnchor === target) {
+        this.hideDiffTooltip();
+      }
+    });
+  },
+
   secondsToTimeString(totalSeconds) {
     const seconds = ((totalSeconds % 86400) + 86400) % 86400;
     const hours = Math.floor(seconds / 3600);
@@ -1750,6 +1773,148 @@ const EASydots = {
     return this.parseSignedHHMMSSToSeconds(valueEl.textContent);
   },
 
+  getCurrentHourBankBalanceSeconds() {
+    try {
+      const card = this.findHourBankCard();
+      if (!card) return null;
+
+      const valueEl =
+        card.querySelector('.eed-hour-bank-front h2 b') ||
+        card.querySelector('.eed-hour-bank-front h2') ||
+        card.querySelector('.bar-widget h2 b') ||
+        card.querySelector('h2 b') ||
+        card.querySelector('h2');
+
+      if (!valueEl) return null;
+      return this.parseSignedHHMMSSToSeconds(valueEl.textContent);
+    } catch (error) {
+      this.warnFeature('leitura do banco de horas', error);
+      return null;
+    }
+  },
+
+  calculateProjectedTimeBank(currentBankSeconds, simulatedAfterToleranceSeconds) {
+    if (!Number.isFinite(currentBankSeconds) || !Number.isFinite(simulatedAfterToleranceSeconds)) {
+      return null;
+    }
+    return currentBankSeconds + simulatedAfterToleranceSeconds;
+  },
+
+  buildTimeBankProjectionView(currentBankSeconds, simulatedAfterToleranceSeconds) {
+    if (!Number.isFinite(currentBankSeconds) || !Number.isFinite(simulatedAfterToleranceSeconds)) {
+      return {
+        visible: true,
+        missing: true,
+        line: t('contentSimBankNotFound'),
+        tone: 'missing',
+        tooltip: t('contentSimBankNotFound'),
+      };
+    }
+
+    const projected = this.calculateProjectedTimeBank(
+      currentBankSeconds,
+      simulatedAfterToleranceSeconds
+    );
+    const projectedText = this.formatSignedBalanceText(projected);
+    const impactAbsText = this.formatSecondsToHHMMSS(
+      Math.abs(simulatedAfterToleranceSeconds)
+    );
+    const afterAbsFriendly = this.formatFriendlyDuration(
+      Math.abs(simulatedAfterToleranceSeconds)
+    );
+    const projectedAbsFriendly = this.formatFriendlyDuration(Math.abs(projected));
+
+    if (simulatedAfterToleranceSeconds === 0) {
+      return {
+        visible: true,
+        missing: false,
+        line: t('contentSimBankCompactLine', [
+          projectedText,
+          t('contentSimBankNoChange'),
+        ]),
+        tone: 'unchanged',
+        tooltip: t('contentSimBankTooltipNoEffect'),
+      };
+    }
+
+    if (simulatedAfterToleranceSeconds < 0) {
+      return {
+        visible: true,
+        missing: false,
+        line: t('contentSimBankCompactLine', [
+          projectedText,
+          t('contentSimBankDetailIncrease', [impactAbsText]),
+        ]),
+        tone: 'worse',
+        tooltip: t('contentSimBankTooltipIncreasesDebt', [afterAbsFriendly]),
+      };
+    }
+
+    // Positive after-tolerance: reduces debt or increases surplus
+    let tooltip;
+    let tone = 'better';
+
+    if (currentBankSeconds < 0) {
+      if (projected < 0) {
+        tooltip = t('contentSimBankTooltipPartialPay', [
+          afterAbsFriendly,
+          projectedAbsFriendly,
+        ]);
+      } else if (projected === 0) {
+        tone = 'balanced';
+        tooltip = t('contentSimBankTooltipClearsDebt', [afterAbsFriendly]);
+      } else {
+        tone = 'surplus';
+        tooltip = t('contentSimBankTooltipTurnsPositive', [projectedAbsFriendly]);
+      }
+    } else {
+      tone = 'surplus';
+      tooltip = t('contentSimBankTooltipStaysPositive', [projectedAbsFriendly]);
+    }
+
+    return {
+      visible: true,
+      missing: false,
+      line: t('contentSimBankCompactLine', [
+        projectedText,
+        t('contentSimBankDetailReduce', [impactAbsText]),
+      ]),
+      tone,
+      tooltip,
+    };
+  },
+
+  updateSimulatorBankProjection(back, analysis) {
+    const bankEl = back.querySelector('.eed-sim-bank');
+    if (!bankEl) return;
+
+    const lineEl = bankEl.querySelector('.eed-sim-bank-line');
+
+    if (!analysis) {
+      bankEl.hidden = true;
+      bankEl.className = 'eed-sim-bank';
+      this.setTooltipTarget(bankEl, null);
+      return;
+    }
+
+    try {
+      const currentBankSeconds = this.getCurrentHourBankBalanceSeconds();
+      const view = this.buildTimeBankProjectionView(
+        currentBankSeconds,
+        analysis.afterTolerance
+      );
+
+      bankEl.hidden = !view.visible;
+      bankEl.className = `eed-sim-bank eed-sim-bank--${view.tone}`;
+      if (lineEl) lineEl.textContent = view.line || '';
+      this.setTooltipTarget(bankEl, view.tooltip);
+    } catch (error) {
+      this.warnFeature('projeção do banco', error);
+      bankEl.hidden = true;
+      this.setTooltipTarget(bankEl, null);
+    }
+  },
+
   getHourBankCloseButtonHtml() {
     return `<button type="button" class="eed-hour-bank-close" aria-label="${t('contentHourBankClose')}"><span aria-hidden="true">×</span></button>`;
   },
@@ -2100,6 +2265,35 @@ const EASydots = {
     return message.includes('Extension context invalidated');
   },
 
+  mountCardFrontActionHint(barWidget, className, text) {
+    if (!barWidget) return null;
+
+    const existing = barWidget.querySelector(`.${className}`);
+    if (existing) return existing;
+
+    const hint = document.createElement('span');
+    hint.className = `eed-card-front-action-hint ${className}`;
+    hint.textContent = text;
+    hint.setAttribute('aria-hidden', 'true');
+
+    // Place the badge in a row immediately above the <hr> so both cards
+    // share the same visual anchor (above the horizontal rule).
+    const hr = barWidget.querySelector(':scope > hr') || barWidget.querySelector('hr');
+    const row = document.createElement('div');
+    row.className = 'eed-front-hint-row';
+    row.appendChild(hint);
+
+    if (hr && hr.parentNode === barWidget) {
+      barWidget.insertBefore(row, hr);
+    } else if (hr) {
+      hr.parentNode.insertBefore(row, hr);
+    } else {
+      barWidget.appendChild(row);
+    }
+
+    return hint;
+  },
+
   initBalanceCardPlanner() {
     if (!this.isExtensionAlive()) return;
 
@@ -2135,12 +2329,11 @@ const EASydots = {
       const front = flip.querySelector('.eed-hour-bank-front');
 
       front.appendChild(barWidget);
-
-      const hint = document.createElement('span');
-      hint.className = 'eed-hour-bank-hover-hint';
-      hint.textContent = t('contentHourBankHoverHint');
-      hint.setAttribute('aria-hidden', 'true');
-      front.appendChild(hint);
+      this.mountCardFrontActionHint(
+        barWidget,
+        'eed-hour-bank-hover-hint',
+        t('contentHourBankHoverHint')
+      );
 
       card.appendChild(flip);
       this.bindHourBankEvents(flip, card);
@@ -2305,52 +2498,37 @@ const EASydots = {
     const rawText = this.formatSignedBalanceText(analysis.raw);
     const afterText = this.formatSignedBalanceText(analysis.afterTolerance);
     const friendlyRaw = this.formatFriendlyDuration(Math.abs(analysis.raw));
-    const withinTolerance =
-      analysis.status === 'within_safe' || analysis.status === 'at_limit';
-    const statusText =
-      analysis.status === 'at_limit'
-        ? t('contentSimStatusAtLimit')
-        : withinTolerance
-          ? t('contentSimStatusWithin')
-          : t('contentSimStatusOutside');
+    const after = analysis.afterTolerance;
 
-    if (analysis.raw === 0) {
+    // Title follows after-tolerance impact, not raw balance.
+    if (after === 0) {
+      const value =
+        analysis.raw === 0 ? '00:00:00' : t('contentSimValueRaw', [rawText]);
+
+      let tooltip = t('contentSimTooltipBalanced');
+      if (analysis.raw > 0) {
+        tooltip = t('contentSimTooltipWithinPositive', [friendlyRaw, afterText]);
+      } else if (analysis.raw < 0) {
+        tooltip = t('contentSimTooltipWithinNegative', [friendlyRaw, afterText]);
+      }
+
       return {
         label: t('contentSimStatusWithin'),
-        value: '00:00:00',
-        meta: t('contentSimResultMeta', [rawText, afterText]),
-        consequence: t('contentSimConsequenceBalanced'),
-        tooltip: t('contentSimTooltipBalanced'),
+        value,
+        meta: t('contentSimMetaImpact', [afterText]),
+        consequence: t('contentSimConsequenceNoBankChange'),
+        tone: 'within',
+        tooltip,
       };
     }
 
-    if (withinTolerance && analysis.raw > 0) {
-      return {
-        label: t('contentSimLabelExtraRaw'),
-        value: t('contentSimValueRaw', [rawText]),
-        meta: t('contentSimMetaWithin', [statusText, afterText]),
-        consequence: t('contentSimConsequenceNoOvertime'),
-        tooltip: t('contentSimTooltipWithinPositive', [friendlyRaw, afterText]),
-      };
-    }
-
-    if (withinTolerance && analysis.raw < 0) {
-      return {
-        label: t('contentSimLabelMissingRaw'),
-        value: t('contentSimValueRaw', [rawText]),
-        meta: t('contentSimMetaWithin', [statusText, afterText]),
-        consequence: t('contentSimConsequenceNoDeduct'),
-        tooltip: t('contentSimTooltipWithinNegative', [friendlyRaw]),
-      };
-    }
-
-    if (analysis.status === 'outside_positive') {
-      const overtimeText = this.formatSignedBalanceText(analysis.estimatedOvertimeSeconds);
+    if (after > 0) {
       return {
         label: t('contentSimOvertimeToday'),
-        value: overtimeText,
-        meta: t('contentSimResultMeta', [rawText, afterText]),
+        value: afterText,
+        meta: t('contentSimMetaRawOnly', [rawText]),
         consequence: t('contentSimConsequenceOvertime'),
+        tone: 'overtime',
         tooltip: t('contentSimTooltipOutsidePositive', [friendlyRaw]),
       };
     }
@@ -2358,8 +2536,9 @@ const EASydots = {
     return {
       label: t('contentSimStatusMissing'),
       value: afterText,
-      meta: t('contentSimResultMeta', [rawText, afterText]),
+      meta: t('contentSimMetaRawOnly', [rawText]),
       consequence: t('contentSimConsequenceMayDeduct'),
+      tone: 'missing',
       tooltip: t('contentSimTooltipOutsideNegative', [friendlyRaw]),
     };
   },
@@ -2381,30 +2560,14 @@ const EASydots = {
       if (metaEl) metaEl.textContent = '';
       if (consequenceEl) consequenceEl.textContent = '';
       this.setTooltipTarget(resultEl, t('contentSimInvalidTimes'));
+      this.updateSimulatorBankProjection(back, null);
       return;
     }
 
     const analysis = this.buildSimulatorAnalysis(times, settings);
     const view = this.getSimulatorResultView(analysis);
-    const statusClass = {
-      within_safe: 'within-safe',
-      at_limit: 'at-limit',
-      outside_negative: 'outside-negative',
-      outside_positive: 'outside-positive',
-    }[analysis.status];
 
-    const toneClass =
-      analysis.raw === 0
-        ? 'balanced'
-        : analysis.raw > 0
-          ? analysis.status === 'outside_positive'
-            ? 'outside-positive'
-            : 'raw-positive'
-          : analysis.status === 'outside_negative'
-            ? 'outside-negative'
-            : 'raw-negative';
-
-    resultEl.className = `eed-sim-result eed-sim-result--${statusClass} eed-sim-result--${toneClass}`;
+    resultEl.className = `eed-sim-result eed-sim-result--${view.tone}`;
 
     if (labelEl) labelEl.textContent = view.label;
     if (valueEl) valueEl.textContent = view.value;
@@ -2412,6 +2575,7 @@ const EASydots = {
     if (consequenceEl) consequenceEl.textContent = view.consequence;
 
     this.setTooltipTarget(resultEl, view.tooltip);
+    this.updateSimulatorBankProjection(back, analysis);
   },
 
   getEmployerSimCloseButtonHtml() {
@@ -2428,7 +2592,9 @@ const EASydots = {
       back.innerHTML = `
         ${this.getEmployerSimCloseButtonHtml()}
         <div class="eed-sim-content">
-          <p class="eed-sim-title">${t('contentSimTitle')}</p>
+          <div class="eed-sim-header">
+            <p class="eed-sim-title">${t('contentSimTitle')}</p>
+          </div>
           <p class="eed-sim-hint">${t('contentSimScheduleRequired')}</p>
         </div>
       `;
@@ -2442,7 +2608,9 @@ const EASydots = {
     back.innerHTML = `
       ${this.getEmployerSimCloseButtonHtml()}
       <div class="eed-sim-content">
-        <p class="eed-sim-title">${t('contentSimTitle')}</p>
+        <div class="eed-sim-header">
+          <p class="eed-sim-title">${t('contentSimTitle')}</p>
+        </div>
         <div class="eed-sim-fields ${hasInterval ? '' : 'eed-sim-fields--simple'}">
           <label class="eed-sim-field">
             <span>${t('contentSimLabelEntry')}</span>
@@ -2474,6 +2642,9 @@ const EASydots = {
           <span class="eed-sim-result-label"></span>
           <span class="eed-sim-result-value"></span>
           <span class="eed-sim-result-meta"></span>
+          <div class="eed-sim-bank" hidden>
+            <span class="eed-sim-bank-line"></span>
+          </div>
           <span class="eed-sim-result-consequence"></span>
         </div>
       </div>
@@ -2656,7 +2827,9 @@ const EASydots = {
           <div class="eed-hour-bank-face eed-employer-sim-back">
             ${this.getEmployerSimCloseButtonHtml()}
             <div class="eed-sim-content">
-              <p class="eed-sim-title">${t('contentSimTitle')}</p>
+              <div class="eed-sim-header">
+                <p class="eed-sim-title">${t('contentSimTitle')}</p>
+              </div>
               <p class="eed-sim-hint">…</p>
             </div>
           </div>
@@ -2672,14 +2845,23 @@ const EASydots = {
         el.setAttribute('aria-hidden', 'true');
       });
 
-      const hint = document.createElement('span');
-      hint.className = 'eed-employer-sim-hover-hint';
-      hint.textContent = t('contentSimHoverHint');
-      hint.setAttribute('aria-hidden', 'true');
-      front.appendChild(hint);
+      this.mountCardFrontActionHint(
+        barWidget,
+        'eed-employer-sim-hover-hint',
+        t('contentSimHoverHint')
+      );
 
       card.appendChild(flip);
+
+      // Lock height after the front hint row is in place so both faces share it.
+      const lockedHeight = Math.ceil(card.getBoundingClientRect().height);
+      if (lockedHeight > 0) {
+        card.style.height = `${lockedHeight}px`;
+        card.dataset.eedSimHeightLocked = 'true';
+      }
+
       this.bindEmployerSimEvents(flip, card);
+      this.installSimulatorTooltips(card);
       this.ensureEmployerSimulatorBack(flip).catch(() => {});
     } catch (error) {
       if (this.isContextInvalidatedError(error)) {
@@ -2692,6 +2874,8 @@ const EASydots = {
         delete card.dataset.eedEmployerSimInitialized;
         delete card.dataset.eedEmployerSimEnhanced;
         delete card.dataset.eedEmployerEventsBound;
+        delete card.dataset.eedSimHeightLocked;
+        card.style.height = '';
       }
     }
   },
