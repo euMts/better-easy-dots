@@ -462,6 +462,19 @@ const EASydots = {
     return t('contentDayBalanceStatusCompactOvertime');
   },
 
+  getDayBalanceEstimatedBankSeconds(analysis) {
+    if (!analysis || !Number.isFinite(analysis.considered)) return null;
+    const currentBankSeconds = this.getCurrentHourBankBalanceSeconds();
+    return this.calculateProjectedTimeBank(currentBankSeconds, analysis.considered);
+  },
+
+  buildDayBalanceAfterDayCompactLabel(estimatedBankSeconds) {
+    if (!Number.isFinite(estimatedBankSeconds)) return '';
+    return t('contentDayBalanceAfterDayCompact', [
+      this.formatSignedBalanceText(estimatedBankSeconds),
+    ]);
+  },
+
   buildDayBalanceMetaLine(analysis) {
     const parts = [
       t('contentDayBalanceRawLabel', [
@@ -484,6 +497,13 @@ const EASydots = {
       (analysis.status === 'outside_negative' || analysis.status === 'at_limit')
     ) {
       parts.push(t('contentDayBalanceSafeSuggestion', [analysis.exits.safe]));
+    }
+
+    const afterDay = this.buildDayBalanceAfterDayCompactLabel(
+      this.getDayBalanceEstimatedBankSeconds(analysis)
+    );
+    if (afterDay) {
+      parts.push(afterDay);
     }
 
     return parts.join(' · ');
@@ -544,6 +564,16 @@ const EASydots = {
       parts.push(
         t('contentDayBalanceOvertimeToday', [
           this.formatSignedBalanceText(analysis.estimatedOvertimeSeconds),
+        ])
+      );
+    }
+
+    const estimatedBankSeconds = this.getDayBalanceEstimatedBankSeconds(analysis);
+    if (Number.isFinite(estimatedBankSeconds)) {
+      parts.push(t('contentDayBalanceAfterDayTooltipExplain'));
+      parts.push(
+        t('contentDayBalanceAfterDayTooltip', [
+          this.formatSignedBalanceText(estimatedBankSeconds),
         ])
       );
     }
@@ -1224,18 +1254,27 @@ const EASydots = {
     if (!scrollContainer.dataset.eedOriginalHeight) {
       scrollContainer.dataset.eedOriginalHeight = scrollContainer.style.height || '';
       scrollContainer.dataset.eedOriginalOverflow = scrollContainer.style.overflow || '';
+      scrollContainer.dataset.eedOriginalOverflowX = scrollContainer.style.overflowX || '';
+      scrollContainer.dataset.eedOriginalOverflowY = scrollContainer.style.overflowY || '';
     }
 
     if (hasBalance) {
       scrollContainer.style.height = 'auto';
       scrollContainer.style.minHeight = scrollContainer.dataset.eedOriginalHeight || '13em';
-      scrollContainer.style.overflow = 'visible';
+      // Grow vertically for the balance card, but keep horizontal scroll when needed
+      scrollContainer.style.overflow = 'auto';
+      scrollContainer.style.overflowX = 'auto';
+      scrollContainer.style.overflowY = 'auto';
+      scrollContainer.classList.add('eed-records-scroll');
       return;
     }
 
+    scrollContainer.classList.remove('eed-records-scroll');
     scrollContainer.style.height = scrollContainer.dataset.eedOriginalHeight;
     scrollContainer.style.minHeight = '';
     scrollContainer.style.overflow = scrollContainer.dataset.eedOriginalOverflow || '';
+    scrollContainer.style.overflowX = scrollContainer.dataset.eedOriginalOverflowX || '';
+    scrollContainer.style.overflowY = scrollContainer.dataset.eedOriginalOverflowY || '';
   },
 
   async renderDayBalance(settings, tableEl) {

@@ -350,6 +350,24 @@
       "amount": { "content": "$1", "example": "+00:11:00" }
     }
   },
+  "contentDayBalanceAfterDayCompact": {
+    "message": "Banco após o dia: $BALANCE$",
+    "description": "Saldo estimado do banco após o fim do dia (compacto)",
+    "placeholders": {
+      "balance": { "content": "$1", "example": "-05:56:09" }
+    }
+  },
+  "contentDayBalanceAfterDayTooltip": {
+    "message": "Saldo estimado após o fim do dia: $BALANCE$",
+    "description": "Saldo estimado do banco após o fim do dia (tooltip)",
+    "placeholders": {
+      "balance": { "content": "$1", "example": "-05:56:09" }
+    }
+  },
+  "contentDayBalanceAfterDayTooltipExplain": {
+    "message": "O saldo estimado após o dia soma o banco de horas atual com o saldo do dia após aplicar a tolerância diária.",
+    "description": "Explicação do saldo estimado após o fim do dia"
+  },
   "contentDayBalanceSafeSuggestion": {
     "message": "Sugestão segura: $TIME$",
     "description": "Sugestão de saída segura no card",
@@ -1234,6 +1252,10 @@
   },
   "changelogV140Item4": {
     "message": "Simulador: texto “sem impacto” visível e alinhamento visual com o card de banco de horas",
+    "description": "Item do changelog v1.4.0"
+  },
+  "changelogV140Item5": {
+    "message": "Card do saldo do dia mostra o banco estimado após o fim do dia",
     "description": "Item do changelog v1.4.0"
   },
   "changelogV131Item1": {

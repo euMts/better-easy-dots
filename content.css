@@ -157,6 +157,49 @@ table:has(#table_registro_horario) th.eed-diff-header,
   }
 }
 
+/* Keep horizontal scroll when the day-balance card expands the container height */
+.table-responsive.eed-records-scroll,
+.table-responsive:has(#table_registro_horario) {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(130, 52, 232, 0.35) transparent;
+}
+
+.table-responsive.eed-records-scroll::-webkit-scrollbar,
+.table-responsive:has(#table_registro_horario)::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.table-responsive.eed-records-scroll::-webkit-scrollbar-track,
+.table-responsive:has(#table_registro_horario)::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.table-responsive.eed-records-scroll::-webkit-scrollbar-thumb,
+.table-responsive:has(#table_registro_horario)::-webkit-scrollbar-thumb {
+  background: rgba(130, 52, 232, 0.28);
+  border-radius: 999px;
+}
+
+.table-responsive.eed-records-scroll::-webkit-scrollbar-thumb:hover,
+.table-responsive:has(#table_registro_horario)::-webkit-scrollbar-thumb:hover {
+  background: rgba(130, 52, 232, 0.45);
+}
+
+.table-responsive.eed-records-scroll::-webkit-scrollbar-corner,
+.table-responsive:has(#table_registro_horario)::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+#table_registro_horario {
+  width: 100%;
+  min-width: 640px;
+}
+
 #table_registro_horario tr.eed-suggestion-row td {
   color: #333 !important;
   font-weight: 500;
@@ -235,6 +278,7 @@ table:has(#table_registro_horario) th.eed-diff-header,
   gap: 2px;
   min-width: 0;
   flex: 1;
+  overflow: visible;
 }
 
 #table_registro_horario tr.eed-day-balance-row .eed-day-balance-right {
@@ -292,11 +336,10 @@ table:has(#table_registro_horario) th.eed-diff-header,
   margin-top: 2px;
   font-size: 11px;
   font-weight: 500;
-  line-height: 1.2;
+  line-height: 1.35;
   color: #7a6b8a;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 #table_registro_horario tr.eed-day-balance-row .eed-day-balance-meta--within-safe {

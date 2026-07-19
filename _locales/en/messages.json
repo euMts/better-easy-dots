@@ -350,6 +350,24 @@
       "amount": { "content": "$1", "example": "+00:11:00" }
     }
   },
+  "contentDayBalanceAfterDayCompact": {
+    "message": "Time bank after today: $BALANCE$",
+    "description": "Estimated time-bank balance after end of day (compact)",
+    "placeholders": {
+      "balance": { "content": "$1", "example": "-05:56:09" }
+    }
+  },
+  "contentDayBalanceAfterDayTooltip": {
+    "message": "Estimated balance after the end of the day: $BALANCE$",
+    "description": "Estimated time-bank balance after end of day (tooltip)",
+    "placeholders": {
+      "balance": { "content": "$1", "example": "-05:56:09" }
+    }
+  },
+  "contentDayBalanceAfterDayTooltipExplain": {
+    "message": "The estimated balance after today adds the current time bank to the day balance after applying daily tolerance.",
+    "description": "Explanation of estimated balance after end of day"
+  },
   "contentDayBalanceSafeSuggestion": {
     "message": "Safe suggestion: $TIME$",
     "description": "Safe exit suggestion on the card",
@@ -1234,6 +1252,10 @@
   },
   "changelogV140Item4": {
     "message": "Simulator: visible “no impact” label and visual alignment with the time-bank card",
+    "description": "Changelog v1.4.0 item"
+  },
+  "changelogV140Item5": {
+    "message": "Daily balance card shows the estimated time bank after the end of the day",
     "description": "Changelog v1.4.0 item"
   },
   "changelogV131Item1": {
