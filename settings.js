@@ -9,9 +9,9 @@ const EED_LOCAL_DEV_WEBSITE_PREFIXES = [
 
 const EED_DEFAULT_SETTINGS = {
   entrada: '08:00',
-  saida: '18:00',
+  saida: '18:10',
   intervaloInicio: '12:00',
-  intervaloFim: '13:00',
+  intervaloFim: '13:30',
   toleranciaAtraso: 10,
   margemSegurancaTolerancia: 1,
   horariosConfigurados: false,

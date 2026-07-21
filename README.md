@@ -60,9 +60,9 @@ Campos configuráveis:
 | Campo | Descrição | Padrão |
 |-------|-----------|--------|
 | Entrada | Horário de início da jornada | `08:00` |
-| Saída | Horário de fim da jornada | `18:00` |
+| Saída | Horário de fim da jornada | `18:10` |
 | Início do intervalo | Saída para almoço | `12:00` |
-| Fim do intervalo | Retorno do almoço | `13:00` |
+| Fim do intervalo | Retorno do almoço | `13:30` |
 | Tolerância de atraso | Minutos aceitos na entrada | `5` |
 | Endereço do Easydots | URL da sua empresa | Detectada automaticamente |
 

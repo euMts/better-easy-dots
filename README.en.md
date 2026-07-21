@@ -60,9 +60,9 @@ Configurable fields:
 | Field | Description | Default |
 |-------|-------------|---------|
 | Clock-in | Workday start time | `08:00` |
-| Clock-out | Workday end time | `18:00` |
+| Clock-out | Workday end time | `18:10` |
 | Break start | Lunch break start | `12:00` |
-| Break end | Lunch break end | `13:00` |
+| Break end | Lunch break end | `13:30` |
 | Late tolerance | Accepted minutes on clock-in | `5` |
 | Easydots URL | Your company's URL | Auto-detected |
 

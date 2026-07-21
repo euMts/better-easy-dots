@@ -1262,6 +1262,10 @@
     "message": "Button to restore automatic times when the simulation is manual",
     "description": "Changelog v1.5.0 item"
   },
+  "changelogV150Item3": {
+    "message": "Default workday schedule: 08:00–12:00 and 13:30–18:10",
+    "description": "Changelog v1.5.0 item"
+  },
   "changelogV140Item1": {
     "message": "Workday simulator shows overtime impact on the time-bank balance",
     "description": "Changelog v1.4.0 item"
