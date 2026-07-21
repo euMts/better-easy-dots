@@ -796,6 +796,22 @@
     "message": "Configure your schedule in the extension to simulate the workday.",
     "description": "Notice when schedule is not configured"
   },
+  "contentSimResetAutomatic": {
+    "message": "Restore automatic times",
+    "description": "Tooltip for the simulator reset button"
+  },
+  "contentSimManualSimulation": {
+    "message": "Manual simulation",
+    "description": "Indicates the simulator is using manual times"
+  },
+  "contentSimSavedValues": {
+    "message": "Saved values",
+    "description": "Indicates simulator values are saved locally"
+  },
+  "contentSimRestoredAutomatic": {
+    "message": "Restored to automatic times",
+    "description": "Feedback when restoring automatic simulator times"
+  },
   "contentSimBankAfterLabel": {
     "message": "Time bank after simulation",
     "description": "Legacy label for time-bank impact in the simulator"
@@ -1237,6 +1253,14 @@
   "changelogOpenSettings": {
     "message": "Open settings",
     "description": "Secondary changelog page button"
+  },
+  "changelogV150Item1": {
+    "message": "Workday simulator saves typed times locally and restores them on the same day",
+    "description": "Changelog v1.5.0 item"
+  },
+  "changelogV150Item2": {
+    "message": "Button to restore automatic times when the simulation is manual",
+    "description": "Changelog v1.5.0 item"
   },
   "changelogV140Item1": {
     "message": "Workday simulator shows overtime impact on the time-bank balance",

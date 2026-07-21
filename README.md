@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="README.en.md"><img src="https://img.shields.io/badge/README-English-blue" alt="README in English"></a>
-  <img src="https://img.shields.io/badge/versão-1.4.0-purple" alt="Versão 1.4.0">
+  <img src="https://img.shields.io/badge/versão-1.5.0-purple" alt="Versão 1.5.0">
   <img src="https://img.shields.io/badge/Manifest-V3-blue" alt="Manifest V3">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licença-MIT-lightgrey" alt="Licença MIT"></a>
 </p>
@@ -181,7 +181,7 @@ Nenhum dado é transmitido para servidores da extensão.
 
 - **Navegador:** Google Chrome (Manifest V3)
 - **Sites:** `https://*.easydots.com.br/*` (padrão: `https://sys.easydots.com.br/`), `https://*.acspontodigital.com.br/*` (legado)
-- **Versão atual:** `1.4.0`
+- **Versão atual:** `1.5.0`
 
 A extensão depende da estrutura HTML atual do Easydots (`#table_registro_horario`, `#btnRegister`, navbar). Atualizações no site podem exigir ajustes nos seletores.
 

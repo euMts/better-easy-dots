@@ -32,6 +32,10 @@ const EASydots = {
   initOnceDone: false,
   ENHANCE_DEBOUNCE_MS: 150,
   UPDATE_DEBOUNCE_MS: 150,
+  SIM_SAVE_DEBOUNCE_MS: 1000,
+  SIMULATOR_STORAGE_KEY: 'eedSimulatorValues',
+  SIMULATOR_TIME_FIELDS: ['entrada', 'intervaloInicio', 'intervaloFim', 'saida'],
+  simSaveTimer: null,
 
   isExtensionAlive() {
     if (this.extensionDead) return false;
@@ -91,6 +95,7 @@ const EASydots = {
     clearTimeout(this.phase2Timer);
     clearTimeout(this.jornadaSyncTimer);
     clearTimeout(this.jornadaFeedbackTimeout);
+    clearTimeout(this.simSaveTimer);
     this.cancelIdle(this.phase3Timer);
     this.updateTimer = null;
     this.enhanceTimer = null;
@@ -98,6 +103,7 @@ const EASydots = {
     this.phase3Timer = null;
     this.jornadaSyncTimer = null;
     this.jornadaFeedbackTimeout = null;
+    this.simSaveTimer = null;
 
     try {
       this.pageObserver?.disconnect();
@@ -2520,10 +2526,9 @@ const EASydots = {
   },
 
   readSimulatorTimesFromBack(back) {
-    const fields = ['entrada', 'intervaloInicio', 'intervaloFim', 'saida'];
     const times = {};
 
-    for (const field of fields) {
+    for (const field of this.SIMULATOR_TIME_FIELDS) {
       const input = back.querySelector(`[data-eed-sim-field="${field}"]`);
       const normalized = this.normalizeSimulatedTimeInput(input?.value);
       if (!normalized) return null;
@@ -2531,6 +2536,189 @@ const EASydots = {
     }
 
     return times;
+  },
+
+  getSimulatorLocalDateKey(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  },
+
+  getAutomaticSimulatorValues(records, settings) {
+    return this.getSimulatorSeedTimes(records, settings);
+  },
+
+  getCurrentSimulatorValues(back) {
+    const automatic = back?._eedAutomaticSimulatorValues || {};
+    const times = {};
+    let allValid = true;
+
+    for (const field of this.SIMULATOR_TIME_FIELDS) {
+      const input = back?.querySelector(`[data-eed-sim-field="${field}"]`);
+      const normalized = this.normalizeSimulatedTimeInput(input?.value);
+      if (normalized) {
+        times[field] = normalized;
+        continue;
+      }
+
+      allValid = false;
+      const lastValid = this.normalizeSimulatedTimeInput(input?.dataset?.eedLastValid);
+      times[field] = lastValid || automatic[field] || null;
+    }
+
+    return { times, allValid };
+  },
+
+  loadSavedSimulatorValues() {
+    try {
+      const raw = localStorage.getItem(this.SIMULATOR_STORAGE_KEY);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return null;
+
+      const date = typeof parsed.date === 'string' ? parsed.date : null;
+      if (!date || date !== this.getSimulatorLocalDateKey()) return null;
+
+      const source =
+        parsed.values && typeof parsed.values === 'object' ? parsed.values : parsed;
+      const values = {};
+
+      for (const field of this.SIMULATOR_TIME_FIELDS) {
+        const normalized = this.normalizeSimulatedTimeInput(source[field]);
+        if (normalized) values[field] = normalized;
+      }
+
+      return Object.keys(values).length > 0 ? values : null;
+    } catch {
+      return null;
+    }
+  },
+
+  saveSimulatorValues(values) {
+    if (!values) return false;
+
+    const normalizedValues = {};
+    for (const field of this.SIMULATOR_TIME_FIELDS) {
+      const normalized = this.normalizeSimulatedTimeInput(values[field]);
+      if (!normalized) return false;
+      normalizedValues[field] = normalized;
+    }
+
+    try {
+      localStorage.setItem(
+        this.SIMULATOR_STORAGE_KEY,
+        JSON.stringify({
+          date: this.getSimulatorLocalDateKey(),
+          values: normalizedValues,
+          updatedAt: new Date().toISOString(),
+        })
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  clearSavedSimulatorValues() {
+    clearTimeout(this.simSaveTimer);
+    this.simSaveTimer = null;
+
+    try {
+      localStorage.removeItem(this.SIMULATOR_STORAGE_KEY);
+    } catch {
+      /* ignore quota / privacy mode */
+    }
+  },
+
+  scheduleSaveSimulatorValues(back) {
+    clearTimeout(this.simSaveTimer);
+    this.simSaveTimer = window.setTimeout(() => {
+      this.simSaveTimer = null;
+      this.flushSaveSimulatorValues(back);
+    }, this.SIM_SAVE_DEBOUNCE_MS);
+  },
+
+  flushSaveSimulatorValues(back) {
+    clearTimeout(this.simSaveTimer);
+    this.simSaveTimer = null;
+    if (!back) return;
+
+    const current = this.readSimulatorTimesFromBack(back);
+    if (!current) return;
+
+    const automatic = back._eedAutomaticSimulatorValues;
+    if (automatic && !this.hasManualSimulatorValues(current, automatic)) {
+      this.clearSavedSimulatorValues();
+      return;
+    }
+
+    this.saveSimulatorValues(current);
+  },
+
+  hasManualSimulatorValues(currentValues, automaticValues) {
+    if (!currentValues || !automaticValues) return false;
+
+    return this.SIMULATOR_TIME_FIELDS.some((field) => {
+      const current = this.normalizeSimulatedTimeInput(currentValues[field]);
+      const automatic = this.normalizeSimulatedTimeInput(automaticValues[field]);
+      return Boolean(current && automatic && current !== automatic);
+    });
+  },
+
+  mergeSavedIntoSimulatorValues(automaticValues, savedValues) {
+    const merged = { ...automaticValues };
+    if (!savedValues) return merged;
+
+    for (const field of this.SIMULATOR_TIME_FIELDS) {
+      const normalized = this.normalizeSimulatedTimeInput(savedValues[field]);
+      if (normalized) merged[field] = normalized;
+    }
+
+    return merged;
+  },
+
+  applySimulatorTimesToBack(back, times) {
+    if (!back || !times) return;
+
+    for (const field of this.SIMULATOR_TIME_FIELDS) {
+      const input = back.querySelector(`[data-eed-sim-field="${field}"]`);
+      if (!input) continue;
+
+      const normalized = this.normalizeSimulatedTimeInput(times[field]);
+      if (!normalized) continue;
+
+      input.value = normalized;
+      input.dataset.eedLastValid = normalized;
+    }
+  },
+
+  updateSimulatorResetButtonVisibility(back) {
+    const button = back?.querySelector('.eed-sim-reset-button');
+    if (!button) return;
+
+    const automatic = back._eedAutomaticSimulatorValues;
+    const { times } = this.getCurrentSimulatorValues(back);
+    const show = this.hasManualSimulatorValues(times, automatic);
+    button.hidden = !show;
+  },
+
+  restoreAutomaticSimulatorValues(back, settings) {
+    if (!back) return;
+
+    const automatic = back._eedAutomaticSimulatorValues;
+    if (!automatic) return;
+
+    this.clearSavedSimulatorValues();
+    this.applySimulatorTimesToBack(back, automatic);
+    this.updateSimulatorResult(back, settings);
+    this.updateSimulatorResetButtonVisibility(back);
+  },
+
+  getEmployerSimResetButtonHtml() {
+    const label = t('contentSimResetAutomatic');
+    return `<button type="button" class="eed-sim-reset-button" hidden aria-label="${label}" data-eed-tooltip="${label}"><svg class="eed-sim-reset-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg></button>`;
   },
 
   getSimulatorResultView(analysis) {
@@ -2625,6 +2813,7 @@ const EASydots = {
     if (!back) return;
 
     delete back.dataset.eedSimInputsBound;
+    back._eedAutomaticSimulatorValues = null;
 
     if (!EEDSettings.isScheduleConfigured(settings)) {
       back.className = 'eed-hour-bank-face eed-employer-sim-back eed-employer-sim-back--hint';
@@ -2640,12 +2829,18 @@ const EASydots = {
       return;
     }
 
-    const seeds = this.getSimulatorSeedTimes(records, settings);
+    const automatic = this.getAutomaticSimulatorValues(records, settings);
+    const displayTimes = this.mergeSavedIntoSimulatorValues(
+      automatic,
+      this.loadSavedSimulatorValues()
+    );
     const hasInterval = this.hasInterval(settings);
 
+    back._eedAutomaticSimulatorValues = { ...automatic };
     back.className = 'eed-hour-bank-face eed-employer-sim-back';
     back.innerHTML = `
       ${this.getEmployerSimCloseButtonHtml()}
+      ${this.getEmployerSimResetButtonHtml()}
       <div class="eed-sim-content">
         <div class="eed-sim-header">
           <p class="eed-sim-title">${t('contentSimTitle')}</p>
@@ -2653,28 +2848,28 @@ const EASydots = {
         <div class="eed-sim-fields ${hasInterval ? '' : 'eed-sim-fields--simple'}">
           <label class="eed-sim-field">
             <span>${t('contentSimLabelEntry')}</span>
-            <input type="text" data-eed-sim-field="entrada" inputmode="numeric" maxlength="8" value="${seeds.entrada}" autocomplete="off">
+            <input type="text" data-eed-sim-field="entrada" data-eed-last-valid="${displayTimes.entrada}" inputmode="numeric" maxlength="8" value="${displayTimes.entrada}" autocomplete="off">
           </label>
           ${
             hasInterval
               ? `
           <label class="eed-sim-field">
             <span>${t('contentSimLabelLunchOut')}</span>
-            <input type="text" data-eed-sim-field="intervaloInicio" inputmode="numeric" maxlength="8" value="${seeds.intervaloInicio}" autocomplete="off">
+            <input type="text" data-eed-sim-field="intervaloInicio" data-eed-last-valid="${displayTimes.intervaloInicio}" inputmode="numeric" maxlength="8" value="${displayTimes.intervaloInicio}" autocomplete="off">
           </label>
           <label class="eed-sim-field">
             <span>${t('contentSimLabelLunchIn')}</span>
-            <input type="text" data-eed-sim-field="intervaloFim" inputmode="numeric" maxlength="8" value="${seeds.intervaloFim}" autocomplete="off">
+            <input type="text" data-eed-sim-field="intervaloFim" data-eed-last-valid="${displayTimes.intervaloFim}" inputmode="numeric" maxlength="8" value="${displayTimes.intervaloFim}" autocomplete="off">
           </label>
           `
               : `
-          <input type="hidden" data-eed-sim-field="intervaloInicio" value="${seeds.intervaloInicio}">
-          <input type="hidden" data-eed-sim-field="intervaloFim" value="${seeds.intervaloFim}">
+          <input type="hidden" data-eed-sim-field="intervaloInicio" data-eed-last-valid="${displayTimes.intervaloInicio}" value="${displayTimes.intervaloInicio}">
+          <input type="hidden" data-eed-sim-field="intervaloFim" data-eed-last-valid="${displayTimes.intervaloFim}" value="${displayTimes.intervaloFim}">
           `
           }
           <label class="eed-sim-field">
             <span>${t('contentSimLabelExit')}</span>
-            <input type="text" data-eed-sim-field="saida" inputmode="numeric" maxlength="8" value="${seeds.saida}" autocomplete="off">
+            <input type="text" data-eed-sim-field="saida" data-eed-last-valid="${displayTimes.saida}" inputmode="numeric" maxlength="8" value="${displayTimes.saida}" autocomplete="off">
           </label>
         </div>
         <div class="eed-sim-result">
@@ -2690,6 +2885,7 @@ const EASydots = {
     `;
 
     this.updateSimulatorResult(back, settings);
+    this.updateSimulatorResetButtonVisibility(back);
   },
 
   bindEmployerSimulatorInputs(flip, card, settings) {
@@ -2698,13 +2894,36 @@ const EASydots = {
     back.dataset.eedSimInputsBound = 'true';
 
     const stop = (event) => event.stopPropagation();
+    const automatic = back._eedAutomaticSimulatorValues || {};
+
+    const resetButton = back.querySelector('.eed-sim-reset-button');
+    if (resetButton) {
+      ['click', 'mousedown', 'pointerdown', 'touchstart', 'keydown'].forEach((eventName) => {
+        resetButton.addEventListener(eventName, stop);
+      });
+
+      resetButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.restoreAutomaticSimulatorValues(back, settings);
+      });
+    }
 
     back.querySelectorAll('[data-eed-sim-field]').forEach((input) => {
       if (input.type === 'hidden') return;
 
+      const field = input.getAttribute('data-eed-sim-field');
+      if (!input.dataset.eedLastValid) {
+        const seed =
+          this.normalizeSimulatedTimeInput(input.value) ||
+          this.normalizeSimulatedTimeInput(automatic[field]);
+        if (seed) input.dataset.eedLastValid = seed;
+      }
+
       input.addEventListener('click', stop);
       input.addEventListener('mousedown', stop);
       input.addEventListener('pointerdown', stop);
+      input.addEventListener('touchstart', stop);
       input.addEventListener('keydown', stop);
       input.addEventListener('keyup', stop);
       input.addEventListener('focus', stop);
@@ -2712,13 +2931,33 @@ const EASydots = {
       input.addEventListener('input', (event) => {
         event.stopPropagation();
         this.updateSimulatorResult(back, settings);
+        this.updateSimulatorResetButtonVisibility(back);
+        this.scheduleSaveSimulatorValues(back);
+      });
+
+      input.addEventListener('change', (event) => {
+        event.stopPropagation();
+        this.flushSaveSimulatorValues(back);
+        this.updateSimulatorResetButtonVisibility(back);
       });
 
       input.addEventListener('blur', (event) => {
         event.stopPropagation();
+
         const normalized = this.normalizeSimulatedTimeInput(input.value);
-        if (normalized) input.value = normalized;
+        if (normalized) {
+          input.value = normalized;
+          input.dataset.eedLastValid = normalized;
+        } else {
+          const fallback =
+            this.normalizeSimulatedTimeInput(input.dataset.eedLastValid) ||
+            this.normalizeSimulatedTimeInput(automatic[field]);
+          if (fallback) input.value = fallback;
+        }
+
         this.updateSimulatorResult(back, settings);
+        this.flushSaveSimulatorValues(back);
+        this.updateSimulatorResetButtonVisibility(back);
       });
     });
   },
@@ -2764,6 +3003,10 @@ const EASydots = {
         event.preventDefault();
         event.stopImmediatePropagation();
         this.setEmployerSimFlipped(flip, card, false);
+        return;
+      }
+
+      if (event.target.closest('.eed-sim-reset-button')) {
         return;
       }
 

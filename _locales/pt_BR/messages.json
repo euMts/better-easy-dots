@@ -796,6 +796,22 @@
     "message": "Configure seus horários na extensão para simular a jornada.",
     "description": "Aviso quando horários não estão configurados"
   },
+  "contentSimResetAutomatic": {
+    "message": "Restaurar horários automáticos",
+    "description": "Tooltip do botão de reset do simulador"
+  },
+  "contentSimManualSimulation": {
+    "message": "Simulação manual",
+    "description": "Indica que o simulador usa horários manuais"
+  },
+  "contentSimSavedValues": {
+    "message": "Valores salvos",
+    "description": "Indica que há valores do simulador salvos localmente"
+  },
+  "contentSimRestoredAutomatic": {
+    "message": "Restaurado para horários automáticos",
+    "description": "Feedback ao restaurar horários automáticos no simulador"
+  },
   "contentSimBankAfterLabel": {
     "message": "Banco após simulação",
     "description": "Label legado do impacto no banco de horas no simulador"
@@ -1237,6 +1253,14 @@
   "changelogOpenSettings": {
     "message": "Ver configurações",
     "description": "Botão secundário da página de changelog"
+  },
+  "changelogV150Item1": {
+    "message": "Simulador de jornada salva os horários digitados localmente e restaura no mesmo dia",
+    "description": "Item do changelog v1.5.0"
+  },
+  "changelogV150Item2": {
+    "message": "Botão para restaurar os horários automáticos quando a simulação está manual",
+    "description": "Item do changelog v1.5.0"
   },
   "changelogV140Item1": {
     "message": "Simulador de jornada mostra o impacto das extras no saldo do banco de horas",
