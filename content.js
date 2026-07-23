@@ -2787,11 +2787,8 @@ const EASydots = {
     const friendlyRaw = this.formatFriendlyDuration(Math.abs(analysis.raw));
     const after = analysis.afterTolerance;
 
-    // Title follows after-tolerance impact, not raw balance.
+    // Title and primary value follow after-tolerance impact, not raw balance.
     if (after === 0) {
-      const value =
-        analysis.raw === 0 ? '00:00:00' : t('contentSimValueRaw', [rawText]);
-
       let tooltip = t('contentSimTooltipBalanced');
       if (analysis.raw > 0) {
         tooltip = t('contentSimTooltipWithinPositive', [friendlyRaw, afterText]);
@@ -2801,8 +2798,8 @@ const EASydots = {
 
       return {
         label: t('contentSimStatusWithin'),
-        value,
-        meta: t('contentSimMetaImpact', [afterText]),
+        value: afterText,
+        meta: analysis.raw === 0 ? '' : t('contentSimMetaRawOnly', [rawText]),
         consequence: t('contentSimConsequenceNoBankChange'),
         tone: 'within',
         tooltip,
@@ -2813,8 +2810,9 @@ const EASydots = {
       return {
         label: t('contentSimOvertimeToday'),
         value: afterText,
-        meta: t('contentSimMetaRawOnly', [rawText]),
-        consequence: t('contentSimConsequenceOvertime'),
+        // Bank + overtime-start cover the secondary detail; keep primary uncluttered.
+        meta: '',
+        consequence: '',
         tone: 'overtime',
         tooltip: t('contentSimTooltipOutsidePositive', [friendlyRaw]),
       };
@@ -2823,7 +2821,7 @@ const EASydots = {
     return {
       label: t('contentSimStatusMissing'),
       value: afterText,
-      meta: t('contentSimMetaRawOnly', [rawText]),
+      meta: '',
       consequence: t('contentSimConsequenceMayDeduct'),
       tone: 'missing',
       tooltip: t('contentSimTooltipOutsideNegative', [friendlyRaw]),

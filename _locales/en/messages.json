@@ -739,7 +739,7 @@
     "description": "Legacy consequence for negative within tolerance"
   },
   "contentSimConsequenceNoBankChange": {
-    "message": "Does not change the time bank",
+    "message": "No bank change",
     "description": "Consequence when after-tolerance impact is zero"
   },
   "contentSimConsequenceMayDeduct": {
@@ -747,7 +747,7 @@
     "description": "Consequence for negative outside tolerance"
   },
   "contentSimConsequenceOvertime": {
-    "message": "Should count as overtime",
+    "message": "Counts as overtime",
     "description": "Consequence for positive outside tolerance"
   },
   "contentSimConsequenceBalanced": {
@@ -901,7 +901,7 @@
     }
   },
   "contentSimOvertimeAlreadyCounting": {
-    "message": "Overtime is already counting",
+    "message": "Overtime already counting",
     "description": "Simulator label when raw balance already exceeds daily tolerance"
   },
   "contentSimOvertimeValidFrom": {
@@ -1296,6 +1296,10 @@
   },
   "changelogV160Item1": {
     "message": "Simulator shows from which time valid overtime starts counting",
+    "description": "Changelog v1.6.0 item"
+  },
+  "changelogV160Item2": {
+    "message": "Simulator result with a much clearer primary label and value",
     "description": "Changelog v1.6.0 item"
   },
   "changelogV150Item1": {

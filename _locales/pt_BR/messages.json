@@ -747,7 +747,7 @@
     "description": "Consequência para negativo fora da tolerância"
   },
   "contentSimConsequenceOvertime": {
-    "message": "Deve contar como hora extra",
+    "message": "Conta como hora extra",
     "description": "Consequência para positivo fora da tolerância"
   },
   "contentSimConsequenceBalanced": {
@@ -901,7 +901,7 @@
     }
   },
   "contentSimOvertimeAlreadyCounting": {
-    "message": "Horas extras já estão contando",
+    "message": "Extras já contando",
     "description": "Label quando o saldo bruto já ultrapassou a tolerância no simulador"
   },
   "contentSimOvertimeValidFrom": {
@@ -1296,6 +1296,10 @@
   },
   "changelogV160Item1": {
     "message": "Simulador indica a partir de qual horário as horas extras válidas começam a contar",
+    "description": "Item do changelog v1.6.0"
+  },
+  "changelogV160Item2": {
+    "message": "Resultado do simulador com label e valor principais bem mais destacados",
     "description": "Item do changelog v1.6.0"
   },
   "changelogV150Item1": {

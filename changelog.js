@@ -8,6 +8,7 @@ const EED_CHANGELOG_ENTRIES = [
     version: '1.6.0',
     items: [
       'changelogV160Item1',
+      'changelogV160Item2',
     ],
   },
   {
