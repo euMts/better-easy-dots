@@ -5,6 +5,12 @@ const EED_CHANGELOG_LAST_SHIPPED_VERSION = '1.4.0';
 
 const EED_CHANGELOG_ENTRIES = [
   {
+    version: '1.6.0',
+    items: [
+      'changelogV160Item1',
+    ],
+  },
+  {
     version: '1.5.0',
     items: [
       'changelogV150Item1',
@@ -103,9 +109,9 @@ const EED_CHANGELOG_ENTRIES = [
 
 function eedGetCurrentVersion() {
   try {
-    return chrome.runtime?.getManifest?.()?.version || '1.5.0';
+    return chrome.runtime?.getManifest?.()?.version || '1.6.0';
   } catch {
-    return '1.4.0';
+    return '1.5.0';
   }
 }
 

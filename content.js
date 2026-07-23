@@ -2525,6 +2525,66 @@ const EASydots = {
     };
   },
 
+  /**
+   * Overtime only counts after raw balance exceeds daily tolerance (+1s past the limit).
+   * Returns clock time of the simulated final exit when that threshold is reached.
+   */
+  calculateOvertimeStartExitTime(
+    rawBalanceSeconds,
+    toleranceSeconds,
+    simulatedFinalExitSeconds
+  ) {
+    if (
+      !Number.isFinite(rawBalanceSeconds) ||
+      !Number.isFinite(toleranceSeconds) ||
+      !Number.isFinite(simulatedFinalExitSeconds)
+    ) {
+      return null;
+    }
+
+    if (rawBalanceSeconds > toleranceSeconds) {
+      return { alreadyCounting: true, exitSeconds: null, exitTime: null };
+    }
+
+    const secondsToStartOvertime = toleranceSeconds - rawBalanceSeconds + 1;
+    const overtimeStartExitSeconds = simulatedFinalExitSeconds + secondsToStartOvertime;
+
+    return {
+      alreadyCounting: false,
+      exitSeconds: overtimeStartExitSeconds,
+      exitTime: this.secondsToTimeString(overtimeStartExitSeconds),
+    };
+  },
+
+  buildOvertimeStartLabel(rawBalanceSeconds, toleranceSeconds, simulatedFinalExitSeconds) {
+    const start = this.calculateOvertimeStartExitTime(
+      rawBalanceSeconds,
+      toleranceSeconds,
+      simulatedFinalExitSeconds
+    );
+    if (!start) return null;
+
+    const toleranceFriendly = this.formatFriendlyDuration(toleranceSeconds);
+
+    if (start.alreadyCounting) {
+      return {
+        text: t('contentSimOvertimeAlreadyCounting'),
+        shortText: t('contentSimOvertimeAlreadyCounting'),
+        tooltip: t('contentSimOvertimeAlreadyCountingTooltip', [toleranceFriendly]),
+        alreadyCounting: true,
+      };
+    }
+
+    const exitTime = start.exitTime;
+    return {
+      text: t('contentSimOvertimeStartsAfter', [exitTime]),
+      shortText: t('contentSimOvertimeStartsAfterShort', [exitTime]),
+      tooltip: t('contentSimOvertimeStartsAfterTooltip', [toleranceFriendly, exitTime]),
+      alreadyCounting: false,
+      exitTime,
+    };
+  },
+
   readSimulatorTimesFromBack(back) {
     const times = {};
 
@@ -2770,6 +2830,48 @@ const EASydots = {
     };
   },
 
+  updateSimulatorOvertimeStartLabel(back, analysis, times) {
+    const overtimeEl = back?.querySelector('.eed-sim-overtime-start');
+    if (!overtimeEl) return;
+
+    if (!analysis || !times) {
+      overtimeEl.hidden = true;
+      overtimeEl.textContent = '';
+      this.setTooltipTarget(overtimeEl, null);
+      return;
+    }
+
+    const exitSeconds = this.timeToSeconds(times.saida);
+    const overtimeView = this.buildOvertimeStartLabel(
+      analysis.raw,
+      analysis.toleranceSeconds,
+      exitSeconds
+    );
+
+    if (!overtimeView) {
+      overtimeEl.hidden = true;
+      overtimeEl.textContent = '';
+      this.setTooltipTarget(overtimeEl, null);
+      return;
+    }
+
+    // Preferred sentence on the card; fall back to short if truncated. Tooltip has the full explanation.
+    overtimeEl.hidden = false;
+    overtimeEl.textContent = overtimeView.text;
+    overtimeEl.classList.toggle(
+      'eed-sim-overtime-start--counting',
+      overtimeView.alreadyCounting
+    );
+    this.setTooltipTarget(overtimeEl, overtimeView.tooltip);
+
+    requestAnimationFrame(() => {
+      if (!overtimeEl.isConnected || overtimeEl.hidden) return;
+      if (overtimeEl.scrollWidth > overtimeEl.clientWidth + 1) {
+        overtimeEl.textContent = overtimeView.shortText;
+      }
+    });
+  },
+
   updateSimulatorResult(back, settings) {
     const resultEl = back.querySelector('.eed-sim-result');
     if (!resultEl) return;
@@ -2788,6 +2890,7 @@ const EASydots = {
       if (consequenceEl) consequenceEl.textContent = '';
       this.setTooltipTarget(resultEl, t('contentSimInvalidTimes'));
       this.updateSimulatorBankProjection(back, null);
+      this.updateSimulatorOvertimeStartLabel(back, null, null);
       return;
     }
 
@@ -2803,6 +2906,7 @@ const EASydots = {
 
     this.setTooltipTarget(resultEl, view.tooltip);
     this.updateSimulatorBankProjection(back, analysis);
+    this.updateSimulatorOvertimeStartLabel(back, analysis, times);
   },
 
   getEmployerSimCloseButtonHtml() {
@@ -2879,6 +2983,7 @@ const EASydots = {
           <div class="eed-sim-bank" hidden>
             <span class="eed-sim-bank-line"></span>
           </div>
+          <span class="eed-sim-overtime-start" hidden></span>
           <span class="eed-sim-result-consequence"></span>
         </div>
       </div>

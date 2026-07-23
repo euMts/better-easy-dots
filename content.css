@@ -1432,7 +1432,8 @@ table:has(#table_registro_horario) th.eed-diff-header,
 }
 
 .card-box.eed-employer-sim-card .eed-sim-result-meta,
-.card-box.eed-employer-sim-card .eed-sim-result-consequence {
+.card-box.eed-employer-sim-card .eed-sim-result-consequence,
+.card-box.eed-employer-sim-card .eed-sim-overtime-start {
   font-size: 7px;
   font-weight: 500;
   line-height: 1.1;
@@ -1440,6 +1441,24 @@ table:has(#table_registro_horario) th.eed-diff-header,
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-overtime-start {
+  display: block;
+  margin-top: 1px;
+  flex-shrink: 0;
+  min-width: 0;
+  cursor: help;
+  opacity: 0.92;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-overtime-start[hidden] {
+  display: none;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-overtime-start--counting {
+  font-weight: 600;
+  opacity: 0.95;
 }
 
 .card-box.eed-employer-sim-card .eed-sim-result-consequence {

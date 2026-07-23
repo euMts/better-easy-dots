@@ -886,6 +886,46 @@
       "amount": { "content": "$1", "example": "1h 17min 12s" }
     }
   },
+  "contentSimOvertimeStartsAfter": {
+    "message": "Overtime starts after $TIME$",
+    "description": "Simulator label for when valid overtime starts",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:24:59" }
+    }
+  },
+  "contentSimOvertimeStartsAfterShort": {
+    "message": "Overtime after $TIME$",
+    "description": "Short simulator label for overtime start time",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:24:59" }
+    }
+  },
+  "contentSimOvertimeAlreadyCounting": {
+    "message": "Overtime is already counting",
+    "description": "Simulator label when raw balance already exceeds daily tolerance"
+  },
+  "contentSimOvertimeValidFrom": {
+    "message": "Valid overtime starts at $TIME$",
+    "description": "Alternate label with the time valid overtime began",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:24:59" }
+    }
+  },
+  "contentSimOvertimeStartsAfterTooltip": {
+    "message": "With the configured daily tolerance, overtime should only count when the raw balance exceeds +$TOLERANCE$. With these times, that would start after $TIME$.",
+    "description": "Tooltip explaining when valid overtime starts in the simulator",
+    "placeholders": {
+      "tolerance": { "content": "$1", "example": "10min" },
+      "time": { "content": "$2", "example": "18:24:59" }
+    }
+  },
+  "contentSimOvertimeAlreadyCountingTooltip": {
+    "message": "Raw balance already exceeds the daily tolerance of +$TOLERANCE$. Valid overtime is already counting.",
+    "description": "Tooltip when overtime is already counting in the simulator",
+    "placeholders": {
+      "tolerance": { "content": "$1", "example": "10min" }
+    }
+  },
   "contentScheduleHintBefore": {
     "message": "Set clock-in, clock-out, and break by",
     "description": "Text before settings link when schedule is not configured"
@@ -1253,6 +1293,10 @@
   "changelogOpenSettings": {
     "message": "Open settings",
     "description": "Secondary changelog page button"
+  },
+  "changelogV160Item1": {
+    "message": "Simulator shows from which time valid overtime starts counting",
+    "description": "Changelog v1.6.0 item"
   },
   "changelogV150Item1": {
     "message": "Workday simulator saves typed times locally and restores them on the same day",

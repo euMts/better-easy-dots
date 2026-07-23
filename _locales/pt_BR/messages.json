@@ -886,6 +886,46 @@
       "amount": { "content": "$1", "example": "1h 17min 12s" }
     }
   },
+  "contentSimOvertimeStartsAfter": {
+    "message": "Horas extras começam após $TIME$",
+    "description": "Label do horário em que a hora extra válida começa no simulador",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:24:59" }
+    }
+  },
+  "contentSimOvertimeStartsAfterShort": {
+    "message": "Extras após $TIME$",
+    "description": "Label curta do início de hora extra no simulador",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:24:59" }
+    }
+  },
+  "contentSimOvertimeAlreadyCounting": {
+    "message": "Horas extras já estão contando",
+    "description": "Label quando o saldo bruto já ultrapassou a tolerância no simulador"
+  },
+  "contentSimOvertimeValidFrom": {
+    "message": "Hora extra válida a partir de $TIME$",
+    "description": "Label alternativa com horário em que a hora extra passou a valer",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:24:59" }
+    }
+  },
+  "contentSimOvertimeStartsAfterTooltip": {
+    "message": "Com a tolerância diária configurada, a hora extra só deve contar quando o saldo bruto passar de +$TOLERANCE$. Com estes horários, isso começaria após $TIME$.",
+    "description": "Tooltip explicando quando a hora extra válida começa no simulador",
+    "placeholders": {
+      "tolerance": { "content": "$1", "example": "10min" },
+      "time": { "content": "$2", "example": "18:24:59" }
+    }
+  },
+  "contentSimOvertimeAlreadyCountingTooltip": {
+    "message": "O saldo bruto já ultrapassou a tolerância diária de +$TOLERANCE$. As horas extras válidas já estão contando.",
+    "description": "Tooltip quando a hora extra já está contando no simulador",
+    "placeholders": {
+      "tolerance": { "content": "$1", "example": "10min" }
+    }
+  },
   "contentScheduleHintBefore": {
     "message": "Configure entrada, saída e intervalo",
     "description": "Texto antes do link de configuração quando horários não estão configurados"
@@ -1253,6 +1293,10 @@
   "changelogOpenSettings": {
     "message": "Ver configurações",
     "description": "Botão secundário da página de changelog"
+  },
+  "changelogV160Item1": {
+    "message": "Simulador indica a partir de qual horário as horas extras válidas começam a contar",
+    "description": "Item do changelog v1.6.0"
   },
   "changelogV150Item1": {
     "message": "Simulador de jornada salva os horários digitados localmente e restaura no mesmo dia",
