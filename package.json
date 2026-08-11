@@ -1,0 +1,12 @@
+{
+  "name": "better-easy-dots",
+  "version": "1.7.1",
+  "private": true,
+  "description": "Chrome extension that improves the Easydots time-clock experience",
+  "scripts": {
+    "validate": "node scripts/validate-extension-package.js",
+    "validate:dist": "node scripts/validate-extension-package.js dist",
+    "package": "node scripts/package-extension.js",
+    "validate:json": "node -e \"JSON.parse(require('fs').readFileSync('_locales/en/messages.json'));JSON.parse(require('fs').readFileSync('_locales/pt_BR/messages.json'));JSON.parse(require('fs').readFileSync('manifest.json'));JSON.parse(require('fs').readFileSync('manifest.prod.json'));console.log('OK');\""
+  }
+}

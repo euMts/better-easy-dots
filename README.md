@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="README.en.md"><img src="https://img.shields.io/badge/README-English-blue" alt="README in English"></a>
-  <img src="https://img.shields.io/badge/versão-1.7.0-purple" alt="Versão 1.7.0">
+  <img src="https://img.shields.io/badge/versão-1.7.1-purple" alt="Versão 1.7.1">
   <img src="https://img.shields.io/badge/Manifest-V3-blue" alt="Manifest V3">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licença-MIT-lightgrey" alt="Licença MIT"></a>
 </p>
@@ -114,7 +114,15 @@ Horários de trabalho, intervalo, tolerância diária, margem de segurança e id
 
 ### Chrome Web Store
 
-[Rascunho na loja](https://chromewebstore.google.com/detail/better-easy-dots/cfnehkkbmplomaianjpfiaoonmpekbbb) — o link ficará público após a publicação.
+[Chrome Web Store](https://chromewebstore.google.com/detail/better-easy-dots/cfnehkkbmplomaianjpfiaoonmpekbbb)
+
+### Empacotar para a loja
+
+```bash
+npm run package
+```
+
+Isso gera `builds/better-easy-dots-vX.Y.Z.zip` com `manifest.json` na raiz, valida arquivos citados no manifest e impede ZIP incompleto. Siga `RELEASE_CHECKLIST.md` antes de enviar.
 
 ---
 
@@ -181,7 +189,7 @@ Nenhum dado é transmitido para servidores da extensão.
 
 - **Navegador:** Google Chrome (Manifest V3)
 - **Sites:** `https://*.easydots.com.br/*` (padrão: `https://sys.easydots.com.br/`), `https://*.acspontodigital.com.br/*` (legado)
-- **Versão atual:** `1.7.0`
+- **Versão atual:** `1.7.1`
 
 A extensão depende da estrutura HTML atual do Easydots (`#table_registro_horario`, `#btnRegister`, navbar). Atualizações no site podem exigir ajustes nos seletores.
 

@@ -3701,3 +3701,38 @@ try {
 }
 
 // Boot continues in pending-requests-impact.js after methods are attached.
+// Fallback: if that file is missing from a broken package, still start core features.
+globalThis.__eedBooted = false;
+globalThis.__eedBoot = function eedBoot() {
+  if (globalThis.__eedBooted) return;
+  if (typeof init !== 'function') return;
+  globalThis.__eedBooted = true;
+  init();
+};
+
+setTimeout(() => {
+  globalThis.__eedBoot?.();
+}, 0);
+
+try {
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message?.action !== 'getPageStatus') return false;
+
+    try {
+      sendResponse({
+        ok: true,
+        hasCoreTargets: Boolean(EASydots?.hasCoreTargets?.()),
+        href: String(location.href || ''),
+      });
+    } catch (error) {
+      sendResponse({
+        ok: false,
+        error: String(error?.message || error),
+      });
+    }
+
+    return false;
+  });
+} catch {
+  /* Extension context may already be invalidated */
+}

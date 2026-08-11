@@ -4,7 +4,7 @@
     "description": "Nome da extensão"
   },
   "extensionDescription": {
-    "message": "Extensão para Chrome que adiciona saldo diário, cores e sugestões de horários na página do Easydots",
+    "message": "Saldo do dia, cores, sugestões, banco de horas e impacto de solicitações no Easydots",
     "description": "Descrição da extensão"
   },
   "popupTitle": {
@@ -42,6 +42,22 @@
   "popupReviewButton": {
     "message": "Avaliar na loja",
     "description": "Botão de avaliação"
+  },
+  "popupStatusWrongSite": {
+    "message": "Abra o Easydots para usar o Better Easy Dots.",
+    "description": "Popup quando a aba ativa não é o Easydots"
+  },
+  "popupStatusWaitingPage": {
+    "message": "Aguardando página do Easydots carregar ou login do usuário.",
+    "description": "Popup no domínio certo sem elementos da página"
+  },
+  "popupStatusActive": {
+    "message": "Ativo nesta página do Easydots.",
+    "description": "Popup quando a extensão detecta a página pronta"
+  },
+  "popupOpenEasydots": {
+    "message": "Abrir Easydots",
+    "description": "Botão do popup para abrir o Easydots"
   },
   "settingsPageTitle": {
     "message": "Configurações — Better Easy Dots",
@@ -1373,6 +1389,14 @@
   "changelogV170Item3": {
     "message": "No saldo do dia, indica a partir de qual horário as horas extras válidas começam",
     "description": "Item do changelog v1.7.0"
+  },
+  "changelogV171Item1": {
+    "message": "Corrige o pacote da loja para a extensão ativar de fato na página do Easydots",
+    "description": "Item do changelog v1.7.1"
+  },
+  "changelogV171Item2": {
+    "message": "Popup mostra orientação clara fora do Easydots ou sem login/página carregada",
+    "description": "Item do changelog v1.7.1"
   },
   "changelogV160Item1": {
     "message": "Simulador indica a partir de qual horário as horas extras válidas começam a contar",

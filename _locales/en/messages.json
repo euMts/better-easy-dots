@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extensionDescription": {
-    "message": "Chrome extension that adds daily balance, colors, and schedule suggestions on the Easydots page",
+    "message": "Daily balance, colors, suggestions, hour bank, and request impact on Easydots",
     "description": "Extension description"
   },
   "popupTitle": {
@@ -42,6 +42,22 @@
   "popupReviewButton": {
     "message": "Rate in the store",
     "description": "Review button"
+  },
+  "popupStatusWrongSite": {
+    "message": "Open Easydots to use Better Easy Dots.",
+    "description": "Popup when the active tab is not Easydots"
+  },
+  "popupStatusWaitingPage": {
+    "message": "Waiting for the Easydots page to load or for the user to sign in.",
+    "description": "Popup on the right domain without expected page elements"
+  },
+  "popupStatusActive": {
+    "message": "Active on this Easydots page.",
+    "description": "Popup when the extension detects a ready page"
+  },
+  "popupOpenEasydots": {
+    "message": "Open Easydots",
+    "description": "Popup button to open Easydots"
   },
   "settingsPageTitle": {
     "message": "Settings — Better Easy Dots",
@@ -1373,6 +1389,14 @@
   "changelogV170Item3": {
     "message": "Day balance shows from which time valid overtime starts counting",
     "description": "Changelog v1.7.0 item"
+  },
+  "changelogV171Item1": {
+    "message": "Fixes the store package so the extension actually activates on the Easydots page",
+    "description": "Changelog v1.7.1 item"
+  },
+  "changelogV171Item2": {
+    "message": "Popup shows clear guidance when you are outside Easydots or not signed in yet",
+    "description": "Changelog v1.7.1 item"
   },
   "changelogV160Item1": {
     "message": "Simulator shows from which time valid overtime starts counting",

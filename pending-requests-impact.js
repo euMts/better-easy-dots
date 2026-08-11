@@ -587,6 +587,4 @@
 })(typeof window !== 'undefined' ? window : globalThis);
 
 // Boot after EASydots methods from content.js + this patch are ready.
-if (typeof init === 'function') {
-  init();
-}
+globalThis.__eedBoot?.();

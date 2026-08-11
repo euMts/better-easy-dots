@@ -5,3 +5,5 @@ website/
 *.zip
 *.sh
 builds/
+dist/
+node_modules/
