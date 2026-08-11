@@ -4,7 +4,9 @@ Instruções para agentes de IA que alteram este repositório.
 
 ## Regra obrigatória: versão + changelog
 
-**A cada entrega que inclua feature relevante ou correção de bug visível ao usuário**, atualize a versão e o changelog **nas duas línguas** (PT e EN) no mesmo PR/commit da mudança.
+**Uma versão nova por sessão de desenvolvimento / commit** — não por cada feature implementada no meio do trabalho.
+
+Durante a sessão, acumule features e correções sob a **mesma** versão. Só defina o bump e a entrada de changelog quando for fechar a entrega (o commit da sessão). Se a sessão ainda estiver aberta e a versão já foi aberta no changelog, **adicione itens na entrada existente** em vez de criar `1.x+1`.
 
 Não deixe para depois. Não abra versão nova sem itens de changelog. Não adicione texto só em um idioma.
 
@@ -20,17 +22,21 @@ Use [Semantic Versioning](https://semver.org/) no `manifest.json`:
 
 Refactors internos, comentários, docs sem mudança de produto: **não** bumpam versão.
 
+Se várias features da mesma sessão ainda não foram publicadas na loja e acabaram em versões intermediárias por engano, **consolide numa única entrada** (a versão atual do manifest) antes de publicar — não deixe várias entradas “Novo” que na prática são a mesma entrega.
+
 ---
 
 ## Checklist (sempre nesta ordem)
 
-1. **Definir a nova versão** (ex.: `1.2.0`).
+1. **Definir a versão da sessão** (ex.: `1.2.0`) — uma vez por entrega/commit, não por implementação.
 2. **Atualizar manifests** — mesma versão nos dois:
    - `manifest.json`
    - `manifest.prod.json`
-3. **Adicionar entrada no topo do changelog** em `changelog.js`:
-   - Array `EED_CHANGELOG_ENTRIES`: nova entrada **primeira** (mais recente no topo).
+3. **Adicionar ou estender a entrada no topo do changelog** em `changelog.js`:
+   - Array `EED_CHANGELOG_ENTRIES`: entrada da sessão **primeira** (mais recente no topo).
+   - Inclua `date: 'YYYY-MM-DD'` (data da entrega).
    - Cada item é uma **chave i18n**, nunca texto solto.
+   - Se a entrada da sessão já existe, só acrescente itens — não crie outra versão.
 4. **Traduzir itens em ambos os locales**:
    - `_locales/pt_BR/messages.json`
    - `_locales/en/messages.json`
@@ -77,7 +83,7 @@ Em **cada** `messages.json`, para cada chave:
 Chaves de UI do changelog (já existentes — reutilizar, não duplicar):
 
 - `changelogTitle`, `changelogCurrentVersion`, `changelogNewBadge`
-- `changelogView`, `changelogUpdatedSubtitle`, `changelogSeeWhatChanged`
+- `changelogView`, `changelogUpdatedSubtitle`, `changelogUpdatedOn`
 - `changelogRateInStore`, `changelogOpenSettings`, `changelogClose`
 
 ---
@@ -90,6 +96,7 @@ Chaves de UI do changelog (já existentes — reutilizar, não duplicar):
 const EED_CHANGELOG_ENTRIES = [
   {
     version: '1.2.0',
+    date: '2026-08-11',
     items: [
       'changelogV120Item1',
       'changelogV120Item2',
@@ -97,6 +104,7 @@ const EED_CHANGELOG_ENTRIES = [
   },
   {
     version: '1.1.0',
+    date: '2026-07-10',
     items: [ /* … */ ],
   },
   // versões antigas abaixo, sem remover histórico
@@ -112,6 +120,7 @@ return chrome.runtime?.getManifest?.()?.version || '1.2.0';
 - Qualquer versão **maior** que `EED_CHANGELOG_LAST_SHIPPED_VERSION` recebe o badge **Novo** / **New** (independente de `eedLastSeenChangelogVersion`).
 - `eedLastSeenChangelogVersion` controla só a abertura automática do changelog.
 - Após publicar na loja, atualize `EED_CHANGELOG_LAST_SHIPPED_VERSION` para a versão publicada.
+- A linha auxiliar da página usa `changelogUpdatedOn` com a `date` da entrada mais recente (não “Versão X · Veja o que mudou”).
 
 ### 2. `_locales/pt_BR/messages.json`
 
@@ -163,7 +172,8 @@ em `manifest.json` e `manifest.prod.json`.
 - Texto de changelog hardcoded em `changelog.js`, `changelog.html` ou CSS.
 - Só PT ou só EN.
 - Bump de versão no manifest sem entrada em `EED_CHANGELOG_ENTRIES`.
-- Remover versões antigas do histórico (só adicionar no topo).
+- Abrir versão nova no meio da sessão para cada feature — acumule na versão da entrega.
+- Remover versões antigas do histórico (só adicionar no topo; consolidar só entradas ainda não publicadas na loja).
 - Abrir changelog dentro do popup.
 - Commitar sem validar que `_locales/en/messages.json` e `_locales/pt_BR/messages.json` são JSON válidos.
 
@@ -184,6 +194,7 @@ console.log('OK');
 Após recarregar a extensão em `chrome://extensions`, conferir:
 
 - `changelog.html` mostra a nova versão com badge Novo/New
+- a linha auxiliar mostra a data de atualização (não “Versão X · Veja o que mudou”)
 - `settings.html` e popup exibem `v<versão-do-manifest>`
 - README badges batem com o manifest
 

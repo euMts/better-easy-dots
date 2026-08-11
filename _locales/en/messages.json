@@ -1282,9 +1282,16 @@
       "version": { "content": "$1", "example": "1.1.0" }
     }
   },
+  "changelogUpdatedOn": {
+    "message": "Updated on $DATE$",
+    "description": "Changelog page helper line with the update date",
+    "placeholders": {
+      "date": { "content": "$1", "example": "August 11, 2026" }
+    }
+  },
   "changelogSeeWhatChanged": {
     "message": "See what changed",
-    "description": "Changelog page helper line"
+    "description": "Legacy changelog page helper line"
   },
   "changelogRateInStore": {
     "message": "Rate on the Chrome Web Store",

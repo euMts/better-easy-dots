@@ -1282,9 +1282,16 @@
       "version": { "content": "$1", "example": "1.1.0" }
     }
   },
+  "changelogUpdatedOn": {
+    "message": "Atualizado em $DATE$",
+    "description": "Linha auxiliar da página de changelog com a data de atualização",
+    "placeholders": {
+      "date": { "content": "$1", "example": "11 de agosto de 2026" }
+    }
+  },
   "changelogSeeWhatChanged": {
     "message": "Veja o que mudou",
-    "description": "Linha auxiliar da página de changelog"
+    "description": "Linha auxiliar legada da página de changelog"
   },
   "changelogRateInStore": {
     "message": "Avaliar na loja do Chrome",

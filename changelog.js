@@ -1,11 +1,12 @@
 const EED_CHANGELOG_STORAGE_KEY = 'eedLastSeenChangelogVersion';
 
 /** Last version already on the Chrome Web Store. Every newer entry gets the New badge. */
-const EED_CHANGELOG_LAST_SHIPPED_VERSION = '1.4.0';
+const EED_CHANGELOG_LAST_SHIPPED_VERSION = '1.6.0';
 
 const EED_CHANGELOG_ENTRIES = [
   {
     version: '1.7.0',
+    date: '2026-08-11',
     items: [
       'changelogV170Item1',
       'changelogV170Item2',
@@ -13,6 +14,7 @@ const EED_CHANGELOG_ENTRIES = [
   },
   {
     version: '1.6.0',
+    date: '2026-07-23',
     items: [
       'changelogV160Item1',
       'changelogV160Item2',
@@ -20,6 +22,7 @@ const EED_CHANGELOG_ENTRIES = [
   },
   {
     version: '1.5.0',
+    date: '2026-07-21',
     items: [
       'changelogV150Item1',
       'changelogV150Item2',
@@ -28,6 +31,7 @@ const EED_CHANGELOG_ENTRIES = [
   },
   {
     version: '1.4.0',
+    date: '2026-07-18',
     items: [
       'changelogV140Item1',
       'changelogV140Item2',
@@ -38,6 +42,7 @@ const EED_CHANGELOG_ENTRIES = [
   },
   {
     version: '1.3.1',
+    date: '2026-07-17',
     items: [
       'changelogV131Item1',
       'changelogV131Item2',
@@ -45,12 +50,14 @@ const EED_CHANGELOG_ENTRIES = [
   },
   {
     version: '1.3.0',
+    date: '2026-07-16',
     items: [
       'changelogV130Item1',
     ],
   },
   {
     version: '1.2.0',
+    date: '2026-07-15',
     items: [
       'changelogV120Item1',
       'changelogV120Item2',
@@ -63,12 +70,14 @@ const EED_CHANGELOG_ENTRIES = [
   },
   {
     version: '1.1.1',
+    date: '2026-07-12',
     items: [
       'changelogV111Item1',
     ],
   },
   {
     version: '1.1.0',
+    date: '2026-07-10',
     items: [
       'changelogV110Item1',
       'changelogV110Item2',
@@ -77,6 +86,7 @@ const EED_CHANGELOG_ENTRIES = [
   },
   {
     version: '1.0.0',
+    date: '2026-07-10',
     items: [
       'changelogV100Item1',
       'changelogV100Item2',
@@ -85,6 +95,7 @@ const EED_CHANGELOG_ENTRIES = [
   },
   {
     version: '0.1.2',
+    date: '2026-07-10',
     items: [
       'changelogV012Item1',
       'changelogV012Item2',
@@ -95,6 +106,7 @@ const EED_CHANGELOG_ENTRIES = [
   },
   {
     version: '0.1.1',
+    date: '2026-07-10',
     items: [
       'changelogV011Item1',
       'changelogV011Item2',
@@ -104,6 +116,7 @@ const EED_CHANGELOG_ENTRIES = [
   },
   {
     version: '0.1.0',
+    date: '2026-07-10',
     items: [
       'changelogV010Item1',
       'changelogV010Item2',
@@ -119,7 +132,7 @@ function eedGetCurrentVersion() {
   try {
     return chrome.runtime?.getManifest?.()?.version || '1.7.0';
   } catch {
-    return '1.5.0';
+    return '1.7.0';
   }
 }
 
@@ -154,8 +167,30 @@ async function eedShouldOpenChangelog() {
   return currentVersion !== lastSeenVersion;
 }
 
+function eedGetLatestChangelogEntry() {
+  return EED_CHANGELOG_ENTRIES[0] ?? null;
+}
+
 function eedGetLatestChangelogVersion() {
-  return EED_CHANGELOG_ENTRIES[0]?.version ?? eedGetCurrentVersion();
+  return eedGetLatestChangelogEntry()?.version ?? eedGetCurrentVersion();
+}
+
+function eedFormatChangelogDate(isoDate) {
+  if (!isoDate) return '';
+
+  const locale =
+    typeof getActiveDocumentLang === 'function' && getActiveDocumentLang() === 'en'
+      ? 'en-US'
+      : 'pt-BR';
+
+  const date = new Date(`${isoDate}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return isoDate;
+
+  return date.toLocaleDateString(locale, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 }
 
 function eedCompareSemver(a, b) {
@@ -215,7 +250,8 @@ async function eedInitChangelogPage() {
     applyI18n();
 
     const currentVersion = eedGetCurrentVersion();
-    const latestVersion = eedGetLatestChangelogVersion();
+    const latestEntry = eedGetLatestChangelogEntry();
+    const latestVersion = latestEntry?.version ?? currentVersion;
     const subtitle = document.getElementById('eed-changelog-subtitle');
     const versionLine = document.getElementById('eed-changelog-version-line');
     const entriesRoot = document.getElementById('eed-changelog-entries');
@@ -227,7 +263,10 @@ async function eedInitChangelogPage() {
     }
 
     if (versionLine) {
-      versionLine.textContent = `${t('changelogCurrentVersion')} ${currentVersion} · ${t('changelogSeeWhatChanged')}`;
+      const formattedDate = eedFormatChangelogDate(latestEntry?.date);
+      versionLine.textContent = formattedDate
+        ? t('changelogUpdatedOn', [formattedDate])
+        : `${t('changelogCurrentVersion')} ${currentVersion}`;
     }
 
     eedRenderChangelogEntries(entriesRoot);
