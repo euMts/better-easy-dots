@@ -44,7 +44,7 @@
     "description": "Review button"
   },
   "popupStatusWrongSite": {
-    "message": "Open Easydots to use Better Easy Dots.",
+    "message": "Open Easydots to use this extension.",
     "description": "Popup when the active tab is not Easydots"
   },
   "popupStatusWaitingPage": {

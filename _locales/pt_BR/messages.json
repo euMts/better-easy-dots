@@ -44,7 +44,7 @@
     "description": "Botão de avaliação"
   },
   "popupStatusWrongSite": {
-    "message": "Abra o Easydots para usar o Better Easy Dots.",
+    "message": "Abra o Easydots para usar esta extensão.",
     "description": "Popup quando a aba ativa não é o Easydots"
   },
   "popupStatusWaitingPage": {
