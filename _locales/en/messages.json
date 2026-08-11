@@ -1294,6 +1294,75 @@
     "message": "Open settings",
     "description": "Secondary changelog page button"
   },
+  "contentPendingImpactBrand": {
+    "message": "Better Easy Dots",
+    "description": "Brand label on pending requests impact summary"
+  },
+  "contentPendingImpactLoading": {
+    "message": "Calculating pending requests impact...",
+    "description": "Loading state for pending requests impact bar"
+  },
+  "contentPendingImpactNone": {
+    "message": "You have no pending requests in this period.",
+    "description": "Empty state when there are no pending requests"
+  },
+  "contentPendingImpactError": {
+    "message": "Could not calculate the impact of pending requests right now.",
+    "description": "Error state for pending requests impact bar"
+  },
+  "contentPendingImpactComplete": {
+    "message": "If all $COUNT$ pending requests are approved, you may gain $GAIN$.",
+    "description": "Complete calculation summary for pending requests",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" },
+      "gain": { "content": "$2", "example": "+02:15:00" }
+    }
+  },
+  "contentPendingImpactCompleteSingular": {
+    "message": "If the pending request is approved, you may gain $GAIN$.",
+    "description": "Complete calculation summary for a single pending request",
+    "placeholders": {
+      "gain": { "content": "$1", "example": "+00:50:00" }
+    }
+  },
+  "contentPendingImpactPartial": {
+    "message": "$COUNT$ pending · $GAIN$ estimated",
+    "description": "Partial calculation summary for pending requests",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" },
+      "gain": { "content": "$2", "example": "+02:15:00" }
+    }
+  },
+  "contentPendingImpactUnknownCount": {
+    "message": "$COUNT$ without enough data",
+    "description": "How many pending requests could not be calculated",
+    "placeholders": {
+      "count": { "content": "$1", "example": "1" }
+    }
+  },
+  "contentPendingImpactNotCalculated": {
+    "message": "$COUNT$ pending requests found. Estimated impact not calculated yet.",
+    "description": "Pending count when impact could not be calculated",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "contentPendingImpactOpenDetailsHint": {
+    "message": "Available details were not enough to safely estimate the gain.",
+    "description": "Hint when pending impact lacks enough detail data"
+  },
+  "contentPendingImpactTooltip": {
+    "message": "This is an estimate based on the visible pending requests and available details. The time bank only changes after approval and processing by Easydots.",
+    "description": "Custom tooltip explaining pending requests impact estimate"
+  },
+  "changelogV170Item1": {
+    "message": "On the requests page, shows estimated time-bank gain if pending requests are approved",
+    "description": "Changelog v1.7.0 item"
+  },
+  "changelogV170Item2": {
+    "message": "Calculates impact by reading each pending request's start and end times",
+    "description": "Changelog v1.7.0 item"
+  },
   "changelogV160Item1": {
     "message": "Simulator shows from which time valid overtime starts counting",
     "description": "Changelog v1.6.0 item"

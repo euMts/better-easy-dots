@@ -55,7 +55,23 @@ const EASydots = {
   },
 
   debugLog(...args) {
-    if (this.EED_DEBUG) console.log('[Better Easy Dots]', ...args);
+    if (this.isDebugEnabled()) console.log('[Better Easy Dots]', ...args);
+  },
+
+  isDebugEnabled() {
+    if (this.EED_DEBUG) return true;
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('eedDebug') === '1') {
+        return true;
+      }
+    } catch {
+      /* private mode / blocked storage */
+    }
+    try {
+      return new URLSearchParams(window.location.search).get('eedDebug') === '1';
+    } catch {
+      return false;
+    }
   },
 
   warnFeature(name, error) {
@@ -96,6 +112,7 @@ const EASydots = {
     clearTimeout(this.jornadaSyncTimer);
     clearTimeout(this.jornadaFeedbackTimeout);
     clearTimeout(this.simSaveTimer);
+    clearTimeout(this.pendingImpactTimer);
     this.cancelIdle(this.phase3Timer);
     this.updateTimer = null;
     this.enhanceTimer = null;
@@ -104,6 +121,8 @@ const EASydots = {
     this.jornadaSyncTimer = null;
     this.jornadaFeedbackTimeout = null;
     this.simSaveTimer = null;
+    this.pendingImpactTimer = null;
+    this.pendingImpactRunId = (this.pendingImpactRunId || 0) + 1;
 
     try {
       this.pageObserver?.disconnect();
@@ -3333,6 +3352,17 @@ const EASydots = {
       );
     }
 
+    const solicitacao = document.querySelector('#solicitacao');
+    if (solicitacao) {
+      return (
+        solicitacao.closest(
+          '.content-page, .content, #wrapper, .container-fluid, main, #content'
+        ) ||
+        solicitacao.parentElement ||
+        null
+      );
+    }
+
     return null;
   },
 
@@ -3340,7 +3370,8 @@ const EASydots = {
     return Boolean(
       document.querySelector(this.SELECTORS.recordsTable) ||
         document.querySelector('.card-box--dashboard') ||
-        document.querySelector(this.SELECTORS.sidebarMenu)
+        document.querySelector(this.SELECTORS.sidebarMenu) ||
+        document.querySelector('#solicitacao .grid-view')
     );
   },
 
@@ -3484,6 +3515,18 @@ const EASydots = {
       this.warnFeature('tabela de registros', error);
     }
 
+    try {
+      if (typeof this.schedulePendingRequestsSummary === 'function') {
+        this.schedulePendingRequestsSummary(reason);
+      } else {
+        console.warn(
+          '[Better Easy Dots] schedulePendingRequestsSummary ausente — pending-requests-impact.js não carregou?'
+        );
+      }
+    } catch (error) {
+      this.warnFeature('impacto solicitações pendentes', error);
+    }
+
     if (!this.hasCoreTargets()) {
       this.debugLog('core targets missing, waiting for DOM');
       if (this.pageObserverRoot !== document.body) {
@@ -3502,12 +3545,16 @@ const EASydots = {
   },
 };
 
+// Content script files don't share top-level `const` across files — expose for patches.
+globalThis.EASydots = EASydots;
+
 function mutationOriginatesFromEnhancedCard(mutation) {
   const target = mutation.target;
   const element = target.nodeType === Node.TEXT_NODE ? target.parentElement : target;
   return Boolean(
     element?.closest?.('.eed-hour-bank-card') ||
-      element?.closest?.('.eed-employer-sim-card')
+      element?.closest?.('.eed-employer-sim-card') ||
+      element?.closest?.('.eed-pending-requests-summary')
   );
 }
 
@@ -3551,6 +3598,7 @@ try {
               await initI18n(nextLanguage);
               document.querySelector(EASydots.SELECTORS.settingsMenuItem)?.remove();
               document.querySelector('#eed-day-balance-row')?.remove();
+              document.querySelector('.eed-pending-requests-summary')?.remove();
               EASydots.injectSidebarSettingsItem();
             }
 
@@ -3558,6 +3606,7 @@ try {
             EASydots.lastViewState = '';
             EASydots.scheduleUpdateRecordsView(true);
             EASydots.scheduleJornadaImportSync();
+            EASydots.schedulePendingRequestsSummary?.('language');
           };
 
           applySettingsChange().catch((error) => {
@@ -3577,4 +3626,4 @@ try {
   /* Extension context may already be invalidated */
 }
 
-init();
+// Boot continues in pending-requests-impact.js after methods are attached.

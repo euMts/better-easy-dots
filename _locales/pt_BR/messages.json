@@ -1294,6 +1294,75 @@
     "message": "Ver configurações",
     "description": "Botão secundário da página de changelog"
   },
+  "contentPendingImpactBrand": {
+    "message": "Better Easy Dots",
+    "description": "Brand label on pending requests impact summary"
+  },
+  "contentPendingImpactLoading": {
+    "message": "Calculando impacto das solicitações pendentes...",
+    "description": "Loading state for pending requests impact bar"
+  },
+  "contentPendingImpactNone": {
+    "message": "Você não possui solicitações pendentes neste período.",
+    "description": "Empty state when there are no pending requests"
+  },
+  "contentPendingImpactError": {
+    "message": "Não foi possível calcular o impacto das solicitações pendentes agora.",
+    "description": "Error state for pending requests impact bar"
+  },
+  "contentPendingImpactComplete": {
+    "message": "Se todas as $COUNT$ solicitações pendentes forem aprovadas, você pode ganhar $GAIN$.",
+    "description": "Complete calculation summary for pending requests",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" },
+      "gain": { "content": "$2", "example": "+02:15:00" }
+    }
+  },
+  "contentPendingImpactCompleteSingular": {
+    "message": "Se a solicitação pendente for aprovada, você pode ganhar $GAIN$.",
+    "description": "Complete calculation summary for a single pending request",
+    "placeholders": {
+      "gain": { "content": "$1", "example": "+00:50:00" }
+    }
+  },
+  "contentPendingImpactPartial": {
+    "message": "$COUNT$ pendentes · $GAIN$ estimados",
+    "description": "Partial calculation summary for pending requests",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" },
+      "gain": { "content": "$2", "example": "+02:15:00" }
+    }
+  },
+  "contentPendingImpactUnknownCount": {
+    "message": "$COUNT$ sem dados suficientes",
+    "description": "How many pending requests could not be calculated",
+    "placeholders": {
+      "count": { "content": "$1", "example": "1" }
+    }
+  },
+  "contentPendingImpactNotCalculated": {
+    "message": "$COUNT$ solicitações pendentes encontradas. Impacto estimado ainda não calculado.",
+    "description": "Pending count when impact could not be calculated",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "contentPendingImpactOpenDetailsHint": {
+    "message": "Os detalhes disponíveis não foram suficientes para estimar o ganho com segurança.",
+    "description": "Hint when pending impact lacks enough detail data"
+  },
+  "contentPendingImpactTooltip": {
+    "message": "Esta é uma estimativa baseada nas solicitações pendentes visíveis e nos detalhes disponíveis. O banco de horas só muda após aprovação e processamento pelo Easydots.",
+    "description": "Custom tooltip explaining pending requests impact estimate"
+  },
+  "changelogV170Item1": {
+    "message": "Na página de solicitações, mostra o ganho estimado no banco se as pendentes forem aprovadas",
+    "description": "Item do changelog v1.7.0"
+  },
+  "changelogV170Item2": {
+    "message": "Calcula o impacto lendo os horários de início e fim de cada solicitação pendente",
+    "description": "Item do changelog v1.7.0"
+  },
   "changelogV160Item1": {
     "message": "Simulador indica a partir de qual horário as horas extras válidas começam a contar",
     "description": "Item do changelog v1.6.0"
