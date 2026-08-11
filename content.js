@@ -280,7 +280,8 @@ const EASydots = {
     }
 
     const analysis = this.buildDayBalanceAnalysis(records, settings);
-    return this.buildDayBalanceTooltipText(analysis, settings);
+    const overtimeView = this.buildDayBalanceOvertimeStartView(records, settings, analysis);
+    return this.buildDayBalanceTooltipText(analysis, settings, overtimeView);
   },
 
   calculateExpectedDailyWork(settings) {
@@ -534,6 +535,65 @@ const EASydots = {
     return parts.join(' · ');
   },
 
+  /**
+   * Reference final-exit clock time used to project when valid overtime would start.
+   * Incomplete days use the configured exit (same as balance projection); complete days use the last punch.
+   */
+  getDayBalanceOvertimeReferenceExitSeconds(records, settings, analysis) {
+    if (analysis?.complete) {
+      const last = records?.[records.length - 1];
+      if (last && this.isSaida(last.type)) {
+        return this.timeToSeconds(last.time);
+      }
+    }
+
+    return this.timeToSeconds(settings.saida);
+  },
+
+  buildDayBalanceOvertimeStartView(records, settings, analysis) {
+    if (!analysis || !settings) return null;
+
+    return this.buildOvertimeStartLabel(
+      analysis.rawProjected,
+      analysis.toleranceSeconds,
+      this.getDayBalanceOvertimeReferenceExitSeconds(records, settings, analysis)
+    );
+  },
+
+  ensureDayBalanceOvertimeStartEl(balanceRow) {
+    let overtimeEl = balanceRow?.querySelector('.eed-day-balance-overtime-start');
+    if (overtimeEl) return overtimeEl;
+
+    const left = balanceRow?.querySelector('.eed-day-balance-left');
+    if (!left) return null;
+
+    overtimeEl = document.createElement('div');
+    overtimeEl.className = 'eed-day-balance-overtime-start';
+    overtimeEl.hidden = true;
+    left.appendChild(overtimeEl);
+    return overtimeEl;
+  },
+
+  updateDayBalanceOvertimeStartLabel(overtimeEl, overtimeView) {
+    if (!overtimeEl) return;
+
+    if (!overtimeView) {
+      overtimeEl.hidden = true;
+      overtimeEl.textContent = '';
+      overtimeEl.classList.remove('eed-day-balance-overtime-start--counting');
+      this.setTooltipTarget(overtimeEl, null);
+      return;
+    }
+
+    overtimeEl.hidden = false;
+    overtimeEl.textContent = overtimeView.text;
+    overtimeEl.classList.toggle(
+      'eed-day-balance-overtime-start--counting',
+      overtimeView.alreadyCounting
+    );
+    this.setTooltipTarget(overtimeEl, overtimeView.tooltip);
+  },
+
   buildDayBalanceCreativeMessage(analysis, settings) {
     const configuredExit = this.formatExpectedTimeForTooltip(settings.saida);
     const amount = this.formatFriendlyDuration(Math.abs(analysis.rawProjected));
@@ -565,12 +625,16 @@ const EASydots = {
     ]);
   },
 
-  buildDayBalanceTooltipText(analysis, settings) {
+  buildDayBalanceTooltipText(analysis, settings, overtimeView = null) {
     const parts = [t('contentDayBalanceTooltipExplain')];
 
     const meta = this.buildDayBalanceMetaLine(analysis);
     if (meta) {
       parts.push(meta);
+    }
+
+    if (overtimeView?.text) {
+      parts.push(overtimeView.text);
     }
 
     if (settings) {
@@ -1347,6 +1411,7 @@ const EASydots = {
                 ${t('contentCreditByline')}
               </button>
               <div class="eed-day-balance-meta"></div>
+              <div class="eed-day-balance-overtime-start" hidden></div>
             </div>
             <div class="eed-day-balance-right">
               <div class="eed-day-balance-value"></div>
@@ -1367,6 +1432,7 @@ const EASydots = {
     const valueEl = balanceRow.querySelector('.eed-day-balance-value');
     const consideredLabelEl = balanceRow.querySelector('.eed-day-balance-considered-label');
     const metaEl = balanceRow.querySelector('.eed-day-balance-meta');
+    const overtimeEl = this.ensureDayBalanceOvertimeStartEl(balanceRow);
     const titleEl = balanceRow.querySelector('.eed-day-balance-title');
     const creditBtn = balanceRow.querySelector('.eed-day-balance-credit');
 
@@ -1397,6 +1463,7 @@ const EASydots = {
         metaEl.textContent = '';
         metaEl.hidden = true;
       }
+      this.updateDayBalanceOvertimeStartLabel(overtimeEl, null);
       this.renderScheduleHint(valueEl);
       this.setTooltipTarget(card || valueEl, t('contentDayBalanceTooltipNotConfigured'));
 
@@ -1407,6 +1474,11 @@ const EASydots = {
     delete valueEl.dataset.eedScheduleHint;
 
     const analysis = this.buildDayBalanceAnalysis(records, loadedSettings);
+    const overtimeView = this.buildDayBalanceOvertimeStartView(
+      records,
+      loadedSettings,
+      analysis
+    );
     const { text } = this.formatBalance(analysis.considered);
     const statusClass = {
       within_safe: 'within-safe',
@@ -1437,9 +1509,11 @@ const EASydots = {
       metaEl.className = `eed-day-balance-meta eed-day-balance-meta--${statusClass}`;
     }
 
+    this.updateDayBalanceOvertimeStartLabel(overtimeEl, overtimeView);
+
     this.setTooltipTarget(
       card || valueEl,
-      this.buildDayBalanceTooltipText(analysis, loadedSettings)
+      this.buildDayBalanceTooltipText(analysis, loadedSettings, overtimeView)
     );
 
     this.adjustRecordsContainer(scrollContainer, true);

@@ -1370,6 +1370,10 @@
     "message": "Calculates impact by reading each pending request's start and end times",
     "description": "Changelog v1.7.0 item"
   },
+  "changelogV170Item3": {
+    "message": "Day balance shows from which time valid overtime starts counting",
+    "description": "Changelog v1.7.0 item"
+  },
   "changelogV160Item1": {
     "message": "Simulator shows from which time valid overtime starts counting",
     "description": "Changelog v1.6.0 item"

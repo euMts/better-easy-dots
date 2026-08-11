@@ -1370,6 +1370,10 @@
     "message": "Calcula o impacto lendo os horários de início e fim de cada solicitação pendente",
     "description": "Item do changelog v1.7.0"
   },
+  "changelogV170Item3": {
+    "message": "No saldo do dia, indica a partir de qual horário as horas extras válidas começam",
+    "description": "Item do changelog v1.7.0"
+  },
   "changelogV160Item1": {
     "message": "Simulador indica a partir de qual horário as horas extras válidas começam a contar",
     "description": "Item do changelog v1.6.0"
