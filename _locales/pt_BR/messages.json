@@ -32,8 +32,8 @@
     "description": "Texto antes do link da loja"
   },
   "popupReviewStoreLink": {
-    "message": "Chrome Web Store",
-    "description": "Texto do link da loja"
+    "message": "loja de extensões",
+    "description": "Texto do link da loja (Chrome ou Firefox)"
   },
   "popupReviewBodyAfter": {
     "message": ", leva menos de um minuto.",
@@ -1310,7 +1310,7 @@
     "description": "Linha auxiliar legada da página de changelog"
   },
   "changelogRateInStore": {
-    "message": "Avaliar na loja do Chrome",
+    "message": "Avaliar na loja",
     "description": "Botão principal da página de changelog para abrir avaliação na loja"
   },
   "changelogOpenSettings": {
@@ -1377,6 +1377,18 @@
   "contentPendingImpactTooltip": {
     "message": "Esta é uma estimativa baseada nas solicitações pendentes visíveis e nos detalhes disponíveis. O banco de horas só muda após aprovação e processamento pelo Easydots.",
     "description": "Custom tooltip explaining pending requests impact estimate"
+  },
+  "changelogV172Item1": {
+    "message": "Firefox passa a usar a mesma camada de APIs, abas, storage e badge do Chrome",
+    "description": "Item do changelog v1.7.2"
+  },
+  "changelogV172Item2": {
+    "message": "Pacote Firefox inclui permissões, ícones e declaração de privacidade alinhados ao AMO",
+    "description": "Item do changelog v1.7.2"
+  },
+  "changelogV172Item3": {
+    "message": "Validação e documentação deixam claro que toda mudança deve funcionar em Chrome e Firefox",
+    "description": "Item do changelog v1.7.2"
   },
   "changelogV170Item1": {
     "message": "Na página de solicitações, mostra o ganho estimado no banco se as pendentes forem aprovadas",

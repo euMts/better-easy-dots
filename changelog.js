@@ -1,9 +1,18 @@
 const EED_CHANGELOG_STORAGE_KEY = 'eedLastSeenChangelogVersion';
 
-/** Last version already on the Chrome Web Store. Every newer entry gets the New badge. */
+/** Last version already live on both stores (CWS + AMO). Every newer entry gets the New badge. */
 const EED_CHANGELOG_LAST_SHIPPED_VERSION = '1.6.0';
 
 const EED_CHANGELOG_ENTRIES = [
+  {
+    version: '1.7.2',
+    date: '2026-08-17',
+    items: [
+      'changelogV172Item1',
+      'changelogV172Item2',
+      'changelogV172Item3',
+    ],
+  },
   {
     version: '1.7.1',
     date: '2026-08-11',
@@ -139,15 +148,15 @@ const EED_CHANGELOG_ENTRIES = [
 
 function eedGetCurrentVersion() {
   try {
-    return chrome.runtime?.getManifest?.()?.version || '1.7.1';
+    return EEDBrowser.runtime?.getManifest?.()?.version || '1.7.2';
   } catch {
-    return '1.7.1';
+    return '1.7.2';
   }
 }
 
 function eedGetChangelogUrl() {
   try {
-    return chrome.runtime.getURL('changelog.html');
+    return EEDBrowser.runtime.getURL('changelog.html');
   } catch {
     return 'changelog.html';
   }
@@ -155,7 +164,7 @@ function eedGetChangelogUrl() {
 
 async function eedGetLastSeenChangelogVersion() {
   try {
-    const result = await chrome.storage.local.get(EED_CHANGELOG_STORAGE_KEY);
+    const result = await EEDBrowser.storage.local.get(EED_CHANGELOG_STORAGE_KEY);
     return result[EED_CHANGELOG_STORAGE_KEY] ?? null;
   } catch {
     return null;
@@ -164,7 +173,7 @@ async function eedGetLastSeenChangelogVersion() {
 
 async function eedMarkChangelogSeen(version = eedGetCurrentVersion()) {
   try {
-    await chrome.storage.local.set({ [EED_CHANGELOG_STORAGE_KEY]: version });
+    await EEDBrowser.storage.local.set({ [EED_CHANGELOG_STORAGE_KEY]: version });
   } catch {
     /* storage unavailable */
   }
@@ -283,14 +292,15 @@ async function eedInitChangelogPage() {
 
     reviewBtn?.addEventListener('click', () => {
       eedMarkChangelogSeen(currentVersion);
-      chrome.tabs.create({ url: EED_EXTENSION_URL });
+      EEDBrowser.tabs.create({ url: eedGetStoreUrl() }).catch(() => {});
     });
 
     settingsBtn?.addEventListener('click', () => {
       eedMarkChangelogSeen(currentVersion);
-      chrome.runtime.sendMessage({ action: 'openSettings' }, () => {
-        window.close();
-      });
+      EEDBrowser.runtime
+        .sendMessage({ action: 'openSettings' })
+        .catch(() => {})
+        .finally(() => window.close());
     });
   } catch {
     /* fail silently */

@@ -2,10 +2,10 @@
 'use strict';
 
 /**
- * Validates a Chrome extension package directory (or extracted ZIP root).
+ * Validates an extension package directory (or extracted ZIP root).
  * Usage:
- *   node scripts/validate-extension-package.js [dir]
- * Default dir: ./dist  (falls back to repo root if dist/manifest.json is missing)
+ *   node scripts/validate-extension-package.js [dir] [chrome|firefox]
+ * Default dir: ./dist/chrome, then ./dist, then repo root.
  */
 
 const fs = require('fs');
@@ -13,12 +13,36 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const argDir = process.argv[2] ? path.resolve(process.argv[2]) : null;
-const DEFAULT_DIST = path.join(ROOT, 'dist');
+const argTarget = (process.argv[3] || '').trim().toLowerCase() || null;
+const DEFAULT_DIST_CHROME = path.join(ROOT, 'dist', 'chrome');
+const DEFAULT_DIST_FIREFOX = path.join(ROOT, 'dist', 'firefox');
+const DEFAULT_DIST_LEGACY = path.join(ROOT, 'dist');
 
 function resolveTargetDir() {
   if (argDir) return argDir;
-  if (fs.existsSync(path.join(DEFAULT_DIST, 'manifest.json'))) return DEFAULT_DIST;
+  if (fs.existsSync(path.join(DEFAULT_DIST_CHROME, 'manifest.json'))) return DEFAULT_DIST_CHROME;
+  if (fs.existsSync(path.join(DEFAULT_DIST_FIREFOX, 'manifest.json'))) return DEFAULT_DIST_FIREFOX;
+  if (fs.existsSync(path.join(DEFAULT_DIST_LEGACY, 'manifest.json'))) return DEFAULT_DIST_LEGACY;
   return ROOT;
+}
+
+function detectTarget(dir, manifest) {
+  if (argTarget === 'chrome' || argTarget === 'firefox') return argTarget;
+  if (manifest?.browser_specific_settings?.gecko?.id) return 'firefox';
+  const resolved = path.resolve(dir);
+  if (resolved === path.resolve(DEFAULT_DIST_FIREFOX)) return 'firefox';
+  if (resolved === path.resolve(DEFAULT_DIST_CHROME)) return 'chrome';
+  if (manifest?.background?.scripts) return 'firefox';
+  return 'chrome';
+}
+
+function isProductionPackage(dir) {
+  const resolved = path.resolve(dir);
+  return (
+    resolved === path.resolve(DEFAULT_DIST_CHROME) ||
+    resolved === path.resolve(DEFAULT_DIST_FIREFOX) ||
+    resolved === path.resolve(DEFAULT_DIST_LEGACY)
+  );
 }
 
 function existsFile(dir, rel) {
@@ -44,6 +68,10 @@ function collectManifestRefs(manifest) {
 
   const sw = manifest?.background?.service_worker;
   if (sw) refs.add(sw);
+
+  for (const script of manifest?.background?.scripts || []) {
+    if (script) refs.add(script);
+  }
 
   if (manifest?.action?.default_popup) refs.add(manifest.action.default_popup);
   if (manifest?.options_page) refs.add(manifest.options_page);
@@ -71,12 +99,9 @@ function collectManifestRefs(manifest) {
 
 function scanRemoteCode(dir, relativeFiles) {
   const issues = [];
-  const htmlScriptRemote =
-    /<script[^>]+src\s*=\s*["']https?:\/\//i;
-  const importRemote =
-    /\bimport\s*\(\s*["']https?:\/\//i;
-  const srcAssignRemote =
-    /\.src\s*=\s*["']https?:\/\/[^"']+\.js/i;
+  const htmlScriptRemote = /<script[^>]+src\s*=\s*["']https?:\/\//i;
+  const importRemote = /\bimport\s*\(\s*["']https?:\/\//i;
+  const srcAssignRemote = /\.src\s*=\s*["']https?:\/\/[^"']+\.js/i;
 
   for (const rel of relativeFiles) {
     if (!/\.(js|html|mjs|css)$/i.test(rel)) continue;
@@ -131,7 +156,6 @@ function main() {
   }
   ok('manifest.json encontrado na raiz');
 
-  // Reject nested packaging mistake: better-easy-dots/manifest.json as only layout
   const nested = path.join(dir, 'better-easy-dots', 'manifest.json');
   if (fs.existsSync(nested) && !existsFile(dir, 'content.js')) {
     err('pacote parece aninhado (better-easy-dots/manifest.json) sem arquivos na raiz');
@@ -145,6 +169,9 @@ function main() {
     printAndExit(lines, errors, dir);
     return;
   }
+
+  const target = detectTarget(dir, manifest);
+  ok(`alvo detectado: ${target}`);
 
   if (manifest.manifest_version !== 3) {
     err(`manifest_version deve ser 3 (atual: ${manifest.manifest_version})`);
@@ -167,8 +194,40 @@ function main() {
     else ok('_locales/ encontrado');
   }
 
-  if (!manifest.background?.service_worker) {
-    err('background.service_worker ausente');
+  const hasServiceWorker = Boolean(manifest.background?.service_worker);
+  const hasScripts =
+    Array.isArray(manifest.background?.scripts) && manifest.background.scripts.length > 0;
+
+  if (target === 'chrome') {
+    if (!hasServiceWorker) err('background.service_worker ausente (Chrome)');
+    else ok(`background.service_worker: ${manifest.background.service_worker}`);
+    if (hasScripts) err('background.scripts não é permitido no pacote Chrome');
+  } else if (target === 'firefox') {
+    if (!hasScripts) err('background.scripts ausente ou vazio (Firefox)');
+    else ok(`background.scripts: ${manifest.background.scripts.join(', ')}`);
+    if (hasScripts && manifest.background.scripts[0] !== 'browser-compat.js') {
+      err('background.scripts deve carregar browser-compat.js primeiro (Firefox)');
+    }
+    if (hasServiceWorker) {
+      err('background.service_worker não deve ser usado no pacote Firefox (use scripts)');
+    }
+    const geckoId = manifest.browser_specific_settings?.gecko?.id;
+    if (!geckoId) err('browser_specific_settings.gecko.id ausente (Firefox)');
+    else ok(`gecko.id: ${geckoId}`);
+    const dataCollection =
+      manifest.browser_specific_settings?.gecko?.data_collection_permissions?.required || [];
+    if (!dataCollection.includes('none')) {
+      err('browser_specific_settings.gecko.data_collection_permissions.required deve incluir "none"');
+    } else {
+      ok('gecko.data_collection_permissions.required: none');
+    }
+    if (!manifest.options_ui?.page && !manifest.options_page) {
+      err('options_ui.page ou options_page ausente (Firefox)');
+    } else if (manifest.options_ui?.page) {
+      ok(`options_ui.page: ${manifest.options_ui.page}`);
+    }
+  } else if (!hasServiceWorker && !hasScripts) {
+    err('background.service_worker ou background.scripts ausente');
   }
 
   if (!Array.isArray(manifest.content_scripts) || manifest.content_scripts.length === 0) {
@@ -177,14 +236,24 @@ function main() {
     for (const [i, cs] of manifest.content_scripts.entries()) {
       if (!cs.matches?.length) err(`content_scripts[${i}].matches vazio`);
       else ok(`content_scripts[${i}].matches: ${cs.matches.join(', ')}`);
+      if (cs.js?.length && cs.js[0] !== 'browser-compat.js') {
+        err(`content_scripts[${i}].js deve carregar browser-compat.js primeiro`);
+      }
     }
   }
 
-  // Localhost matches should not ship in production packages (dist/)
-  const isDistPackage = path.resolve(dir) === path.resolve(DEFAULT_DIST);
-  if (isDistPackage) {
+  const sharedPermissions = target === 'firefox' ? ['storage', 'tabs'] : ['storage', 'tabs', 'windows'];
+  for (const permission of sharedPermissions) {
+    if (manifest.permissions?.includes(permission)) ok(`permission: ${permission}`);
+    else err(`permissão compartilhada ausente: ${permission}`);
+  }
+
+  if (isProductionPackage(dir)) {
     const matches = (manifest.content_scripts || []).flatMap((cs) => cs.matches || []);
-    const localMatches = matches.filter((m) => /localhost|127\.0\.0\.1|192\.168\./i.test(m));
+    const hostPerms = manifest.host_permissions || [];
+    const localMatches = [...matches, ...hostPerms].filter((m) =>
+      /localhost|127\.0\.0\.1|192\.168\./i.test(m)
+    );
     if (localMatches.length) {
       err(`matches de desenvolvimento no pacote de produção: ${localMatches.join(', ')}`);
     } else {
@@ -198,7 +267,6 @@ function main() {
     else err(`${ref} citado no manifest mas não encontrado`);
   }
 
-  // HTML pages often reference local scripts — soft-check common extension pages
   const htmlPages = ['popup.html', 'settings.html', 'changelog.html'].filter((f) =>
     existsFile(dir, f)
   );
@@ -223,7 +291,6 @@ function main() {
     for (const issue of remoteIssues) err(issue);
   }
 
-  // Critical boot dependency for this project
   if (refs.includes('pending-requests-impact.js') && !existsFile(dir, 'pending-requests-impact.js')) {
     err('pending-requests-impact.js é obrigatório (chama init() dos content scripts)');
   }

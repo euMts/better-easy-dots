@@ -8,7 +8,10 @@ let eedLanguagePreference = EED_LANGUAGE_SYSTEM;
 
 function eedGetBrowserLocale() {
   try {
-    const ui = chrome.i18n?.getUILanguage?.() || 'pt-BR';
+    const ui =
+      typeof EEDBrowser !== 'undefined'
+        ? EEDBrowser.i18n?.getUILanguage?.() || 'pt-BR'
+        : 'pt-BR';
     const normalized = String(ui).replace('-', '_');
     if (EED_SUPPORTED_LOCALES.includes(normalized)) return normalized;
     const lower = normalized.toLowerCase();
@@ -64,7 +67,7 @@ function eedFormatMessage(entry, substitutions) {
 }
 
 async function eedFetchLocaleJson(locale) {
-  const url = chrome.runtime.getURL(`_locales/${locale}/messages.json`);
+  const url = EEDBrowser.runtime.getURL(`_locales/${locale}/messages.json`);
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to load locale ${locale}`);
@@ -75,24 +78,22 @@ async function eedFetchLocaleJson(locale) {
 function eedRequestLocaleFromBackground(locale) {
   return new Promise((resolve, reject) => {
     try {
-      if (typeof chrome === 'undefined' || !chrome.runtime?.sendMessage) {
+      if (typeof EEDBrowser === 'undefined' || !EEDBrowser.runtime?.sendMessage) {
         reject(new Error('runtime unavailable'));
         return;
       }
 
-      chrome.runtime.sendMessage({ action: 'getLocaleMessages', locale }, (response) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
+      EEDBrowser.runtime
+        .sendMessage({ action: 'getLocaleMessages', locale })
+        .then((response) => {
+          if (response?.ok && response.messages) {
+            resolve(response.messages);
+            return;
+          }
 
-        if (response?.ok && response.messages) {
-          resolve(response.messages);
-          return;
-        }
-
-        reject(new Error(response?.error || `Failed to load locale ${locale}`));
-      });
+          reject(new Error(response?.error || `Failed to load locale ${locale}`));
+        })
+        .catch(reject);
     } catch (error) {
       reject(error);
     }
@@ -126,8 +127,8 @@ async function initI18nFromStorage() {
   let language = EED_LANGUAGE_SYSTEM;
 
   try {
-    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-      const result = await chrome.storage.local.get(EED_I18N_SETTINGS_KEY);
+    if (typeof EEDBrowser !== 'undefined' && EEDBrowser.storage?.local) {
+      const result = await EEDBrowser.storage.local.get(EED_I18N_SETTINGS_KEY);
       language = result[EED_I18N_SETTINGS_KEY]?.language ?? EED_LANGUAGE_SYSTEM;
     }
   } catch {
@@ -156,14 +157,14 @@ function t(key, substitutions) {
       return key;
     }
 
-    if (typeof chrome === 'undefined' || !chrome.runtime?.id || !chrome.i18n?.getMessage) {
+    if (typeof EEDBrowser === 'undefined' || !EEDBrowser.runtime?.id || !EEDBrowser.i18n?.getMessage) {
       return key;
     }
 
     const message =
       substitutions !== undefined
-        ? chrome.i18n.getMessage(key, substitutions)
-        : chrome.i18n.getMessage(key);
+        ? EEDBrowser.i18n.getMessage(key, substitutions)
+        : EEDBrowser.i18n.getMessage(key);
     return message || key;
   } catch {
     return key;

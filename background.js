@@ -1,29 +1,41 @@
-importScripts('i18n.js', 'changelog.js');
+// Chrome MV3 service worker loads deps via importScripts.
+// Firefox MV3 lists browser-compat.js + deps in background.scripts first.
+if (typeof importScripts === 'function') {
+  importScripts('browser-compat.js', 'i18n.js', 'changelog.js');
+}
 
 async function setBadge(recordCount) {
   if (!recordCount) {
-    await chrome.action.setBadgeText({ text: '' });
+    await EEDBrowser.action.setBadgeText({ text: '' });
     return;
   }
 
-  await chrome.action.setBadgeText({ text: String(recordCount) });
-  await chrome.action.setBadgeBackgroundColor({ color: '#8234e8' });
+  await EEDBrowser.action.setBadgeText({ text: String(recordCount) });
+  await EEDBrowser.action.setBadgeBackgroundColor({ color: '#8234e8' });
+}
+
+async function focusWindow(windowId) {
+  if (!windowId) return;
+
+  try {
+    await EEDBrowser.windows.update(windowId, { focused: true });
+  } catch {
+    /* Firefox exposes windows without a manifest permission; ignore if unavailable. */
+  }
 }
 
 async function openSettingsPage() {
-  const settingsUrl = chrome.runtime.getURL('settings.html');
-  const tabs = await chrome.tabs.query({ url: settingsUrl });
+  const settingsUrl = EEDBrowser.runtime.getURL('settings.html');
+  const tabs = await EEDBrowser.tabs.query({ url: settingsUrl });
   const existing = tabs.find((tab) => tab.id);
 
   if (existing?.id) {
-    await chrome.tabs.update(existing.id, { active: true });
-    if (existing.windowId) {
-      await chrome.windows.update(existing.windowId, { focused: true });
-    }
+    await EEDBrowser.tabs.update(existing.id, { active: true });
+    await focusWindow(existing.windowId);
     return existing.id;
   }
 
-  const tab = await chrome.tabs.create({ url: settingsUrl, active: true });
+  const tab = await EEDBrowser.tabs.create({ url: settingsUrl, active: true });
   return tab.id;
 }
 
@@ -31,18 +43,16 @@ async function openChangelogPage({ focusExisting = true } = {}) {
   const changelogUrl = eedGetChangelogUrl();
 
   if (focusExisting) {
-    const tabs = await chrome.tabs.query({ url: changelogUrl });
+    const tabs = await EEDBrowser.tabs.query({ url: changelogUrl });
     const existing = tabs.find((tab) => tab.id);
     if (existing?.id) {
-      await chrome.tabs.update(existing.id, { active: true });
-      if (existing.windowId) {
-        await chrome.windows.update(existing.windowId, { focused: true });
-      }
+      await EEDBrowser.tabs.update(existing.id, { active: true });
+      await focusWindow(existing.windowId);
       return existing.id;
     }
   }
 
-  const tab = await chrome.tabs.create({ url: changelogUrl, active: true });
+  const tab = await EEDBrowser.tabs.create({ url: changelogUrl, active: true });
   return tab.id;
 }
 
@@ -56,12 +66,12 @@ async function openChangelogIfNeeded() {
   }
 }
 
-chrome.runtime.onInstalled.addListener((details) => {
+EEDBrowser.runtime.onInstalled.addListener((details) => {
   if (details.reason !== 'install' && details.reason !== 'update') return;
   openChangelogIfNeeded();
 });
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+EEDBrowser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'getLocaleMessages') {
     const locale = EED_SUPPORTED_LOCALES.includes(message.locale) ? message.locale : 'pt_BR';
     eedFetchLocaleJson(locale)

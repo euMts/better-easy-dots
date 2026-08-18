@@ -5,13 +5,15 @@
 <h1 align="center">Better Easy Dots</h1>
 
 <p align="center">
-  Chrome extension that improves time-clock registration on <strong>Easydots</strong> (<code>sys.easydots.com.br</code>).
+  <strong>Chrome</strong> and <strong>Firefox</strong> extension that improves time-clock registration on <strong>Easydots</strong> (<code>sys.easydots.com.br</code>).
 </p>
 
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/README-Português_(BR)-green" alt="README in Portuguese"></a>
-  <img src="https://img.shields.io/badge/version-1.7.1-purple" alt="Version 1.7.1">
+  <img src="https://img.shields.io/badge/version-1.7.2-purple" alt="Version 1.7.2">
   <img src="https://img.shields.io/badge/Manifest-V3-blue" alt="Manifest V3">
+  <img src="https://img.shields.io/badge/Chrome-supported-green" alt="Chrome">
+  <img src="https://img.shields.io/badge/Firefox-supported-orange" alt="Firefox">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="MIT License"></a>
 </p>
 
@@ -19,7 +21,7 @@
 
 ## About
 
-**Better Easy Dots** is an unofficial extension that adds visual and productivity features to the Easydots time registration page. Everything runs in your browser: settings and calculations are stored in `chrome.storage.local`, with no data sent to external servers.
+**Better Easy Dots** is an unofficial extension that adds visual and productivity features to the Easydots time registration page. Everything runs in your browser: settings and calculations are stored in the extension's local storage, with no data sent to external servers.
 
 > **Disclaimer:** this extension is not affiliated with, endorsed by, or maintained by Easydots or ACS Pontodigital.
 
@@ -53,7 +55,7 @@ Dedicated page (`settings.html`) accessible via:
 
 - Gear icon in the Easydots navbar
 - Extension popup → **Settings**
-- `chrome://extensions` → Details → Options
+- Browser options page (Chrome / Firefox)
 
 Configurable fields:
 
@@ -70,7 +72,7 @@ The Easydots URL is detected from the page you use — you do not need to be on 
 
 ### Icon badge
 
-The extension icon in the Chrome toolbar shows the number of records for the day when an Easydots tab is open.
+The extension icon in the browser toolbar shows the number of records for the day when an Easydots tab is open.
 
 ---
 
@@ -104,25 +106,52 @@ Work hours, break times, daily tolerance, safety margin, and language:
 
 ## Installation
 
-### Development (load unpacked)
+### Development — Chrome
 
 1. Clone or download this repository
 2. Open `chrome://extensions`
 3. Enable **Developer mode**
 4. Click **Load unpacked**
-5. Select the project root folder (`easy-easy-dots`)
+5. Select the project root folder
+
+### Development — Firefox
+
+1. Clone or download this repository
+2. Run `npm run firefox:dev`
+3. Open `about:debugging#/runtime/this-firefox`
+4. Click **Load Temporary Add-on…**
+5. Select `load-in-firefox/manifest.json`
+
+Details: [`docs/firefox.md`](docs/firefox.md).
 
 ### Chrome Web Store
 
 [Chrome Web Store](https://chromewebstore.google.com/detail/better-easy-dots/cfnehkkbmplomaianjpfiaoonmpekbbb)
 
-### Package for the store
+### Firefox Add-ons (AMO)
+
+Listing pending. After the first publish, the URL lives in `config.js` (`EED_FIREFOX_STORE_URL`).
+
+### Package for the stores
 
 ```bash
+npm install
 npm run package
 ```
 
-This creates `builds/better-easy-dots-vX.Y.Z.zip` with `manifest.json` at the archive root, validates every file referenced by the manifest, and blocks incomplete ZIPs. Follow `RELEASE_CHECKLIST.md` before uploading.
+Creates:
+
+- `builds/better-easy-dots-chrome-vX.Y.Z.zip`
+- `builds/better-easy-dots-firefox-vX.Y.Z.zip`
+
+Each ZIP has `manifest.json` at the archive root and passes automatic validation. Follow [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) before uploading.
+
+```bash
+npm run package:chrome    # Chrome only
+npm run package:firefox   # Firefox only
+npm test                  # validate:json + package
+npm run lint:firefox      # package Firefox + web-ext lint
+```
 
 ---
 
@@ -139,27 +168,25 @@ This creates `builds/better-easy-dots-vX.Y.Z.zip` with `manifest.json` at the ar
 ## Project structure
 
 ```
-easy-easy-dots/
-├── manifest.json          # Extension Manifest V3
-├── config.js              # Store URL and default Easydots URL
-├── background.js          # Service worker (badge, open settings)
-├── content.js             # Logic on the Easydots page
-├── content.css            # Injected page styles
-├── settings.js            # Settings persistence and normalization
-├── settings-ui.js         # Settings form component
-├── settings-ui.css
-├── settings.html          # Options page
-├── settings-page.js
-├── settings-page.css
-├── popup.html             # Extension popup
-├── popup.js
-├── popup.css
-├── icons/                 # Extension icons
-└── docs/
-    └── to-do.md           # Chrome Web Store release checklist
+better-easy-dots/
+├── manifest.json                 # Chrome (dev, with localhost)
+├── manifest.prod.json            # Chrome (store)
+├── manifest.firefox.json         # Firefox (dev)
+├── manifest.firefox.prod.json    # Firefox (AMO)
+├── browser-compat.js             # Shared chrome/browser bridge for Chrome + Firefox
+├── config.js                     # Store URLs + default Easydots URL
+├── background.js                 # Badge, open settings/changelog
+├── content.js                    # Logic on the Easydots page
+├── scripts/
+│   ├── package-extension.js
+│   └── validate-extension-package.js
+├── .github/workflows/            # CI + Release
+├── docs/
+│   └── firefox.md
+└── …
 ```
 
-The `website/` folder contains a local mirror of the Easydots page for testing with Live Server (`127.0.0.1:5500`) and **must not** be included in the production package.
+The `website/` folder contains a local mirror of the Easydots page for testing with Live Server (`127.0.0.1:5500`) and **must not** be included in the production package. Generated `dist/` and `builds/` folders are gitignored.
 
 ---
 
@@ -169,6 +196,7 @@ The `website/` folder contains a local mirror of the Easydots page for testing w
 |------------|--------|
 | `storage` | Save schedule and Easydots URL locally |
 | `tabs` | Find an open Easydots tab to update the badge |
+| `windows` | Focus the window when reopening settings/changelog (Chrome permission; permissionless API in Firefox) |
 | `*.easydots.com.br` | Inject enhancements on the page you already opened |
 | `*.acspontodigital.com.br` | Legacy domain compatibility |
 
@@ -178,7 +206,7 @@ No data is sent to extension servers.
 
 ## Privacy
 
-- Settings stored only in `chrome.storage.local` on your device
+- Settings stored only in the extension's local storage on your device
 - The extension reads the records table **only** on the Easydots tab you opened
 - No analytics, telemetry, or user accounts
 - No access to sites other than those configured in the manifest
@@ -187,11 +215,14 @@ No data is sent to extension servers.
 
 ## Compatibility
 
-- **Browser:** Google Chrome (Manifest V3)
+- **Browsers:** Google Chrome and Mozilla Firefox (Manifest V3)
 - **Sites:** `https://*.easydots.com.br/*` (default: `https://sys.easydots.com.br/`), `https://*.acspontodigital.com.br/*` (legacy)
-- **Current version:** `1.7.1`
+- **Current version:** `1.7.2`
+- **Gecko ID:** `better-easy-dots@matheuspass.dev`
 
 The extension depends on the current Easydots HTML structure (`#table_registro_horario`, `#btnRegister`, navbar). Site updates may require selector adjustments.
+
+Every new implementation must keep Chrome and Firefox in parity: same UI, same styles, same functionality, and validation in both packages. Asynchronous browser APIs must go through `browser-compat.js`.
 
 ---
 
@@ -199,7 +230,7 @@ The extension depends on the current Easydots HTML structure (`#table_registro_h
 
 1. Fork the repository
 2. Create a branch for your change
-3. Test on real Easydots or the local mirror
+3. Test on real Easydots or the local mirror in Chrome and Firefox
 4. Open a pull request describing the change
 
 ---

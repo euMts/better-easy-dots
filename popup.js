@@ -16,23 +16,23 @@
   const openEasydotsBtn = document.getElementById('eed-popup-open-easydots');
 
   try {
-    versionEl.textContent = `v${chrome.runtime.getManifest().version}`;
+    versionEl.textContent = `v${EEDBrowser.runtime.getManifest().version}`;
   } catch {
-    versionEl.textContent = 'v1.7.1';
+    versionEl.textContent = 'v1.7.2';
   }
   versionEl.setAttribute('aria-label', t('changelogView'));
 
   function openStore() {
-    chrome.tabs.create({ url: EED_EXTENSION_URL });
+    EEDBrowser.tabs.create({ url: eedGetStoreUrl() }).catch(() => {});
   }
 
   function openSettingsPage() {
-    chrome.runtime.sendMessage({ action: 'openSettings' });
+    EEDBrowser.runtime.sendMessage({ action: 'openSettings' }).catch(() => {});
     window.close();
   }
 
   function openChangelogPage() {
-    chrome.runtime.sendMessage({ action: 'openChangelog' });
+    EEDBrowser.runtime.sendMessage({ action: 'openChangelog' }).catch(() => {});
     window.close();
   }
 
@@ -42,7 +42,10 @@
       host === 'easydots.com.br' ||
       host.endsWith('.easydots.com.br') ||
       host === 'acspontodigital.com.br' ||
-      host.endsWith('.acspontodigital.com.br')
+      host.endsWith('.acspontodigital.com.br') ||
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '192.168.0.104'
     );
   }
 
@@ -57,7 +60,7 @@
 
   async function resolveEasydotsUrl() {
     try {
-      const stored = await chrome.storage.local.get('eed-settings');
+      const stored = await EEDBrowser.storage.local.get('eed-settings');
       const url = stored?.['eed-settings']?.easydotsUrl;
       if (typeof url === 'string' && url.trim()) return url.trim();
     } catch {
@@ -70,7 +73,7 @@
 
   async function refreshPageStatus() {
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const [tab] = await EEDBrowser.tabs.query({ active: true, currentWindow: true });
       const url = tab?.url || '';
       let parsed;
       try {
@@ -104,7 +107,7 @@
 
       let response = null;
       try {
-        response = await chrome.tabs.sendMessage(tab.id, { action: 'getPageStatus' });
+        response = await EEDBrowser.tabs.sendMessage(tab.id, { action: 'getPageStatus' });
       } catch {
         response = null;
       }
@@ -144,7 +147,7 @@
 
   openEasydotsBtn?.addEventListener('click', async () => {
     const easydotsUrl = await resolveEasydotsUrl();
-    chrome.tabs.create({ url: easydotsUrl });
+    EEDBrowser.tabs.create({ url: easydotsUrl }).catch(() => {});
     window.close();
   });
 

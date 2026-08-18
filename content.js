@@ -41,9 +41,8 @@ const EASydots = {
     if (this.extensionDead) return false;
 
     try {
-      // Accessing chrome.runtime after reload throws in some Chrome versions.
-      const runtime = chrome?.runtime;
-      if (!runtime || !runtime.id) {
+      // Accessing extension APIs after reload throws in some browser versions.
+      if (typeof EEDBrowser === 'undefined' || !EEDBrowser.runtime?.id) {
         this.markExtensionDead();
         return false;
       }
@@ -151,7 +150,7 @@ const EASydots = {
   getExtensionAssetUrl(path) {
     try {
       if (!this.isExtensionAlive()) return '';
-      return chrome.runtime.getURL(path);
+      return EEDBrowser.runtime.getURL(path);
     } catch {
       this.markExtensionDead();
       return '';
@@ -162,15 +161,9 @@ const EASydots = {
     try {
       if (!this.isExtensionAlive()) return;
 
-      const sendMessage = chrome?.runtime?.sendMessage;
-      if (typeof sendMessage !== 'function') return;
-
-      const result = sendMessage.call(chrome.runtime, message);
-      if (result && typeof result.catch === 'function') {
-        result.catch(() => {
-          this.markExtensionDead();
-        });
-      }
+      EEDBrowser.runtime.sendMessage(message).catch(() => {
+        this.markExtensionDead();
+      });
     } catch {
       this.markExtensionDead();
     }
@@ -1423,7 +1416,7 @@ const EASydots = {
       balanceRow.querySelector('.eed-day-balance-credit')?.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
-        window.open(EED_EXTENSION_URL, '_blank', 'noopener');
+        window.open(eedGetStoreUrl(), '_blank', 'noopener');
       });
       table.appendChild(balanceRow);
     }
@@ -3638,7 +3631,7 @@ async function init() {
   try {
     await initI18nFromStorage();
   } catch {
-    /* keep chrome.i18n fallback */
+    /* keep manifest i18n fallback */
   }
 
   EEDSettings.rememberSiteUrl(window.location.href).catch(() => {});
@@ -3658,8 +3651,8 @@ async function init() {
 }
 
 try {
-  if (chrome?.storage?.onChanged) {
-    chrome.storage.onChanged.addListener((changes, area) => {
+  if (typeof EEDBrowser !== 'undefined' && EEDBrowser.storage?.onChanged) {
+    EEDBrowser.storage.onChanged.addListener((changes, area) => {
       try {
         if (!EASydots.isExtensionAlive()) return;
 
@@ -3715,7 +3708,7 @@ setTimeout(() => {
 }, 0);
 
 try {
-  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  EEDBrowser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message?.action !== 'getPageStatus') return false;
 
     try {

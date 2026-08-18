@@ -32,8 +32,8 @@
     "description": "Text before store link"
   },
   "popupReviewStoreLink": {
-    "message": "Chrome Web Store",
-    "description": "Store link text"
+    "message": "extension store",
+    "description": "Store link text (Chrome or Firefox)"
   },
   "popupReviewBodyAfter": {
     "message": "— it takes less than a minute.",
@@ -1310,7 +1310,7 @@
     "description": "Legacy changelog page helper line"
   },
   "changelogRateInStore": {
-    "message": "Rate on the Chrome Web Store",
+    "message": "Rate in the store",
     "description": "Primary changelog page button to open store review"
   },
   "changelogOpenSettings": {
@@ -1377,6 +1377,18 @@
   "contentPendingImpactTooltip": {
     "message": "This is an estimate based on the visible pending requests and available details. The time bank only changes after approval and processing by Easydots.",
     "description": "Custom tooltip explaining pending requests impact estimate"
+  },
+  "changelogV172Item1": {
+    "message": "Firefox now uses the same API, tabs, storage, and badge layer as Chrome",
+    "description": "Changelog v1.7.2 item"
+  },
+  "changelogV172Item2": {
+    "message": "Firefox package includes AMO-aligned permissions, icons, and privacy declaration",
+    "description": "Changelog v1.7.2 item"
+  },
+  "changelogV172Item3": {
+    "message": "Validation and docs now make Chrome and Firefox parity explicit for every change",
+    "description": "Changelog v1.7.2 item"
   },
   "changelogV170Item1": {
     "message": "On the requests page, shows estimated time-bank gain if pending requests are approved",
