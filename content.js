@@ -307,23 +307,99 @@ const EASydots = {
     return Math.max(0, workSpan - breakSpan);
   },
 
-  calculateWorkedSeconds(records) {
-    let total = 0;
-    let lastEntrada = null;
+  getRecordDirection(type) {
+    if (this.isEntrada(type)) return 'entrada';
+    if (this.isSaida(type)) return 'saida';
+    return null;
+  },
 
-    records.forEach((record) => {
-      if (this.isEntrada(record.type)) {
-        lastEntrada = this.timeToSeconds(record.time);
+  getLastArrayItem(items) {
+    return items?.length ? items[items.length - 1] : null;
+  },
+
+  findLastTimelineItem(items, predicate) {
+    for (let index = items.length - 1; index >= 0; index -= 1) {
+      if (predicate(items[index])) return items[index];
+    }
+    return null;
+  },
+
+  buildWorkdayTimeline(records = []) {
+    const timeline = {
+      items: [],
+      entradas: [],
+      saidas: [],
+      segments: [],
+      openEntrada: null,
+      lastItem: null,
+      anomalies: [],
+    };
+
+    records.forEach((record, index) => {
+      const direction = this.getRecordDirection(record.type);
+      if (!direction) return;
+
+      const seconds = this.timeToSeconds(record.time);
+      if (!Number.isFinite(seconds)) return;
+
+      const item = {
+        record,
+        index,
+        direction,
+        seconds,
+      };
+
+      timeline.items.push(item);
+
+      if (direction === 'entrada') {
+        timeline.entradas.push(item);
+
+        if (timeline.openEntrada) {
+          timeline.anomalies.push({
+            type: 'duplicateEntrada',
+            previous: timeline.openEntrada,
+            current: item,
+          });
+          return;
+        }
+
+        timeline.openEntrada = item;
         return;
       }
 
-      if (this.isSaida(record.type) && lastEntrada !== null) {
-        total += this.timeToSeconds(record.time) - lastEntrada;
-        lastEntrada = null;
+      timeline.saidas.push(item);
+
+      if (!timeline.openEntrada) {
+        timeline.anomalies.push({ type: 'orphanSaida', current: item });
+        return;
       }
+
+      const durationSeconds = item.seconds - timeline.openEntrada.seconds;
+      if (durationSeconds < 0) {
+        timeline.anomalies.push({
+          type: 'negativeSegment',
+          entrada: timeline.openEntrada,
+          saida: item,
+        });
+      }
+
+      timeline.segments.push({
+        entrada: timeline.openEntrada,
+        saida: item,
+        startSeconds: timeline.openEntrada.seconds,
+        endSeconds: item.seconds,
+        durationSeconds: Math.max(0, durationSeconds),
+      });
+      timeline.openEntrada = null;
     });
 
-    return total;
+    timeline.lastItem = this.getLastArrayItem(timeline.items);
+    return timeline;
+  },
+
+  calculateWorkedSeconds(records, timeline = null) {
+    const workday = timeline || this.buildWorkdayTimeline(records);
+    return workday.segments.reduce((total, segment) => total + segment.durationSeconds, 0);
   },
 
   hasInterval(settings) {
@@ -332,27 +408,30 @@ const EASydots = {
     );
   },
 
-  isWorkDayComplete(records, settings) {
-    if (!records.length) return false;
+  isWorkDayComplete(records, settings, timeline = null) {
+    const workday = timeline || this.buildWorkdayTimeline(records);
+    if (!workday.segments.length || workday.openEntrada) return false;
+    if (workday.lastItem?.direction !== 'saida') return false;
 
-    const lastRecord = records[records.length - 1];
-    if (!this.isSaida(lastRecord.type)) return false;
-
-    const entradas = records.filter((record) => this.isEntrada(record.type)).length;
-    const saidas = records.filter((record) => this.isSaida(record.type)).length;
-
-    if (entradas === 0 || entradas !== saidas) return false;
-
-    if (this.hasInterval(settings)) {
-      return entradas >= 2 && saidas >= 2;
+    if (!this.hasInterval(settings)) {
+      return true;
     }
 
-    return true;
+    const intervalEndSeconds = this.timeToSeconds(settings.intervaloFim);
+    const hasWorkBeforeIntervalEnd = workday.segments.some(
+      (segment) => segment.startSeconds < intervalEndSeconds
+    );
+
+    return (
+      workday.segments.length >= 2 &&
+      hasWorkBeforeIntervalEnd &&
+      workday.lastItem.seconds >= intervalEndSeconds
+    );
   },
 
-  calculateDayBalance(records, settings) {
+  calculateDayBalance(records, settings, timeline = null) {
     const expectedDaily = this.calculateExpectedDailyWork(settings);
-    const worked = this.calculateWorkedSeconds(records);
+    const worked = this.calculateWorkedSeconds(records, timeline);
 
     return worked - expectedDaily;
   },
@@ -399,10 +478,10 @@ const EASydots = {
     return 'outside_positive';
   },
 
-  projectDayBalanceWithConfiguredSchedule(records, settings) {
+  projectDayBalanceWithConfiguredSchedule(records, settings, timeline = null) {
     const remaining = this.getRemainingExpectedPunches(records, settings);
     if (!remaining.length) {
-      return this.calculateDayBalance(records, settings);
+      return this.calculateDayBalance(records, settings, timeline);
     }
 
     const simulated = records.map((record) => ({
@@ -420,11 +499,51 @@ const EASydots = {
     return this.calculateDayBalance(simulated, settings);
   },
 
-  isFinalExitPunch(punch, settings) {
-    return punch.type === 'saida' && punch.expected === settings.saida;
+  getProjectedBalanceReferenceExitSeconds(records, settings, timeline, complete) {
+    if (complete) {
+      const lastSaida = this.getLastArrayItem(timeline?.saidas || []);
+      if (lastSaida) return lastSaida.seconds;
+    }
+
+    const remainingFinalExit = this.findLastTimelineItem(
+      this.getRemainingExpectedPunches(records, settings),
+      (punch) => this.isFinalExitPunch(punch, settings)
+    );
+    if (remainingFinalExit) return this.timeToSeconds(remainingFinalExit.expected);
+
+    const lastSaida = this.getLastArrayItem(timeline?.saidas || []);
+    if (lastSaida) return lastSaida.seconds;
+
+    return this.timeToSeconds(settings.saida);
   },
 
-  buildExitOptions(rawBalanceSeconds, settings) {
+  calculateLiveOpenDayBalance(records, settings, timeline, date = new Date()) {
+    const openEntrada = timeline?.openEntrada;
+    if (!openEntrada) return null;
+
+    const nowSeconds = this.getLocalClockSeconds(date);
+    if (!Number.isFinite(nowSeconds) || nowSeconds < openEntrada.seconds) {
+      return null;
+    }
+
+    const worked =
+      this.calculateWorkedSeconds(records, timeline) +
+      Math.max(0, nowSeconds - openEntrada.seconds);
+
+    return {
+      raw: worked - this.calculateExpectedDailyWork(settings),
+      referenceExitSeconds: nowSeconds,
+    };
+  },
+
+  isFinalExitPunch(punch, settings) {
+    return (
+      punch?.kind === 'workExit' ||
+      (punch?.type === 'saida' && punch?.expected === settings.saida)
+    );
+  },
+
+  buildExitOptions(rawBalanceSeconds, settings, referenceExitSeconds = null) {
     if (rawBalanceSeconds >= 0) return null;
 
     const toleranceSeconds = this.getToleranceSeconds(settings);
@@ -434,7 +553,9 @@ const EASydots = {
       toleranceSeconds,
       safetyMarginSeconds
     );
-    const baseExitSeconds = this.timeToSeconds(settings.saida);
+    const baseExitSeconds = Number.isFinite(referenceExitSeconds)
+      ? referenceExitSeconds
+      : this.timeToSeconds(settings.saida);
 
     return {
       compensation,
@@ -447,12 +568,30 @@ const EASydots = {
     };
   },
 
-  buildDayBalanceAnalysis(records, settings) {
-    const complete = this.isWorkDayComplete(records, settings);
-    const rawCurrent = this.calculateDayBalance(records, settings);
-    const rawProjected = complete
+  buildDayBalanceAnalysis(records, settings, date = new Date()) {
+    const timeline = this.buildWorkdayTimeline(records);
+    const complete = this.isWorkDayComplete(records, settings, timeline);
+    const rawCurrent = this.calculateDayBalance(records, settings, timeline);
+    const scheduledRawProjected = complete
       ? rawCurrent
-      : this.projectDayBalanceWithConfiguredSchedule(records, settings);
+      : this.projectDayBalanceWithConfiguredSchedule(records, settings, timeline);
+    const scheduledReferenceExitSeconds = this.getProjectedBalanceReferenceExitSeconds(
+      records,
+      settings,
+      timeline,
+      complete
+    );
+    const liveOpenBalance = complete
+      ? null
+      : this.calculateLiveOpenDayBalance(records, settings, timeline, date);
+    const useLiveBalance =
+      liveOpenBalance &&
+      Number.isFinite(liveOpenBalance.raw) &&
+      liveOpenBalance.raw > scheduledRawProjected;
+    const rawProjected = useLiveBalance ? liveOpenBalance.raw : scheduledRawProjected;
+    const projectionReferenceExitSeconds = useLiveBalance
+      ? liveOpenBalance.referenceExitSeconds
+      : scheduledReferenceExitSeconds;
 
     const toleranceSeconds = this.getToleranceSeconds(settings);
     const safetyMarginSeconds = this.getSafetyMarginSeconds(settings);
@@ -466,7 +605,7 @@ const EASydots = {
       toleranceSeconds,
       safeLimitSeconds
     );
-    const exits = this.buildExitOptions(rawProjected, settings);
+    const exits = this.buildExitOptions(rawProjected, settings, projectionReferenceExitSeconds);
     const estimatedOvertimeSeconds =
       rawProjected > toleranceSeconds ? rawProjected : 0;
 
@@ -481,6 +620,8 @@ const EASydots = {
       safeLimitSeconds,
       exits,
       estimatedOvertimeSeconds,
+      projectionReferenceExitSeconds,
+      usesLocalClockForBalance: Boolean(useLiveBalance),
     };
   },
 
@@ -502,6 +643,61 @@ const EASydots = {
     if (status === 'at_limit') return t('contentDayBalanceStatusCompactAtLimit');
     if (status === 'outside_negative') return t('contentDayBalanceStatusCompactOutside');
     return t('contentDayBalanceStatusCompactOvertime');
+  },
+
+  getDayBalanceStatusClass(status) {
+    return {
+      within_safe: 'within-safe',
+      at_limit: 'at-limit',
+      outside_negative: 'outside-negative',
+      outside_positive: 'outside-positive',
+    }[status] || 'within-safe';
+  },
+
+  clearDayBalanceStatusClasses(card) {
+    card?.classList.remove(
+      'eed-day-balance-card--within-safe',
+      'eed-day-balance-card--at-limit',
+      'eed-day-balance-card--outside-negative',
+      'eed-day-balance-card--outside-positive'
+    );
+  },
+
+  updateDayBalanceSummaryView(balanceRow, analysis) {
+    if (!balanceRow || !analysis) return;
+
+    const card = balanceRow.querySelector('.eed-day-balance-card');
+    const valueEl = balanceRow.querySelector('.eed-day-balance-value');
+    const consideredLabelEl = balanceRow.querySelector('.eed-day-balance-considered-label');
+    const metaEl = balanceRow.querySelector('.eed-day-balance-meta');
+    if (!valueEl) return;
+
+    const { text } = this.formatBalance(analysis.considered);
+    const statusClass = this.getDayBalanceStatusClass(analysis.status);
+    const nextValueClass = `eed-day-balance-value eed-day-balance-${statusClass}`;
+
+    if (valueEl.textContent !== text) {
+      valueEl.textContent = text;
+    }
+    if (valueEl.className !== nextValueClass) {
+      valueEl.className = nextValueClass;
+    }
+
+    this.clearDayBalanceStatusClasses(card);
+    card?.classList.add(`eed-day-balance-card--${statusClass}`);
+
+    if (consideredLabelEl) {
+      consideredLabelEl.textContent = t('contentDayBalanceConsideredLabel');
+    }
+
+    if (metaEl) {
+      const metaText = this.buildDayBalanceMetaLine(analysis);
+      if (metaEl.textContent !== metaText) {
+        metaEl.textContent = metaText;
+      }
+      metaEl.hidden = !metaText;
+      metaEl.className = `eed-day-balance-meta eed-day-balance-meta--${statusClass}`;
+    }
   },
 
   getDayBalanceEstimatedBankSeconds(analysis) {
@@ -556,6 +752,10 @@ const EASydots = {
    * Incomplete days use the configured exit (same as balance projection); complete days use the last punch.
    */
   getDayBalanceOvertimeReferenceExitSeconds(records, settings, analysis) {
+    if (Number.isFinite(analysis?.projectionReferenceExitSeconds)) {
+      return analysis.projectionReferenceExitSeconds;
+    }
+
     if (analysis?.complete) {
       const last = records?.[records.length - 1];
       if (last && this.isSaida(last.type)) {
@@ -620,8 +820,10 @@ const EASydots = {
 
   isCurrentlyClockedIn(records, settings, analysis = null) {
     if (!records?.length) return false;
-    if (analysis?.complete || this.isWorkDayComplete(records, settings)) return false;
-    return this.isEntrada(records[records.length - 1]?.type);
+
+    const timeline = this.buildWorkdayTimeline(records);
+    if (analysis?.complete || this.isWorkDayComplete(records, settings, timeline)) return false;
+    return Boolean(timeline.openEntrada);
   },
 
   calculateCurrentDayBalanceOvertimeSeconds(
@@ -633,14 +835,20 @@ const EASydots = {
     if (!records?.length || !settings || !analysis) return 0;
 
     let currentRecords = records;
-    if (this.isCurrentlyClockedIn(records, settings, analysis)) {
+    const timeline = this.buildWorkdayTimeline(records);
+    const isClockedIn =
+      !analysis.complete &&
+      Boolean(timeline.openEntrada) &&
+      !this.isWorkDayComplete(records, settings, timeline);
+
+    if (isClockedIn) {
       const nowSeconds = this.getLocalClockSeconds(date);
-      const lastRecordSeconds = this.timeToSeconds(records[records.length - 1].time);
+      const openEntradaSeconds = timeline.openEntrada?.seconds;
 
       if (
         Number.isFinite(nowSeconds) &&
-        Number.isFinite(lastRecordSeconds) &&
-        nowSeconds >= lastRecordSeconds
+        Number.isFinite(openEntradaSeconds) &&
+        nowSeconds >= openEntradaSeconds
       ) {
         currentRecords = [
           ...records,
@@ -664,11 +872,66 @@ const EASydots = {
     return remaining.length === 1 && this.isFinalExitPunch(remaining[0], settings);
   },
 
+  calculateDayBalanceSafeEarlyExitTime(records, settings, analysis) {
+    if (!records?.length || !settings || !analysis) return null;
+
+    const timeline = this.buildWorkdayTimeline(records);
+    const openEntrada = timeline.openEntrada;
+    if (!openEntrada) return null;
+
+    const configuredExitSeconds = this.timeToSeconds(settings.saida);
+    const safeLimitSeconds = analysis.safeLimitSeconds;
+
+    if (
+      !Number.isFinite(configuredExitSeconds) ||
+      !Number.isFinite(openEntrada.seconds) ||
+      !Number.isFinite(safeLimitSeconds)
+    ) {
+      return null;
+    }
+
+    const workedBeforeOpen = this.calculateWorkedSeconds(records, timeline);
+    const rawAtConfiguredExit =
+      workedBeforeOpen +
+      Math.max(0, configuredExitSeconds - openEntrada.seconds) -
+      this.calculateExpectedDailyWork(settings);
+    const secondsBeforeSchedule = rawAtConfiguredExit + safeLimitSeconds;
+
+    if (!Number.isFinite(secondsBeforeSchedule) || secondsBeforeSchedule <= 0) {
+      return null;
+    }
+
+    const safeExitSeconds = configuredExitSeconds - secondsBeforeSchedule;
+    if (
+      safeExitSeconds < 0 ||
+      safeExitSeconds >= 86400 ||
+      safeExitSeconds < openEntrada.seconds ||
+      safeExitSeconds >= configuredExitSeconds
+    ) {
+      return null;
+    }
+
+    return {
+      exitSeconds: safeExitSeconds,
+      exitTime: this.secondsToTimeString(safeExitSeconds),
+    };
+  },
+
   buildDayBalanceSafeEarlyExitView(records, settings, analysis) {
     if (!this.isFinalWorkSegmentOpen(records, settings, analysis)) return null;
 
-    const times = this.getSimulatorSeedTimes(records, settings);
-    return this.buildSimulatorSafeEarlyExitLabel(times, settings, analysis);
+    const safeExit = this.calculateDayBalanceSafeEarlyExitTime(records, settings, analysis);
+    if (!safeExit) return null;
+
+    return {
+      text: t('contentSimSafeExitBeforeSchedule', [safeExit.exitTime]),
+      shortText: t('contentSimSafeExitBeforeScheduleShort', [safeExit.exitTime]),
+      tooltip: t('contentSimSafeExitBeforeScheduleTooltip', [safeExit.exitTime]),
+      status: this.getSafeExitClockStatus(safeExit.exitSeconds),
+      usesLocalClock: true,
+      exitSeconds: safeExit.exitSeconds,
+      exitTime: safeExit.exitTime,
+    };
   },
 
   ensureDayBalanceOvertimeStartEl(balanceRow) {
@@ -789,6 +1052,7 @@ const EASydots = {
       analysis
     );
 
+    this.updateDayBalanceSummaryView(balanceRow, analysis);
     this.updateDayBalanceOvertimeStartLabel(
       this.ensureDayBalanceOvertimeStartEl(balanceRow),
       overtimeView
@@ -997,22 +1261,6 @@ const EASydots = {
 
     timeCell.classList.remove(...this.TIME_STATUS_CLASSES);
     timeCell.classList.add(status);
-  },
-
-  getRecordKind(type, entradaIndex, saidaIndex, totalSaidas, settings) {
-    if (this.isEntrada(type)) {
-      return entradaIndex === 0 ? 'workEntry' : 'breakEnd';
-    }
-
-    if (!this.hasInterval(settings)) {
-      return 'workExit';
-    }
-
-    if (saidaIndex >= totalSaidas - 1 && totalSaidas >= 2) {
-      return 'workExit';
-    }
-
-    return 'breakStart';
   },
 
   calculateDifferenceSeconds(type, recordedTime, expectedTime) {
@@ -1315,46 +1563,121 @@ const EASydots = {
     return [hours, minutes, secs].map((unit) => String(unit).padStart(2, '0')).join(':');
   },
 
+  buildExpectedPunch(kind, settings, expectedOverride = null) {
+    const punches = {
+      workEntry: {
+        type: 'entrada',
+        label: t('contentPunchEntry'),
+        expected: settings.entrada,
+        icon: 'icon-login',
+      },
+      breakStart: {
+        type: 'saida',
+        label: t('contentPunchExit'),
+        expected: settings.intervaloInicio,
+        icon: 'icon-logout',
+      },
+      breakEnd: {
+        type: 'entrada',
+        label: t('contentPunchEntry'),
+        expected: settings.intervaloFim,
+        icon: 'icon-login',
+      },
+      workExit: {
+        type: 'saida',
+        label: t('contentPunchExit'),
+        expected: settings.saida,
+        icon: 'icon-logout',
+      },
+    };
+
+    return {
+      ...punches[kind],
+      kind,
+      expected: expectedOverride || punches[kind].expected,
+    };
+  },
+
   getExpectedDaySequence(settings) {
     if (this.hasInterval(settings)) {
       return [
-        { type: 'entrada', label: t('contentPunchEntry'), expected: settings.entrada, icon: 'icon-login' },
-        { type: 'saida', label: t('contentPunchExit'), expected: settings.intervaloInicio, icon: 'icon-logout' },
-        { type: 'entrada', label: t('contentPunchEntry'), expected: settings.intervaloFim, icon: 'icon-login' },
-        { type: 'saida', label: t('contentPunchExit'), expected: settings.saida, icon: 'icon-logout' },
+        this.buildExpectedPunch('workEntry', settings),
+        this.buildExpectedPunch('breakStart', settings),
+        this.buildExpectedPunch('breakEnd', settings),
+        this.buildExpectedPunch('workExit', settings),
       ];
     }
 
     return [
-      { type: 'entrada', label: t('contentPunchEntry'), expected: settings.entrada, icon: 'icon-login' },
-      { type: 'saida', label: t('contentPunchExit'), expected: settings.saida, icon: 'icon-logout' },
+      this.buildExpectedPunch('workEntry', settings),
+      this.buildExpectedPunch('workExit', settings),
     ];
+  },
+
+  getFinalExitExpectedTime(settings, openEntrada = null) {
+    const configuredExitSeconds = this.timeToSeconds(settings.saida);
+    const openEntradaSeconds = openEntrada?.seconds;
+
+    if (!Number.isFinite(configuredExitSeconds) || !Number.isFinite(openEntradaSeconds)) {
+      return settings.saida;
+    }
+
+    return this.secondsToTimeString(Math.max(configuredExitSeconds, openEntradaSeconds));
   },
 
   getRemainingExpectedPunches(records, settings) {
     const sequence = this.getExpectedDaySequence(settings);
-    let sequenceIndex = 0;
+    const timeline = this.buildWorkdayTimeline(records);
+    if (!timeline.items.length) return sequence;
 
-    records.forEach((record) => {
-      if (sequenceIndex >= sequence.length) return;
+    const buildFinalExitPunch = () =>
+      this.buildExpectedPunch(
+        'workExit',
+        settings,
+        this.getFinalExitExpectedTime(settings, timeline.openEntrada)
+      );
 
-      const expected = sequence[sequenceIndex];
-      const matchesEntrada = this.isEntrada(record.type) && expected.type === 'entrada';
-      const matchesSaida = this.isSaida(record.type) && expected.type === 'saida';
+    if (!this.hasInterval(settings)) {
+      return timeline.openEntrada ? [buildFinalExitPunch()] : [];
+    }
 
-      if (matchesEntrada || matchesSaida) {
-        sequenceIndex += 1;
+    const intervalStartSeconds = this.timeToSeconds(settings.intervaloInicio);
+    const intervalEndSeconds = this.timeToSeconds(settings.intervaloFim);
+
+    if (timeline.openEntrada) {
+      if (
+        timeline.saidas.length === 0 &&
+        Number.isFinite(intervalStartSeconds) &&
+        timeline.openEntrada.seconds < intervalStartSeconds
+      ) {
+        return sequence.slice(1);
       }
-    });
 
-    return sequence.slice(sequenceIndex);
+      return [buildFinalExitPunch()];
+    }
+
+    if (timeline.lastItem?.direction === 'saida') {
+      if (
+        Number.isFinite(intervalEndSeconds) &&
+        timeline.lastItem.seconds < intervalEndSeconds
+      ) {
+        return [
+          this.buildExpectedPunch('breakEnd', settings),
+          this.buildExpectedPunch('workExit', settings),
+        ];
+      }
+
+      return [];
+    }
+
+    return sequence;
   },
 
   isLunchExitPunch(punch, settings) {
     return (
       this.hasInterval(settings) &&
-      punch.type === 'saida' &&
-      punch.expected === settings.intervaloInicio
+      (punch?.kind === 'breakStart' ||
+        (punch?.type === 'saida' && punch?.expected === settings.intervaloInicio))
     );
   },
 
@@ -1365,15 +1688,28 @@ const EASydots = {
       return configuredTime;
     }
 
+    let suggestedTime = configuredTime;
     if (
       analysis &&
       (analysis.status === 'outside_negative' || analysis.status === 'at_limit') &&
       analysis.exits?.safe
     ) {
-      return analysis.exits.safe;
+      suggestedTime = analysis.exits.safe;
     }
 
-    return configuredTime;
+    const timeline = this.buildWorkdayTimeline(records);
+    const openEntradaSeconds = timeline.openEntrada?.seconds;
+    if (!Number.isFinite(openEntradaSeconds)) {
+      return suggestedTime;
+    }
+
+    const nowSeconds = this.getLocalClockSeconds();
+    const liveExitFloorSeconds =
+      Number.isFinite(nowSeconds) && nowSeconds >= openEntradaSeconds ? nowSeconds : 0;
+
+    return this.secondsToTimeString(
+      Math.max(this.timeToSeconds(suggestedTime), openEntradaSeconds, liveExitFloorSeconds)
+    );
   },
 
   getSuggestedPunchTimes(records, settings) {
@@ -1439,20 +1775,47 @@ const EASydots = {
     });
   },
 
-  getExpectedTime(type, entradaIndex, saidaIndex, totalSaidas, settings) {
+  getRecordKind(type, entradaIndex, saidaIndex, totalSaidas, settings, recordedTime = null) {
     if (this.isEntrada(type)) {
-      return entradaIndex === 0 ? settings.entrada : settings.intervaloFim;
+      return entradaIndex === 0 ? 'workEntry' : 'breakEnd';
     }
 
     if (!this.hasInterval(settings)) {
-      return settings.saida;
+      return 'workExit';
     }
 
-    if (saidaIndex >= totalSaidas - 1 && totalSaidas >= 2) {
-      return settings.saida;
+    const recordedSeconds = recordedTime ? this.timeToSeconds(recordedTime) : null;
+    const intervalEndSeconds = this.timeToSeconds(settings.intervaloFim);
+
+    if (Number.isFinite(recordedSeconds) && recordedSeconds >= intervalEndSeconds) {
+      return 'workExit';
     }
 
-    return settings.intervaloInicio;
+    if (
+      !Number.isFinite(recordedSeconds) &&
+      saidaIndex >= totalSaidas - 1 &&
+      totalSaidas >= 2
+    ) {
+      return 'workExit';
+    }
+
+    return 'breakStart';
+  },
+
+  getExpectedTime(type, entradaIndex, saidaIndex, totalSaidas, settings, recordedTime = null) {
+    const kind = this.getRecordKind(
+      type,
+      entradaIndex,
+      saidaIndex,
+      totalSaidas,
+      settings,
+      recordedTime
+    );
+
+    if (kind === 'workEntry') return settings.entrada;
+    if (kind === 'breakStart') return settings.intervaloInicio;
+    if (kind === 'breakEnd') return settings.intervaloFim;
+    return settings.saida;
   },
 
   async applyRecordColors() {
@@ -1528,14 +1891,16 @@ const EASydots = {
           entradaIndex,
           saidaIndex,
           totalSaidas,
-          settings
+          settings,
+          recordedTime
         );
         const recordKind = this.getRecordKind(
           type,
           entradaIndex,
           saidaIndex,
           totalSaidas,
-          settings
+          settings,
+          recordedTime
         );
 
         if (this.isEntrada(type)) entradaIndex += 1;
@@ -1690,17 +2055,8 @@ const EASydots = {
       creditBtn.append(document.createTextNode(t('contentCreditByline')));
     }
 
-    const clearStatusClasses = () => {
-      card?.classList.remove(
-        'eed-day-balance-card--within-safe',
-        'eed-day-balance-card--at-limit',
-        'eed-day-balance-card--outside-negative',
-        'eed-day-balance-card--outside-positive'
-      );
-    };
-
     if (!scheduleConfigured) {
-      clearStatusClasses();
+      this.clearDayBalanceStatusClasses(card);
       if (consideredLabelEl) consideredLabelEl.textContent = '';
       if (metaEl) {
         metaEl.textContent = '';
@@ -1729,36 +2085,8 @@ const EASydots = {
       loadedSettings,
       analysis
     );
-    const { text } = this.formatBalance(analysis.considered);
-    const statusClass = {
-      within_safe: 'within-safe',
-      at_limit: 'at-limit',
-      outside_negative: 'outside-negative',
-      outside_positive: 'outside-positive',
-    }[analysis.status];
 
-    const nextValueClass = `eed-day-balance-value eed-day-balance-${statusClass}`;
-    if (valueEl.textContent !== text) {
-      valueEl.textContent = text;
-    }
-    if (valueEl.className !== nextValueClass) {
-      valueEl.className = nextValueClass;
-    }
-
-    clearStatusClasses();
-    card?.classList.add(`eed-day-balance-card--${statusClass}`);
-
-    if (consideredLabelEl) {
-      consideredLabelEl.textContent = t('contentDayBalanceConsideredLabel');
-    }
-
-    if (metaEl) {
-      const metaText = this.buildDayBalanceMetaLine(analysis);
-      metaEl.textContent = metaText;
-      metaEl.hidden = !metaText;
-      metaEl.className = `eed-day-balance-meta eed-day-balance-meta--${statusClass}`;
-    }
-
+    this.updateDayBalanceSummaryView(balanceRow, analysis);
     this.updateDayBalanceOvertimeStartLabel(overtimeEl, overtimeView);
     this.updateDayBalanceSafeExitLabel(safeExitEl, safeExitView);
     if (overtimeView?.usesLocalClock || safeExitView?.usesLocalClock) {
@@ -2812,33 +3140,72 @@ const EASydots = {
       saida: this.formatExpectedTimeForTooltip(settings.saida),
     };
 
+    const timeline = this.buildWorkdayTimeline(records);
+    const setSeed = (field, item) => {
+      const normalized = this.normalizeSimulatedTimeInput(item?.record?.time);
+      if (normalized) seeds[field] = normalized;
+    };
+
+    setSeed('entrada', timeline.entradas[0]);
+
     if (!this.hasInterval(settings)) {
       seeds.intervaloInicio = seeds.entrada;
       seeds.intervaloFim = seeds.entrada;
+      setSeed('saida', this.getLastArrayItem(timeline.saidas));
+      return seeds;
     }
 
-    const fieldByIndex = this.hasInterval(settings)
-      ? ['entrada', 'intervaloInicio', 'intervaloFim', 'saida']
-      : ['entrada', 'saida'];
+    const intervalStartSeconds = this.timeToSeconds(settings.intervaloInicio);
+    const intervalEndSeconds = this.timeToSeconds(settings.intervaloFim);
+    const finalExit = this.findLastTimelineItem(
+      timeline.saidas,
+      (item) => Number.isFinite(intervalEndSeconds) && item.seconds >= intervalEndSeconds
+    );
+    let finalEntry = null;
 
-    let index = 0;
-    records.forEach((record) => {
-      if (index >= fieldByIndex.length) return;
+    if (finalExit) {
+      finalEntry = timeline.entradas.find(
+        (item) =>
+          item.index < finalExit.index &&
+          Number.isFinite(intervalStartSeconds) &&
+          item.seconds >= intervalStartSeconds
+      );
 
-      const field = fieldByIndex[index];
-      const expectsEntrada = field === 'entrada' || field === 'intervaloFim';
-      const matches =
-        (expectsEntrada && this.isEntrada(record.type)) ||
-        (!expectsEntrada && this.isSaida(record.type));
-
-      if (!matches) return;
-
-      const normalized = this.normalizeSimulatedTimeInput(record.time);
-      if (normalized) {
-        seeds[field] = normalized;
+      if (!finalEntry) {
+        finalEntry = this.findLastTimelineItem(
+          timeline.entradas,
+          (item) => item.index < finalExit.index
+        );
       }
-      index += 1;
-    });
+    } else if (
+      timeline.openEntrada &&
+      (timeline.saidas.length > 0 ||
+        (Number.isFinite(intervalStartSeconds) &&
+          timeline.openEntrada.seconds >= intervalStartSeconds))
+    ) {
+      finalEntry = timeline.openEntrada;
+    }
+
+    let breakStart = null;
+    if (finalEntry) {
+      breakStart = this.findLastTimelineItem(
+        timeline.saidas,
+        (item) => item.index < finalEntry.index
+      );
+    }
+
+    if (!breakStart) {
+      breakStart = this.findLastTimelineItem(
+        timeline.saidas,
+        (item) => Number.isFinite(intervalEndSeconds) && item.seconds < intervalEndSeconds
+      );
+    }
+
+    setSeed('intervaloInicio', breakStart);
+    if (finalEntry && finalEntry !== timeline.entradas[0]) {
+      setSeed('intervaloFim', finalEntry);
+    }
+    setSeed('saida', finalExit);
 
     return seeds;
   },
@@ -3019,6 +3386,7 @@ const EASydots = {
   },
 
   isDevClockOverrideAllowed() {
+    if (typeof window === 'undefined' || !window.location) return false;
     const host = window.location.hostname;
     return (
       window.location.protocol === 'file:' ||

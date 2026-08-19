@@ -1468,6 +1468,18 @@
     "message": "Esta é uma estimativa baseada nas solicitações pendentes visíveis e nos detalhes disponíveis. O banco de horas só muda após aprovação e processamento pelo Easydots.",
     "description": "Custom tooltip explaining pending requests impact estimate"
   },
+  "changelogV181Item1": {
+    "message": "Registros extras no mesmo dia são pareados corretamente sem encerrar a jornada antes da hora",
+    "description": "Item do changelog v1.8.1"
+  },
+  "changelogV181Item2": {
+    "message": "Saldo aberto acompanha o horário local quando a jornada já passou da projeção configurada",
+    "description": "Item do changelog v1.8.1"
+  },
+  "changelogV181Item3": {
+    "message": "Sugestão de saída final evita horários já passados quando a pessoa ainda está batida",
+    "description": "Item do changelog v1.8.1"
+  },
   "changelogV180Item1": {
     "message": "Simulador mostra uma saída segura antes do horário configurado quando houver margem",
     "description": "Item do changelog v1.8.0"

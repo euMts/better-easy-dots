@@ -1468,6 +1468,18 @@
     "message": "This is an estimate based on the visible pending requests and available details. The time bank only changes after approval and processing by Easydots.",
     "description": "Custom tooltip explaining pending requests impact estimate"
   },
+  "changelogV181Item1": {
+    "message": "Extra punches on the same day are paired correctly without closing the workday too early",
+    "description": "Changelog v1.8.1 item"
+  },
+  "changelogV181Item2": {
+    "message": "Open day balance follows the local clock once the workday has passed the configured projection",
+    "description": "Changelog v1.8.1 item"
+  },
+  "changelogV181Item3": {
+    "message": "Final exit suggestions avoid past times while someone is still clocked in",
+    "description": "Changelog v1.8.1 item"
+  },
   "changelogV180Item1": {
     "message": "Simulator shows a safe early exit before the configured schedule when there is margin",
     "description": "Changelog v1.8.0 item"
