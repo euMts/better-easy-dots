@@ -916,9 +916,53 @@
       "time": { "content": "$1", "example": "18:24:59" }
     }
   },
+  "contentSimOvertimeWouldStartAfter": {
+    "message": "Overtime would start after $TIME$",
+    "description": "Conditional label for the overtime start time on an already closed day",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:24:59" }
+    }
+  },
+  "contentSimOvertimeWouldStartAfterShort": {
+    "message": "Overtime would start after $TIME$",
+    "description": "Short conditional label for overtime start time on an already closed day",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:24:59" }
+    }
+  },
+  "contentSimOvertimeStartsAfterWithRemaining": {
+    "message": "Overtime starts after $TIME$ ($REMAINING$)",
+    "description": "Overtime start label with remaining countdown time",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:30:01" },
+      "remaining": { "content": "$2", "example": "00:12:34" }
+    }
+  },
+  "contentSimOvertimeStartsAfterWithRemainingShort": {
+    "message": "Overtime after $TIME$ ($REMAINING$)",
+    "description": "Short overtime start label with remaining countdown time",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:30:01" },
+      "remaining": { "content": "$2", "example": "00:12:34" }
+    }
+  },
   "contentSimOvertimeAlreadyCounting": {
     "message": "Overtime already counting",
     "description": "Simulator label when raw balance already exceeds daily tolerance"
+  },
+  "contentSimOvertimeAlreadyCountingWithAmount": {
+    "message": "Overtime already counting: $AMOUNT$",
+    "description": "Label with overtime already accumulated by local clock",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "00:12:34" }
+    }
+  },
+  "contentSimOvertimeAlreadyCountingWithAmountShort": {
+    "message": "Overtime: $AMOUNT$",
+    "description": "Short label with overtime already accumulated by local clock",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "00:12:34" }
+    }
   },
   "contentSimOvertimeValidFrom": {
     "message": "Valid overtime starts at $TIME$",
@@ -935,11 +979,57 @@
       "time": { "content": "$2", "example": "18:24:59" }
     }
   },
+  "contentSimOvertimeWouldStartAfterTooltip": {
+    "message": "With the configured daily tolerance of +$TOLERANCE$, overtime would only count if clock-out had happened after $TIME$.",
+    "description": "Conditional tooltip for overtime start on an already closed day",
+    "placeholders": {
+      "tolerance": { "content": "$1", "example": "10min" },
+      "time": { "content": "$2", "example": "18:24:59" }
+    }
+  },
+  "contentSimOvertimeStartsAfterWithRemainingTooltip": {
+    "message": "With the configured daily tolerance, overtime should only count when the raw balance exceeds +$TOLERANCE$. With these times, that would start after $TIME$. $REMAINING$ remaining by local time.",
+    "description": "Tooltip explaining overtime start with remaining time",
+    "placeholders": {
+      "tolerance": { "content": "$1", "example": "10min" },
+      "time": { "content": "$2", "example": "18:30:01" },
+      "remaining": { "content": "$3", "example": "00:12:34" }
+    }
+  },
   "contentSimOvertimeAlreadyCountingTooltip": {
     "message": "Raw balance already exceeds the daily tolerance of +$TOLERANCE$. Valid overtime is already counting.",
     "description": "Tooltip when overtime is already counting in the simulator",
     "placeholders": {
       "tolerance": { "content": "$1", "example": "10min" }
+    }
+  },
+  "contentSimOvertimeAlreadyCountingWithAmountTooltip": {
+    "message": "Based on this computer's local time, the current raw balance has reached $AMOUNT$ and started counting as valid overtime at $TIME$.",
+    "description": "Tooltip with overtime already accumulated by local clock",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "00:12:34" },
+      "time": { "content": "$2", "example": "18:24:59" }
+    }
+  },
+  "contentSimSafeExitBeforeSchedule": {
+    "message": "You can leave comfortably at $TIME$",
+    "description": "Safe exit before configured schedule label on the simulator",
+    "placeholders": {
+      "time": { "content": "$1", "example": "17:55:00" }
+    }
+  },
+  "contentSimSafeExitBeforeScheduleShort": {
+    "message": "Comfortable exit: $TIME$",
+    "description": "Short safe exit before configured schedule label on the simulator",
+    "placeholders": {
+      "time": { "content": "$1", "example": "17:55:00" }
+    }
+  },
+  "contentSimSafeExitBeforeScheduleTooltip": {
+    "message": "With these times, clocking out at $TIME$ still keeps the day inside the safe margin.",
+    "description": "Tooltip explaining safe exit before configured schedule on the simulator",
+    "placeholders": {
+      "time": { "content": "$1", "example": "17:55:00" }
     }
   },
   "contentScheduleHintBefore": {
@@ -1377,6 +1467,42 @@
   "contentPendingImpactTooltip": {
     "message": "This is an estimate based on the visible pending requests and available details. The time bank only changes after approval and processing by Easydots.",
     "description": "Custom tooltip explaining pending requests impact estimate"
+  },
+  "changelogV180Item1": {
+    "message": "Simulator shows a safe early exit before the configured schedule when there is margin",
+    "description": "Changelog v1.8.0 item"
+  },
+  "changelogV180Item2": {
+    "message": "Day balance and simulator show how much valid overtime has already accrued from the local clock",
+    "description": "Changelog v1.8.0 item"
+  },
+  "changelogV180Item3": {
+    "message": "Local development mirror can simulate the current time during tests",
+    "description": "Changelog v1.8.0 item"
+  },
+  "changelogV180Item4": {
+    "message": "Overtime start labels show an HH:MM:SS countdown",
+    "description": "Changelog v1.8.0 item"
+  },
+  "changelogV180Item5": {
+    "message": "Day balance also shows a comfortable early exit when you can clock out before schedule",
+    "description": "Changelog v1.8.0 item"
+  },
+  "changelogV180Item6": {
+    "message": "Clock-driven updates are lighter for slower computers",
+    "description": "Changelog v1.8.0 item"
+  },
+  "changelogV180Item7": {
+    "message": "New badge stays only on the current changelog version",
+    "description": "Changelog v1.8.0 item"
+  },
+  "changelogV180Item8": {
+    "message": "Comfortable exit changes color as the time gets close or has already passed",
+    "description": "Changelog v1.8.0 item"
+  },
+  "changelogV180Item9": {
+    "message": "Closed day balance uses conditional copy for when overtime would have started",
+    "description": "Changelog v1.8.0 item"
   },
   "changelogV170Item1": {
     "message": "On the requests page, shows estimated time-bank gain if pending requests are approved",

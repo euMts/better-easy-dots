@@ -10,6 +10,7 @@ const EASydots = {
     settingsMenuItem: '#eed-sidebar-settings',
     jornadaInput: '#inputHorario',
     jornadaImport: '#eed-jornada-import',
+    devClockInput: '[data-eed-dev-current-time]',
   },
 
   EED_DEBUG: false,
@@ -33,9 +34,19 @@ const EASydots = {
   ENHANCE_DEBOUNCE_MS: 150,
   UPDATE_DEBOUNCE_MS: 150,
   SIM_SAVE_DEBOUNCE_MS: 1000,
+  SIM_CLOCK_REFRESH_MS: 1000,
+  SIM_CLOCK_REFRESH_BACKGROUND_MS: 15000,
+  SAFE_EXIT_NEAR_THRESHOLD_SECONDS: 5 * 60,
+  SAFE_EXIT_STATUS_CLASSES: [
+    'eed-safe-exit--pending',
+    'eed-safe-exit--near',
+    'eed-safe-exit--passed',
+  ],
   SIMULATOR_STORAGE_KEY: 'eedSimulatorValues',
   SIMULATOR_TIME_FIELDS: ['entrada', 'intervaloInicio', 'intervaloFim', 'saida'],
   simSaveTimer: null,
+  simClockTimer: null,
+  dayBalanceClockTimer: null,
 
   isExtensionAlive() {
     if (this.extensionDead) return false;
@@ -112,6 +123,8 @@ const EASydots = {
     clearTimeout(this.jornadaSyncTimer);
     clearTimeout(this.jornadaFeedbackTimeout);
     clearTimeout(this.simSaveTimer);
+    clearTimeout(this.simClockTimer);
+    clearTimeout(this.dayBalanceClockTimer);
     clearTimeout(this.pendingImpactTimer);
     this.cancelIdle(this.phase3Timer);
     this.updateTimer = null;
@@ -121,6 +134,8 @@ const EASydots = {
     this.jornadaSyncTimer = null;
     this.jornadaFeedbackTimeout = null;
     this.simSaveTimer = null;
+    this.simClockTimer = null;
+    this.dayBalanceClockTimer = null;
     this.pendingImpactTimer = null;
     this.pendingImpactRunId = (this.pendingImpactRunId || 0) + 1;
 
@@ -281,7 +296,8 @@ const EASydots = {
 
     const analysis = this.buildDayBalanceAnalysis(records, settings);
     const overtimeView = this.buildDayBalanceOvertimeStartView(records, settings, analysis);
-    return this.buildDayBalanceTooltipText(analysis, settings, overtimeView);
+    const safeExitView = this.buildDayBalanceSafeEarlyExitView(records, settings, analysis);
+    return this.buildDayBalanceTooltipText(analysis, settings, overtimeView, safeExitView);
   },
 
   calculateExpectedDailyWork(settings) {
@@ -553,11 +569,106 @@ const EASydots = {
   buildDayBalanceOvertimeStartView(records, settings, analysis) {
     if (!analysis || !settings) return null;
 
-    return this.buildOvertimeStartLabel(
+    const referenceExitSeconds = this.getDayBalanceOvertimeReferenceExitSeconds(
+      records,
+      settings,
+      analysis
+    );
+    const start = this.calculateOvertimeStartExitTime(
       analysis.rawProjected,
       analysis.toleranceSeconds,
-      this.getDayBalanceOvertimeReferenceExitSeconds(records, settings, analysis)
+      referenceExitSeconds
     );
+    if (!start) return null;
+
+    const currentOvertimeSeconds = this.calculateCurrentDayBalanceOvertimeSeconds(
+      records,
+      settings,
+      analysis
+    );
+
+    if (currentOvertimeSeconds > 0) {
+      const amount = this.formatDuration(currentOvertimeSeconds);
+      return {
+        text: t('contentSimOvertimeAlreadyCountingWithAmount', [amount]),
+        shortText: t('contentSimOvertimeAlreadyCountingWithAmountShort', [amount]),
+        tooltip: t('contentSimOvertimeAlreadyCountingWithAmountTooltip', [
+          amount,
+          start.exitTime,
+        ]),
+        alreadyCounting: true,
+        exitTime: start.exitTime,
+        usesLocalClock: !analysis.complete,
+      };
+    }
+
+    const isClockedIn = this.isCurrentlyClockedIn(records, settings, analysis);
+    const remainingSeconds = isClockedIn
+      ? this.getSecondsUntilLocalClockTime(start.exitSeconds)
+      : null;
+
+    return {
+      ...this.buildOvertimeStartsAfterLabel(
+        start.exitTime,
+        this.formatFriendlyDuration(analysis.toleranceSeconds),
+        remainingSeconds,
+        { projected: !isClockedIn }
+      ),
+      usesLocalClock: isClockedIn && Number.isFinite(remainingSeconds),
+    };
+  },
+
+  isCurrentlyClockedIn(records, settings, analysis = null) {
+    if (!records?.length) return false;
+    if (analysis?.complete || this.isWorkDayComplete(records, settings)) return false;
+    return this.isEntrada(records[records.length - 1]?.type);
+  },
+
+  calculateCurrentDayBalanceOvertimeSeconds(
+    records,
+    settings,
+    analysis,
+    date = new Date()
+  ) {
+    if (!records?.length || !settings || !analysis) return 0;
+
+    let currentRecords = records;
+    if (this.isCurrentlyClockedIn(records, settings, analysis)) {
+      const nowSeconds = this.getLocalClockSeconds(date);
+      const lastRecordSeconds = this.timeToSeconds(records[records.length - 1].time);
+
+      if (
+        Number.isFinite(nowSeconds) &&
+        Number.isFinite(lastRecordSeconds) &&
+        nowSeconds >= lastRecordSeconds
+      ) {
+        currentRecords = [
+          ...records,
+          { type: 'saida', time: this.secondsToTimeString(nowSeconds) },
+        ];
+      }
+    }
+
+    const rawNow = analysis.complete
+      ? analysis.rawCurrent
+      : this.calculateDayBalance(currentRecords, settings);
+
+    if (!Number.isFinite(rawNow)) return 0;
+    return rawNow > analysis.toleranceSeconds ? rawNow : 0;
+  },
+
+  isFinalWorkSegmentOpen(records, settings, analysis = null) {
+    if (!this.isCurrentlyClockedIn(records, settings, analysis)) return false;
+
+    const remaining = this.getRemainingExpectedPunches(records, settings);
+    return remaining.length === 1 && this.isFinalExitPunch(remaining[0], settings);
+  },
+
+  buildDayBalanceSafeEarlyExitView(records, settings, analysis) {
+    if (!this.isFinalWorkSegmentOpen(records, settings, analysis)) return null;
+
+    const times = this.getSimulatorSeedTimes(records, settings);
+    return this.buildSimulatorSafeEarlyExitLabel(times, settings, analysis);
   },
 
   ensureDayBalanceOvertimeStartEl(balanceRow) {
@@ -574,6 +685,20 @@ const EASydots = {
     return overtimeEl;
   },
 
+  ensureDayBalanceSafeExitEl(balanceRow) {
+    let safeExitEl = balanceRow?.querySelector('.eed-day-balance-safe-exit');
+    if (safeExitEl) return safeExitEl;
+
+    const left = balanceRow?.querySelector('.eed-day-balance-left');
+    if (!left) return null;
+
+    safeExitEl = document.createElement('div');
+    safeExitEl.className = 'eed-day-balance-safe-exit';
+    safeExitEl.hidden = true;
+    left.appendChild(safeExitEl);
+    return safeExitEl;
+  },
+
   updateDayBalanceOvertimeStartLabel(overtimeEl, overtimeView) {
     if (!overtimeEl) return;
 
@@ -586,12 +711,118 @@ const EASydots = {
     }
 
     overtimeEl.hidden = false;
-    overtimeEl.textContent = overtimeView.text;
+    if (overtimeEl.textContent !== overtimeView.text) {
+      overtimeEl.textContent = overtimeView.text;
+    }
     overtimeEl.classList.toggle(
       'eed-day-balance-overtime-start--counting',
       overtimeView.alreadyCounting
     );
     this.setTooltipTarget(overtimeEl, overtimeView.tooltip);
+  },
+
+  updateDayBalanceSafeExitLabel(safeExitEl, safeExitView) {
+    if (!safeExitEl) return;
+
+    if (!safeExitView) {
+      safeExitEl.hidden = true;
+      safeExitEl.textContent = '';
+      this.applySafeExitStatusClasses(safeExitEl, null);
+      this.setTooltipTarget(safeExitEl, null);
+      return;
+    }
+
+    safeExitEl.hidden = false;
+    if (safeExitEl.textContent !== safeExitView.text) {
+      safeExitEl.textContent = safeExitView.text;
+    }
+    this.applySafeExitStatusClasses(safeExitEl, safeExitView.status);
+    this.setTooltipTarget(safeExitEl, safeExitView.tooltip);
+  },
+
+  clearDayBalanceClockRefresh() {
+    clearTimeout(this.dayBalanceClockTimer);
+    this.dayBalanceClockTimer = null;
+  },
+
+  updateDayBalanceClockLines(table, settings) {
+    if (!this.isExtensionAlive() || !table || !settings || !table.isConnected) {
+      this.clearDayBalanceClockRefresh();
+      return;
+    }
+
+    if (this.isUpdating) {
+      this.scheduleDayBalanceClockRefresh(table, settings);
+      return;
+    }
+
+    const balanceRow = table.querySelector('#eed-day-balance-row');
+    const card = balanceRow?.querySelector('.eed-day-balance-card');
+    if (!balanceRow || !card) {
+      this.clearDayBalanceClockRefresh();
+      return;
+    }
+
+    const records = this.getRecords();
+    if (!records.length || !EEDSettings.isScheduleConfigured(settings)) {
+      this.updateDayBalanceOvertimeStartLabel(
+        this.ensureDayBalanceOvertimeStartEl(balanceRow),
+        null
+      );
+      this.updateDayBalanceSafeExitLabel(
+        this.ensureDayBalanceSafeExitEl(balanceRow),
+        null
+      );
+      this.clearDayBalanceClockRefresh();
+      return;
+    }
+
+    const analysis = this.buildDayBalanceAnalysis(records, settings);
+    const overtimeView = this.buildDayBalanceOvertimeStartView(
+      records,
+      settings,
+      analysis
+    );
+    const safeExitView = this.buildDayBalanceSafeEarlyExitView(
+      records,
+      settings,
+      analysis
+    );
+
+    this.updateDayBalanceOvertimeStartLabel(
+      this.ensureDayBalanceOvertimeStartEl(balanceRow),
+      overtimeView
+    );
+    this.updateDayBalanceSafeExitLabel(
+      this.ensureDayBalanceSafeExitEl(balanceRow),
+      safeExitView
+    );
+    this.setTooltipTarget(
+      card,
+      this.buildDayBalanceTooltipText(analysis, settings, overtimeView, safeExitView)
+    );
+
+    if (overtimeView?.usesLocalClock || safeExitView?.usesLocalClock) {
+      this.scheduleDayBalanceClockRefresh(table, settings);
+    } else {
+      this.clearDayBalanceClockRefresh();
+    }
+  },
+
+  scheduleDayBalanceClockRefresh(table, settings) {
+    this.clearDayBalanceClockRefresh();
+
+    if (!table || !settings || !table.isConnected) return;
+
+    this.dayBalanceClockTimer = window.setTimeout(() => {
+      this.dayBalanceClockTimer = null;
+      if (!this.isExtensionAlive() || !table.isConnected) return;
+      try {
+        this.updateDayBalanceClockLines(table, settings);
+      } catch (error) {
+        this.warnFeature('saldo do dia (relógio local)', error);
+      }
+    }, this.getClockRefreshDelay());
   },
 
   buildDayBalanceCreativeMessage(analysis, settings) {
@@ -625,7 +856,12 @@ const EASydots = {
     ]);
   },
 
-  buildDayBalanceTooltipText(analysis, settings, overtimeView = null) {
+  buildDayBalanceTooltipText(
+    analysis,
+    settings,
+    overtimeView = null,
+    safeExitView = null
+  ) {
     const parts = [t('contentDayBalanceTooltipExplain')];
 
     const meta = this.buildDayBalanceMetaLine(analysis);
@@ -635,6 +871,10 @@ const EASydots = {
 
     if (overtimeView?.text) {
       parts.push(overtimeView.text);
+    }
+
+    if (safeExitView?.text) {
+      parts.push(safeExitView.text);
     }
 
     if (settings) {
@@ -1380,6 +1620,7 @@ const EASydots = {
     let balanceRow = table.querySelector('#eed-day-balance-row');
 
     if (!records.length) {
+      this.clearDayBalanceClockRefresh();
       balanceRow?.remove();
       this.adjustRecordsContainer(scrollContainer, false);
       return;
@@ -1412,6 +1653,7 @@ const EASydots = {
               </button>
               <div class="eed-day-balance-meta"></div>
               <div class="eed-day-balance-overtime-start" hidden></div>
+              <div class="eed-day-balance-safe-exit" hidden></div>
             </div>
             <div class="eed-day-balance-right">
               <div class="eed-day-balance-value"></div>
@@ -1433,6 +1675,7 @@ const EASydots = {
     const consideredLabelEl = balanceRow.querySelector('.eed-day-balance-considered-label');
     const metaEl = balanceRow.querySelector('.eed-day-balance-meta');
     const overtimeEl = this.ensureDayBalanceOvertimeStartEl(balanceRow);
+    const safeExitEl = this.ensureDayBalanceSafeExitEl(balanceRow);
     const titleEl = balanceRow.querySelector('.eed-day-balance-title');
     const creditBtn = balanceRow.querySelector('.eed-day-balance-credit');
 
@@ -1464,6 +1707,8 @@ const EASydots = {
         metaEl.hidden = true;
       }
       this.updateDayBalanceOvertimeStartLabel(overtimeEl, null);
+      this.updateDayBalanceSafeExitLabel(safeExitEl, null);
+      this.clearDayBalanceClockRefresh();
       this.renderScheduleHint(valueEl);
       this.setTooltipTarget(card || valueEl, t('contentDayBalanceTooltipNotConfigured'));
 
@@ -1475,6 +1720,11 @@ const EASydots = {
 
     const analysis = this.buildDayBalanceAnalysis(records, loadedSettings);
     const overtimeView = this.buildDayBalanceOvertimeStartView(
+      records,
+      loadedSettings,
+      analysis
+    );
+    const safeExitView = this.buildDayBalanceSafeEarlyExitView(
       records,
       loadedSettings,
       analysis
@@ -1510,10 +1760,21 @@ const EASydots = {
     }
 
     this.updateDayBalanceOvertimeStartLabel(overtimeEl, overtimeView);
+    this.updateDayBalanceSafeExitLabel(safeExitEl, safeExitView);
+    if (overtimeView?.usesLocalClock || safeExitView?.usesLocalClock) {
+      this.scheduleDayBalanceClockRefresh(table, loadedSettings);
+    } else {
+      this.clearDayBalanceClockRefresh();
+    }
 
     this.setTooltipTarget(
       card || valueEl,
-      this.buildDayBalanceTooltipText(analysis, loadedSettings, overtimeView)
+      this.buildDayBalanceTooltipText(
+        analysis,
+        loadedSettings,
+        overtimeView,
+        safeExitView
+      )
     );
 
     this.adjustRecordsContainer(scrollContainer, true);
@@ -2615,6 +2876,8 @@ const EASydots = {
       status,
       estimatedOvertimeSeconds,
       toleranceSeconds,
+      safeLimitSeconds,
+      safetyMarginSeconds,
     };
   },
 
@@ -2635,17 +2898,68 @@ const EASydots = {
       return null;
     }
 
-    if (rawBalanceSeconds > toleranceSeconds) {
-      return { alreadyCounting: true, exitSeconds: null, exitTime: null };
-    }
-
     const secondsToStartOvertime = toleranceSeconds - rawBalanceSeconds + 1;
     const overtimeStartExitSeconds = simulatedFinalExitSeconds + secondsToStartOvertime;
+
+    if (rawBalanceSeconds > toleranceSeconds) {
+      return {
+        alreadyCounting: true,
+        exitSeconds: overtimeStartExitSeconds,
+        exitTime: this.secondsToTimeString(overtimeStartExitSeconds),
+      };
+    }
 
     return {
       alreadyCounting: false,
       exitSeconds: overtimeStartExitSeconds,
       exitTime: this.secondsToTimeString(overtimeStartExitSeconds),
+    };
+  },
+
+  buildOvertimeStartsAfterLabel(
+    exitTime,
+    toleranceFriendly,
+    remainingSeconds = null,
+    options = {}
+  ) {
+    if (Number.isFinite(remainingSeconds)) {
+      const remaining = this.formatDuration(remainingSeconds);
+      return {
+        text: t('contentSimOvertimeStartsAfterWithRemaining', [exitTime, remaining]),
+        shortText: t('contentSimOvertimeStartsAfterWithRemainingShort', [
+          exitTime,
+          remaining,
+        ]),
+        tooltip: t('contentSimOvertimeStartsAfterWithRemainingTooltip', [
+          toleranceFriendly,
+          exitTime,
+          remaining,
+        ]),
+        alreadyCounting: false,
+        exitTime,
+        remainingSeconds,
+      };
+    }
+
+    if (options.projected) {
+      return {
+        text: t('contentSimOvertimeWouldStartAfter', [exitTime]),
+        shortText: t('contentSimOvertimeWouldStartAfterShort', [exitTime]),
+        tooltip: t('contentSimOvertimeWouldStartAfterTooltip', [
+          toleranceFriendly,
+          exitTime,
+        ]),
+        alreadyCounting: false,
+        exitTime,
+      };
+    }
+
+    return {
+      text: t('contentSimOvertimeStartsAfter', [exitTime]),
+      shortText: t('contentSimOvertimeStartsAfterShort', [exitTime]),
+      tooltip: t('contentSimOvertimeStartsAfterTooltip', [toleranceFriendly, exitTime]),
+      alreadyCounting: false,
+      exitTime,
     };
   },
 
@@ -2665,16 +2979,206 @@ const EASydots = {
         shortText: t('contentSimOvertimeAlreadyCounting'),
         tooltip: t('contentSimOvertimeAlreadyCountingTooltip', [toleranceFriendly]),
         alreadyCounting: true,
+        exitTime: start.exitTime,
       };
     }
 
-    const exitTime = start.exitTime;
+    return this.buildOvertimeStartsAfterLabel(start.exitTime, toleranceFriendly);
+  },
+
+  getSecondsUntilLocalClockTime(targetSeconds, date = new Date()) {
+    const nowSeconds = this.getLocalClockSeconds(date);
+
+    if (!Number.isFinite(targetSeconds) || !Number.isFinite(nowSeconds)) {
+      return null;
+    }
+
+    return Math.max(0, targetSeconds - nowSeconds);
+  },
+
+  getSafeExitClockStatus(exitSeconds, date = new Date()) {
+    const nowSeconds = this.getLocalClockSeconds(date);
+
+    if (!Number.isFinite(exitSeconds) || !Number.isFinite(nowSeconds)) {
+      return 'pending';
+    }
+
+    const remainingSeconds = exitSeconds - nowSeconds;
+    if (remainingSeconds <= 0) return 'passed';
+    if (remainingSeconds <= this.SAFE_EXIT_NEAR_THRESHOLD_SECONDS) return 'near';
+    return 'pending';
+  },
+
+  applySafeExitStatusClasses(element, status) {
+    if (!element) return;
+
+    element.classList.remove(...this.SAFE_EXIT_STATUS_CLASSES);
+    if (status) {
+      element.classList.add(`eed-safe-exit--${status}`);
+    }
+  },
+
+  isDevClockOverrideAllowed() {
+    const host = window.location.hostname;
+    return (
+      window.location.protocol === 'file:' ||
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host.startsWith('192.168.')
+    );
+  },
+
+  getDevClockOverrideSeconds() {
+    if (!this.isDevClockOverrideAllowed()) return null;
+
+    const input = document.querySelector(this.SELECTORS.devClockInput);
+    const value = this.normalizeSimulatedTimeInput(input?.value);
+    if (!value) return null;
+
+    return this.timeToSeconds(value);
+  },
+
+  getLocalClockSeconds(date = new Date()) {
+    const devClockSeconds = this.getDevClockOverrideSeconds();
+    if (Number.isFinite(devClockSeconds)) return devClockSeconds;
+
+    return date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds();
+  },
+
+  getClockRefreshDelay() {
+    return document.hidden
+      ? this.SIM_CLOCK_REFRESH_BACKGROUND_MS
+      : this.SIM_CLOCK_REFRESH_MS;
+  },
+
+  calculateCurrentSimulatorOvertimeSeconds(times, settings, toleranceSeconds, date = new Date()) {
+    if (!times || !settings || !Number.isFinite(toleranceSeconds)) return null;
+
+    const nowSeconds = this.getLocalClockSeconds(date);
+    const finalWorkStartSeconds = this.timeToSeconds(
+      this.hasInterval(settings) ? times.intervaloFim : times.entrada
+    );
+
+    if (!Number.isFinite(nowSeconds) || !Number.isFinite(finalWorkStartSeconds)) {
+      return null;
+    }
+
+    if (nowSeconds < finalWorkStartSeconds) return 0;
+
+    const currentTimes = {
+      ...times,
+      saida: this.secondsToTimeString(nowSeconds),
+    };
+    const rawNow =
+      this.calculateSimulatedWorkedSeconds(currentTimes, settings) -
+      this.calculateExpectedDailyWork(settings);
+
+    if (!Number.isFinite(rawNow)) return null;
+    return rawNow > toleranceSeconds ? rawNow : 0;
+  },
+
+  buildSimulatorOvertimeStartLabel(analysis, times, settings, date = new Date()) {
+    if (!analysis || !times || !settings) return null;
+
+    const exitSeconds = this.timeToSeconds(times.saida);
+    const start = this.calculateOvertimeStartExitTime(
+      analysis.raw,
+      analysis.toleranceSeconds,
+      exitSeconds
+    );
+    if (!start) return null;
+
+    const toleranceFriendly = this.formatFriendlyDuration(analysis.toleranceSeconds);
+    const currentOvertimeSeconds = this.calculateCurrentSimulatorOvertimeSeconds(
+      times,
+      settings,
+      analysis.toleranceSeconds,
+      date
+    );
+
+    if (currentOvertimeSeconds > 0) {
+      const amount = this.formatDuration(currentOvertimeSeconds);
+      return {
+        text: t('contentSimOvertimeAlreadyCountingWithAmount', [amount]),
+        shortText: t('contentSimOvertimeAlreadyCountingWithAmountShort', [amount]),
+        tooltip: t('contentSimOvertimeAlreadyCountingWithAmountTooltip', [
+          amount,
+          start.exitTime,
+        ]),
+        alreadyCounting: true,
+        exitTime: start.exitTime,
+        usesLocalClock: true,
+      };
+    }
+
     return {
-      text: t('contentSimOvertimeStartsAfter', [exitTime]),
-      shortText: t('contentSimOvertimeStartsAfterShort', [exitTime]),
-      tooltip: t('contentSimOvertimeStartsAfterTooltip', [toleranceFriendly, exitTime]),
-      alreadyCounting: false,
-      exitTime,
+      ...this.buildOvertimeStartsAfterLabel(
+        start.exitTime,
+        toleranceFriendly,
+        this.getSecondsUntilLocalClockTime(start.exitSeconds, date)
+      ),
+      usesLocalClock: true,
+    };
+  },
+
+  calculateSimulatorSafeEarlyExitTime(times, settings, analysis) {
+    if (!times || !settings || !analysis) return null;
+
+    const configuredExitSeconds = this.timeToSeconds(settings.saida);
+    const finalWorkStartSeconds = this.timeToSeconds(
+      this.hasInterval(settings) ? times.intervaloFim : times.entrada
+    );
+    const safeLimitSeconds = analysis.safeLimitSeconds;
+
+    if (
+      !Number.isFinite(configuredExitSeconds) ||
+      !Number.isFinite(finalWorkStartSeconds) ||
+      !Number.isFinite(safeLimitSeconds)
+    ) {
+      return null;
+    }
+
+    const scheduledTimes = {
+      ...times,
+      saida: this.secondsToTimeString(configuredExitSeconds),
+    };
+    const rawAtScheduledExit =
+      this.calculateSimulatedWorkedSeconds(scheduledTimes, settings) -
+      this.calculateExpectedDailyWork(settings);
+    const secondsBeforeSchedule = rawAtScheduledExit + safeLimitSeconds;
+
+    if (!Number.isFinite(secondsBeforeSchedule) || secondsBeforeSchedule <= 0) {
+      return null;
+    }
+
+    const safeExitSeconds = configuredExitSeconds - secondsBeforeSchedule;
+    if (
+      safeExitSeconds < 0 ||
+      safeExitSeconds >= 86400 ||
+      safeExitSeconds < finalWorkStartSeconds ||
+      safeExitSeconds >= configuredExitSeconds
+    ) {
+      return null;
+    }
+
+    return {
+      exitSeconds: safeExitSeconds,
+      exitTime: this.secondsToTimeString(safeExitSeconds),
+    };
+  },
+
+  buildSimulatorSafeEarlyExitLabel(times, settings, analysis) {
+    const safeExit = this.calculateSimulatorSafeEarlyExitTime(times, settings, analysis);
+    if (!safeExit) return null;
+
+    return {
+      text: t('contentSimSafeExitBeforeSchedule', [safeExit.exitTime]),
+      shortText: t('contentSimSafeExitBeforeScheduleShort', [safeExit.exitTime]),
+      tooltip: t('contentSimSafeExitBeforeScheduleTooltip', [safeExit.exitTime]),
+      status: this.getSafeExitClockStatus(safeExit.exitSeconds),
+      usesLocalClock: true,
+      exitSeconds: safeExit.exitSeconds,
+      exitTime: safeExit.exitTime,
     };
   },
 
@@ -2921,46 +3425,134 @@ const EASydots = {
     };
   },
 
-  updateSimulatorOvertimeStartLabel(back, analysis, times) {
+  updateSimulatorInfoLine(lineEl, view, activeClass = null, isActive = false) {
+    if (!lineEl) return;
+
+    if (!view) {
+      lineEl.hidden = true;
+      lineEl.textContent = '';
+      if (activeClass) lineEl.classList.remove(activeClass);
+      this.setTooltipTarget(lineEl, null);
+      return;
+    }
+
+    lineEl.hidden = false;
+    if (lineEl.textContent !== view.text) {
+      lineEl.textContent = view.text;
+    }
+    if (activeClass) lineEl.classList.toggle(activeClass, Boolean(isActive));
+    this.setTooltipTarget(lineEl, view.tooltip);
+
+    requestAnimationFrame(() => {
+      if (!lineEl.isConnected || lineEl.hidden || !view.shortText) return;
+      if (lineEl.scrollWidth > lineEl.clientWidth + 1) {
+        lineEl.textContent = view.shortText;
+      }
+    });
+  },
+
+  clearSimulatorClockRefresh() {
+    clearTimeout(this.simClockTimer);
+    this.simClockTimer = null;
+  },
+
+  isEmployerSimulatorBackVisible(back) {
+    return back?.closest?.('.eed-employer-sim-flip')?.dataset?.eedFlipped === 'true';
+  },
+
+  updateSimulatorClockLine(back, settings) {
+    if (
+      !this.isExtensionAlive() ||
+      !back ||
+      !settings ||
+      !back.isConnected ||
+      !this.isEmployerSimulatorBackVisible(back)
+    ) {
+      this.clearSimulatorClockRefresh();
+      return;
+    }
+
+    const times = this.readSimulatorTimesFromBack(back);
+    if (!times) {
+      this.updateSimulatorOvertimeStartLabel(back, null, null, settings);
+      this.updateSimulatorSafeExitLabel(back, null, null, settings);
+      return;
+    }
+
+    const analysis = this.buildSimulatorAnalysis(times, settings);
+    this.updateSimulatorOvertimeStartLabel(
+      back,
+      analysis,
+      times,
+      settings
+    );
+    this.updateSimulatorSafeExitLabel(back, analysis, times, settings);
+  },
+
+  scheduleSimulatorClockRefresh(back, settings) {
+    this.clearSimulatorClockRefresh();
+
+    if (!back || !settings || !back.isConnected || !this.isEmployerSimulatorBackVisible(back)) {
+      return;
+    }
+
+    this.simClockTimer = window.setTimeout(() => {
+      this.simClockTimer = null;
+      if (!this.isExtensionAlive() || !back.isConnected || !this.isEmployerSimulatorBackVisible(back)) {
+        return;
+      }
+      this.updateSimulatorClockLine(back, settings);
+    }, this.getClockRefreshDelay());
+  },
+
+  updateSimulatorOvertimeStartLabel(back, analysis, times, settings) {
     const overtimeEl = back?.querySelector('.eed-sim-overtime-start');
     if (!overtimeEl) return;
 
-    if (!analysis || !times) {
-      overtimeEl.hidden = true;
-      overtimeEl.textContent = '';
-      this.setTooltipTarget(overtimeEl, null);
+    if (!analysis || !times || !settings) {
+      this.updateSimulatorInfoLine(
+        overtimeEl,
+        null,
+        'eed-sim-overtime-start--counting'
+      );
+      this.clearSimulatorClockRefresh();
       return;
     }
 
-    const exitSeconds = this.timeToSeconds(times.saida);
-    const overtimeView = this.buildOvertimeStartLabel(
-      analysis.raw,
-      analysis.toleranceSeconds,
-      exitSeconds
-    );
-
-    if (!overtimeView) {
-      overtimeEl.hidden = true;
-      overtimeEl.textContent = '';
-      this.setTooltipTarget(overtimeEl, null);
-      return;
-    }
+    const overtimeView = this.buildSimulatorOvertimeStartLabel(analysis, times, settings);
 
     // Preferred sentence on the card; fall back to short if truncated. Tooltip has the full explanation.
-    overtimeEl.hidden = false;
-    overtimeEl.textContent = overtimeView.text;
-    overtimeEl.classList.toggle(
+    this.updateSimulatorInfoLine(
+      overtimeEl,
+      overtimeView,
       'eed-sim-overtime-start--counting',
-      overtimeView.alreadyCounting
+      overtimeView?.alreadyCounting
     );
-    this.setTooltipTarget(overtimeEl, overtimeView.tooltip);
 
-    requestAnimationFrame(() => {
-      if (!overtimeEl.isConnected || overtimeEl.hidden) return;
-      if (overtimeEl.scrollWidth > overtimeEl.clientWidth + 1) {
-        overtimeEl.textContent = overtimeView.shortText;
-      }
-    });
+    if (overtimeView?.usesLocalClock) {
+      this.scheduleSimulatorClockRefresh(back, settings);
+    } else {
+      this.clearSimulatorClockRefresh();
+    }
+  },
+
+  updateSimulatorSafeExitLabel(back, analysis, times, settings) {
+    const safeExitEl = back?.querySelector('.eed-sim-safe-exit');
+    if (!safeExitEl) return;
+
+    if (!analysis || !times || !settings) {
+      this.updateSimulatorInfoLine(safeExitEl, null);
+      this.applySafeExitStatusClasses(safeExitEl, null);
+      return;
+    }
+
+    const safeExitView = this.buildSimulatorSafeEarlyExitLabel(times, settings, analysis);
+    this.updateSimulatorInfoLine(safeExitEl, safeExitView);
+    this.applySafeExitStatusClasses(safeExitEl, safeExitView?.status);
+
+    if (safeExitView?.usesLocalClock && !this.simClockTimer) {
+      this.scheduleSimulatorClockRefresh(back, settings);
+    }
   },
 
   updateSimulatorResult(back, settings) {
@@ -2981,7 +3573,8 @@ const EASydots = {
       if (consequenceEl) consequenceEl.textContent = '';
       this.setTooltipTarget(resultEl, t('contentSimInvalidTimes'));
       this.updateSimulatorBankProjection(back, null);
-      this.updateSimulatorOvertimeStartLabel(back, null, null);
+      this.updateSimulatorOvertimeStartLabel(back, null, null, settings);
+      this.updateSimulatorSafeExitLabel(back, null, null, settings);
       return;
     }
 
@@ -2997,7 +3590,8 @@ const EASydots = {
 
     this.setTooltipTarget(resultEl, view.tooltip);
     this.updateSimulatorBankProjection(back, analysis);
-    this.updateSimulatorOvertimeStartLabel(back, analysis, times);
+    this.updateSimulatorOvertimeStartLabel(back, analysis, times, settings);
+    this.updateSimulatorSafeExitLabel(back, analysis, times, settings);
   },
 
   getEmployerSimCloseButtonHtml() {
@@ -3075,6 +3669,7 @@ const EASydots = {
             <span class="eed-sim-bank-line"></span>
           </div>
           <span class="eed-sim-overtime-start" hidden></span>
+          <span class="eed-sim-safe-exit" hidden></span>
           <span class="eed-sim-result-consequence"></span>
         </div>
       </div>
@@ -3171,7 +3766,9 @@ const EASydots = {
     card.setAttribute('aria-expanded', flipped ? 'true' : 'false');
 
     if (flipped) {
-      this.ensureEmployerSimulatorBack(flip).catch(() => {});
+      this.ensureEmployerSimulatorBack(flip)
+        .then(() => this.refreshEmployerSimulatorBack(flip))
+        .catch(() => {});
       window.setTimeout(() => {
         if (flip.dataset.eedFlipped === 'true') {
           document.addEventListener('click', flip._eedEmployerOutsideClick, true);
@@ -3181,6 +3778,20 @@ const EASydots = {
     }
 
     document.removeEventListener('click', flip._eedEmployerOutsideClick, true);
+    this.clearSimulatorClockRefresh();
+  },
+
+  async refreshEmployerSimulatorBack(flip) {
+    const back = flip?.querySelector?.('.eed-employer-sim-back');
+    if (!back || back.dataset.eedSimReady !== 'true' || !this.isExtensionAlive()) return;
+
+    try {
+      const settings = await EEDSettings.load();
+      if (!this.isExtensionAlive() || !back.isConnected) return;
+      this.updateSimulatorResult(back, settings);
+    } catch (error) {
+      this.warnFeature('simulador (relógio local)', error);
+    }
   },
 
   bindEmployerSimEvents(flip, card) {

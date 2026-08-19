@@ -358,7 +358,8 @@ table:has(#table_registro_horario) th.eed-diff-header,
   color: #15803d;
 }
 
-#table_registro_horario tr.eed-day-balance-row .eed-day-balance-overtime-start {
+#table_registro_horario tr.eed-day-balance-row .eed-day-balance-overtime-start,
+#table_registro_horario tr.eed-day-balance-row .eed-day-balance-safe-exit {
   max-width: 100%;
   margin-top: 1px;
   font-size: 11px;
@@ -370,8 +371,27 @@ table:has(#table_registro_horario) th.eed-diff-header,
   cursor: help;
 }
 
-#table_registro_horario tr.eed-day-balance-row .eed-day-balance-overtime-start[hidden] {
+#table_registro_horario tr.eed-day-balance-row .eed-day-balance-overtime-start[hidden],
+#table_registro_horario tr.eed-day-balance-row .eed-day-balance-safe-exit[hidden] {
   display: none;
+}
+
+#table_registro_horario tr.eed-day-balance-row .eed-day-balance-safe-exit {
+  font-weight: 600;
+  color: #dc2626;
+  transition: color 0.2s ease;
+}
+
+#table_registro_horario tr.eed-day-balance-row .eed-day-balance-safe-exit.eed-safe-exit--pending {
+  color: #dc2626;
+}
+
+#table_registro_horario tr.eed-day-balance-row .eed-day-balance-safe-exit.eed-safe-exit--near {
+  color: #d97706;
+}
+
+#table_registro_horario tr.eed-day-balance-row .eed-day-balance-safe-exit.eed-safe-exit--passed {
+  color: #047857;
 }
 
 #table_registro_horario tr.eed-day-balance-row .eed-day-balance-overtime-start--counting {
@@ -1458,6 +1478,7 @@ table:has(#table_registro_horario) th.eed-diff-header,
 .card-box.eed-employer-sim-card .eed-sim-result-meta,
 .card-box.eed-employer-sim-card .eed-sim-result-consequence,
 .card-box.eed-employer-sim-card .eed-sim-overtime-start,
+.card-box.eed-employer-sim-card .eed-sim-safe-exit,
 .card-box.eed-employer-sim-card .eed-sim-bank-line {
   font-size: 10px;
   font-weight: 500;
@@ -1473,20 +1494,40 @@ table:has(#table_registro_horario) th.eed-diff-header,
   display: none;
 }
 
-.card-box.eed-employer-sim-card .eed-sim-overtime-start {
+.card-box.eed-employer-sim-card .eed-sim-overtime-start,
+.card-box.eed-employer-sim-card .eed-sim-safe-exit {
   display: block;
   flex-shrink: 0;
   min-width: 0;
   cursor: help;
 }
 
-.card-box.eed-employer-sim-card .eed-sim-overtime-start[hidden] {
+.card-box.eed-employer-sim-card .eed-sim-overtime-start[hidden],
+.card-box.eed-employer-sim-card .eed-sim-safe-exit[hidden] {
   display: none;
 }
 
 .card-box.eed-employer-sim-card .eed-sim-overtime-start--counting {
   font-weight: 600;
   opacity: 0.92;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-safe-exit.eed-safe-exit--pending {
+  color: #ffe0e0;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-safe-exit.eed-safe-exit--near {
+  color: #ffe0a8;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-safe-exit.eed-safe-exit--passed {
+  color: #d8ffe8;
+  font-weight: 600;
+  opacity: 0.95;
 }
 
 .card-box.eed-employer-sim-card .eed-sim-result-consequence {
@@ -1652,4 +1693,3 @@ table:has(#table_registro_horario) th.eed-diff-header,
 .eed-pending-requests-summary--ready .eed-pending-requests-summary__gain {
   color: #6b21c8;
 }
-
