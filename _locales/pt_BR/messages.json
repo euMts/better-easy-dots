@@ -916,9 +916,53 @@
       "time": { "content": "$1", "example": "18:24:59" }
     }
   },
+  "contentSimOvertimeWouldStartAfter": {
+    "message": "Horas extras começariam após $TIME$",
+    "description": "Label condicional do horário em que a hora extra começaria em dia já fechado",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:24:59" }
+    }
+  },
+  "contentSimOvertimeWouldStartAfterShort": {
+    "message": "Extras começariam após $TIME$",
+    "description": "Label curta condicional do início de hora extra em dia já fechado",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:24:59" }
+    }
+  },
+  "contentSimOvertimeStartsAfterWithRemaining": {
+    "message": "Horas extras começam após $TIME$ ($REMAINING$)",
+    "description": "Label do início de hora extra com tempo restante em contagem regressiva",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:30:01" },
+      "remaining": { "content": "$2", "example": "00:12:34" }
+    }
+  },
+  "contentSimOvertimeStartsAfterWithRemainingShort": {
+    "message": "Extras após $TIME$ ($REMAINING$)",
+    "description": "Label curta do início de hora extra com tempo restante em contagem regressiva",
+    "placeholders": {
+      "time": { "content": "$1", "example": "18:30:01" },
+      "remaining": { "content": "$2", "example": "00:12:34" }
+    }
+  },
   "contentSimOvertimeAlreadyCounting": {
     "message": "Extras já contando",
     "description": "Label quando o saldo bruto já ultrapassou a tolerância no simulador"
+  },
+  "contentSimOvertimeAlreadyCountingWithAmount": {
+    "message": "Extras já contando: $AMOUNT$",
+    "description": "Label com quantidade de hora extra já acumulada pelo horário local",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "00:12:34" }
+    }
+  },
+  "contentSimOvertimeAlreadyCountingWithAmountShort": {
+    "message": "Extras: $AMOUNT$",
+    "description": "Label curta com quantidade de hora extra já acumulada pelo horário local",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "00:12:34" }
+    }
   },
   "contentSimOvertimeValidFrom": {
     "message": "Hora extra válida a partir de $TIME$",
@@ -935,11 +979,57 @@
       "time": { "content": "$2", "example": "18:24:59" }
     }
   },
+  "contentSimOvertimeWouldStartAfterTooltip": {
+    "message": "Com a tolerância diária de +$TOLERANCE$, a hora extra só contaria se a saída tivesse acontecido após $TIME$.",
+    "description": "Tooltip condicional para início de hora extra em dia já fechado",
+    "placeholders": {
+      "tolerance": { "content": "$1", "example": "10min" },
+      "time": { "content": "$2", "example": "18:24:59" }
+    }
+  },
+  "contentSimOvertimeStartsAfterWithRemainingTooltip": {
+    "message": "Com a tolerância diária configurada, a hora extra só deve contar quando o saldo bruto passar de +$TOLERANCE$. Com estes horários, isso começaria após $TIME$. Faltam $REMAINING$ pelo horário local.",
+    "description": "Tooltip explicando início de hora extra com tempo restante",
+    "placeholders": {
+      "tolerance": { "content": "$1", "example": "10min" },
+      "time": { "content": "$2", "example": "18:30:01" },
+      "remaining": { "content": "$3", "example": "00:12:34" }
+    }
+  },
   "contentSimOvertimeAlreadyCountingTooltip": {
     "message": "O saldo bruto já ultrapassou a tolerância diária de +$TOLERANCE$. As horas extras válidas já estão contando.",
     "description": "Tooltip quando a hora extra já está contando no simulador",
     "placeholders": {
       "tolerance": { "content": "$1", "example": "10min" }
+    }
+  },
+  "contentSimOvertimeAlreadyCountingWithAmountTooltip": {
+    "message": "Pelo horário local deste computador, o saldo bruto atual já chegou a $AMOUNT$ e passou a contar como hora extra válida desde $TIME$.",
+    "description": "Tooltip com quantidade de hora extra já acumulada pelo horário local",
+    "placeholders": {
+      "amount": { "content": "$1", "example": "00:12:34" },
+      "time": { "content": "$2", "example": "18:24:59" }
+    }
+  },
+  "contentSimSafeExitBeforeSchedule": {
+    "message": "Pode sair tranquilo às $TIME$",
+    "description": "Label de saída segura antes do horário configurado no simulador",
+    "placeholders": {
+      "time": { "content": "$1", "example": "17:55:00" }
+    }
+  },
+  "contentSimSafeExitBeforeScheduleShort": {
+    "message": "Saída tranquila: $TIME$",
+    "description": "Label curta de saída segura antes do horário configurado no simulador",
+    "placeholders": {
+      "time": { "content": "$1", "example": "17:55:00" }
+    }
+  },
+  "contentSimSafeExitBeforeScheduleTooltip": {
+    "message": "Com estes horários, bater o ponto às $TIME$ ainda deixa o dia dentro da margem segura.",
+    "description": "Tooltip explicando a saída segura antes do horário configurado no simulador",
+    "placeholders": {
+      "time": { "content": "$1", "example": "17:55:00" }
     }
   },
   "contentScheduleHintBefore": {
@@ -1377,6 +1467,42 @@
   "contentPendingImpactTooltip": {
     "message": "Esta é uma estimativa baseada nas solicitações pendentes visíveis e nos detalhes disponíveis. O banco de horas só muda após aprovação e processamento pelo Easydots.",
     "description": "Custom tooltip explaining pending requests impact estimate"
+  },
+  "changelogV180Item1": {
+    "message": "Simulador mostra uma saída segura antes do horário configurado quando houver margem",
+    "description": "Item do changelog v1.8.0"
+  },
+  "changelogV180Item2": {
+    "message": "Saldo do dia e simulador mostram quanto de hora extra válida já acumulou pelo horário local",
+    "description": "Item do changelog v1.8.0"
+  },
+  "changelogV180Item3": {
+    "message": "Mirror local de desenvolvimento permite simular o horário atual nos testes",
+    "description": "Item do changelog v1.8.0"
+  },
+  "changelogV180Item4": {
+    "message": "Início das horas extras mostra uma contagem regressiva em HH:MM:SS",
+    "description": "Item do changelog v1.8.0"
+  },
+  "changelogV180Item5": {
+    "message": "Saldo do dia também mostra uma saída tranquila quando dá para bater antes do horário",
+    "description": "Item do changelog v1.8.0"
+  },
+  "changelogV180Item6": {
+    "message": "Atualizações de relógio ficam mais leves para computadores mais lentos",
+    "description": "Item do changelog v1.8.0"
+  },
+  "changelogV180Item7": {
+    "message": "Badge Novo fica só na versão atual do changelog",
+    "description": "Item do changelog v1.8.0"
+  },
+  "changelogV180Item8": {
+    "message": "Saída tranquila muda de cor conforme o horário fica perto ou já passou",
+    "description": "Item do changelog v1.8.0"
+  },
+  "changelogV180Item9": {
+    "message": "Saldo fechado usa texto condicional para horário em que extras começariam",
+    "description": "Item do changelog v1.8.0"
   },
   "changelogV170Item1": {
     "message": "Na página de solicitações, mostra o ganho estimado no banco se as pendentes forem aprovadas",
