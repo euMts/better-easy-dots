@@ -358,8 +358,7 @@ table:has(#table_registro_horario) th.eed-diff-header,
   color: #15803d;
 }
 
-#table_registro_horario tr.eed-day-balance-row .eed-day-balance-overtime-start,
-#table_registro_horario tr.eed-day-balance-row .eed-day-balance-safe-exit {
+#table_registro_horario tr.eed-day-balance-row .eed-day-balance-overtime-start {
   max-width: 100%;
   margin-top: 1px;
   font-size: 11px;
@@ -371,27 +370,8 @@ table:has(#table_registro_horario) th.eed-diff-header,
   cursor: help;
 }
 
-#table_registro_horario tr.eed-day-balance-row .eed-day-balance-overtime-start[hidden],
-#table_registro_horario tr.eed-day-balance-row .eed-day-balance-safe-exit[hidden] {
+#table_registro_horario tr.eed-day-balance-row .eed-day-balance-overtime-start[hidden] {
   display: none;
-}
-
-#table_registro_horario tr.eed-day-balance-row .eed-day-balance-safe-exit {
-  font-weight: 600;
-  color: #dc2626;
-  transition: color 0.2s ease;
-}
-
-#table_registro_horario tr.eed-day-balance-row .eed-day-balance-safe-exit.eed-safe-exit--pending {
-  color: #dc2626;
-}
-
-#table_registro_horario tr.eed-day-balance-row .eed-day-balance-safe-exit.eed-safe-exit--near {
-  color: #d97706;
-}
-
-#table_registro_horario tr.eed-day-balance-row .eed-day-balance-safe-exit.eed-safe-exit--passed {
-  color: #047857;
 }
 
 #table_registro_horario tr.eed-day-balance-row .eed-day-balance-overtime-start--counting {

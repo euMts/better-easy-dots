@@ -1012,14 +1012,14 @@
     }
   },
   "contentSimSafeExitBeforeSchedule": {
-    "message": "You can leave comfortably at $TIME$",
+    "message": "\"Safe\" exit at $TIME$",
     "description": "Safe exit before configured schedule label on the simulator",
     "placeholders": {
       "time": { "content": "$1", "example": "17:55:00" }
     }
   },
   "contentSimSafeExitBeforeScheduleShort": {
-    "message": "Comfortable exit: $TIME$",
+    "message": "\"Safe\" exit: $TIME$",
     "description": "Short safe exit before configured schedule label on the simulator",
     "placeholders": {
       "time": { "content": "$1", "example": "17:55:00" }
@@ -1467,6 +1467,10 @@
   "contentPendingImpactTooltip": {
     "message": "This is an estimate based on the visible pending requests and available details. The time bank only changes after approval and processing by Easydots.",
     "description": "Custom tooltip explaining pending requests impact estimate"
+  },
+  "changelogV182Item1": {
+    "message": "Early \"safe\" exit now appears only on the simulator card, not on the day records balance",
+    "description": "Changelog v1.8.2 item"
   },
   "changelogV181Item1": {
     "message": "Extra punches on the same day are paired correctly without closing the workday too early",

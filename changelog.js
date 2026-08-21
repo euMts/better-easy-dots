@@ -5,6 +5,13 @@ const EED_CHANGELOG_LAST_SHIPPED_VERSION = '1.8.0';
 
 const EED_CHANGELOG_ENTRIES = [
   {
+    version: '1.8.2',
+    date: '2026-08-20',
+    items: [
+      'changelogV182Item1',
+    ],
+  },
+  {
     version: '1.8.1',
     date: '2026-08-18',
     items: [
@@ -163,9 +170,9 @@ const EED_CHANGELOG_ENTRIES = [
 
 function eedGetCurrentVersion() {
   try {
-    return chrome.runtime?.getManifest?.()?.version || '1.8.1';
+    return chrome.runtime?.getManifest?.()?.version || '1.8.2';
   } catch {
-    return '1.8.1';
+    return '1.8.2';
   }
 }
 
