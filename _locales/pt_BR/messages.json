@@ -610,6 +610,69 @@
       "time": { "content": "$2", "example": "01:01:51" }
     }
   },
+  "contentHourBankSummaryAdjustedSingular": {
+    "message": "1 dia · mínimo válido +$TIME$/dia",
+    "description": "Resumo quando a extra diária foi elevada ao mínimo válido (1 dia selecionado)",
+    "placeholders": {
+      "time": { "content": "$1", "example": "00:11:00" }
+    }
+  },
+  "contentHourBankSummaryAdjustedPlural": {
+    "message": "$DAYS$ dias · mínimo válido +$TIME$/dia",
+    "description": "Resumo quando a extra diária foi elevada ao mínimo válido",
+    "placeholders": {
+      "days": { "content": "$1", "example": "21" },
+      "time": { "content": "$2", "example": "00:11:00" }
+    }
+  },
+  "contentHourBankSummaryBelowMinimum": {
+    "message": "Mínimo válido: +$TIME$",
+    "description": "Resumo quando a dívida é menor que uma extra válida mínima",
+    "placeholders": {
+      "time": { "content": "$1", "example": "00:11:00" }
+    }
+  },
+  "contentHourBankForecastAdjustedSingular": {
+    "message": "Zera em no máximo 1 dia",
+    "description": "Previsão com sugestão segura quando a dívida zera em no máximo 1 dia"
+  },
+  "contentHourBankForecastAdjustedPlural": {
+    "message": "Zera em no máximo $DAYS$ dias",
+    "description": "Previsão com sugestão segura e quantidade máxima de dias reais",
+    "placeholders": {
+      "days": { "content": "$1", "example": "4" }
+    }
+  },
+  "contentHourBankForecastBelowMinimum": {
+    "message": "Faça pelo menos +$MIN$ em um dia para a extra contar. Você ficará +$SURPLUS$ positivo.",
+    "description": "Previsão quando a dívida é menor que o mínimo válido de hora extra",
+    "placeholders": {
+      "min": { "content": "$1", "example": "00:11:00" },
+      "surplus": { "content": "$2", "example": "00:06:46" }
+    }
+  },
+  "contentHourBankForecastAtLimit": {
+    "message": "Esse é o mínimo. Não dá para fazer menos que $MIN$/dia: dentro da tolerância a extra não conta.",
+    "description": "Previsão quando o slider chega ao máximo de dias permitido pela tolerância",
+    "placeholders": {
+      "min": { "content": "$1", "example": "11min" }
+    }
+  },
+  "contentHourBankTooltipAtLimit": {
+    "message": "A tolerância diária ignora extra de até $TOLERANCE$. Por isso o mínimo válido é $MIN$/dia, e não dá para parcelar em mais dias.",
+    "description": "Tooltip quando o slider está no máximo de dias da tolerância",
+    "placeholders": {
+      "tolerance": { "content": "$1", "example": "10min" },
+      "min": { "content": "$2", "example": "11min" }
+    }
+  },
+  "contentHourBankTooltipAdjusted": {
+    "message": "A divisão simples daria +$TIME$/dia, mas isso fica dentro da tolerância diária e provavelmente não conta como hora extra. Por isso a sugestão usa o mínimo válido.",
+    "description": "Tooltip do planejador quando a extra diária foi ajustada pela tolerância",
+    "placeholders": {
+      "time": { "content": "$1", "example": "00:01:40" }
+    }
+  },
   "contentHourBankNoDeficit": {
     "message": "Você não possui saldo negativo para compensar.",
     "description": "Mensagem quando o banco de horas não está negativo"
@@ -1467,6 +1530,26 @@
   "contentPendingImpactTooltip": {
     "message": "Esta é uma estimativa baseada nas solicitações pendentes visíveis e nos detalhes disponíveis. O banco de horas só muda após aprovação e processamento pelo Easydots.",
     "description": "Custom tooltip explaining pending requests impact estimate"
+  },
+  "changelogV183Item1": {
+    "message": "Corrige o card de compensação do banco de horas para respeitar a tolerância diária",
+    "description": "Item do changelog v1.8.3"
+  },
+  "changelogV183Item2": {
+    "message": "O card não sugere mais extras menores ou iguais à tolerância como se fossem válidas",
+    "description": "Item do changelog v1.8.3"
+  },
+  "changelogV183Item3": {
+    "message": "Quando a dívida é menor que a extra mínima válida, a extensão sugere o mínimo seguro configurado",
+    "description": "Item do changelog v1.8.3"
+  },
+  "changelogV183Item4": {
+    "message": "Ajusta o limite do slider para evitar parcelamentos que ficariam dentro da tolerância",
+    "description": "Item do changelog v1.8.3"
+  },
+  "changelogV183Item5": {
+    "message": "Quando a extra mínima segura supera a dívida, o card mostra o saldo positivo que sobra",
+    "description": "Item do changelog v1.8.3"
   },
   "changelogV182Item1": {
     "message": "Saída \"segura\" antecipada aparece só no simulador, não no saldo dos registros do dia",
