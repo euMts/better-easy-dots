@@ -1,9 +1,20 @@
 const EED_CHANGELOG_STORAGE_KEY = 'eedLastSeenChangelogVersion';
 
 /** Last version already on the Chrome Web Store. Every newer entry gets the New badge. */
-const EED_CHANGELOG_LAST_SHIPPED_VERSION = '1.8.0';
+const EED_CHANGELOG_LAST_SHIPPED_VERSION = '1.8.2';
 
 const EED_CHANGELOG_ENTRIES = [
+  {
+    version: '1.8.3',
+    date: '2026-08-21',
+    items: [
+      'changelogV183Item1',
+      'changelogV183Item2',
+      'changelogV183Item3',
+      'changelogV183Item4',
+      'changelogV183Item5',
+    ],
+  },
   {
     version: '1.8.2',
     date: '2026-08-20',
@@ -170,9 +181,9 @@ const EED_CHANGELOG_ENTRIES = [
 
 function eedGetCurrentVersion() {
   try {
-    return chrome.runtime?.getManifest?.()?.version || '1.8.2';
+    return chrome.runtime?.getManifest?.()?.version || '1.8.3';
   } catch {
-    return '1.8.2';
+    return '1.8.3';
   }
 }
 

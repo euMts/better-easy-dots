@@ -1,6 +1,6 @@
 {
   "name": "better-easy-dots",
-  "version": "1.8.2",
+  "version": "1.8.3",
   "private": true,
   "description": "Chrome extension that improves the Easydots time-clock experience",
   "scripts": {

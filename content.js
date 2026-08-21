@@ -289,6 +289,80 @@ const EASydots = {
     return Math.ceil(abs / days);
   },
 
+  getPlannerSettings() {
+    if (this.cachedSettings) return this.cachedSettings;
+    if (typeof EEDSettings !== 'undefined') {
+      return EEDSettings.normalize({});
+    }
+
+    return {
+      toleranciaAtraso: 10,
+      margemSegurancaTolerancia: 1,
+    };
+  },
+
+  getMinimumValidDailyExtraSeconds(settings) {
+    const plannerSettings = settings || this.getPlannerSettings();
+    const toleranceSeconds = this.getToleranceSeconds(plannerSettings);
+    const safetyMarginSeconds = this.getSafetyMarginSeconds(plannerSettings);
+    const extraFloorSeconds = safetyMarginSeconds > 0 ? safetyMarginSeconds : 1;
+    return toleranceSeconds + extraFloorSeconds;
+  },
+
+  getHourBankMaxCompensableDays(bankDebtSeconds, settings) {
+    const debtSeconds = Math.abs(bankDebtSeconds);
+    const minimumValidDailyExtraSeconds = this.getMinimumValidDailyExtraSeconds(settings);
+
+    if (minimumValidDailyExtraSeconds <= 0) {
+      return this.HOUR_BANK_MAX_DAYS;
+    }
+
+    const maxByTolerance = Math.floor(debtSeconds / minimumValidDailyExtraSeconds);
+    return Math.max(1, Math.min(this.HOUR_BANK_MAX_DAYS, maxByTolerance));
+  },
+
+  calculateCompensationPlan(bankDebtSeconds, selectedDays, settings) {
+    const debtSeconds = Math.abs(bankDebtSeconds);
+    const maxCompensableDays = this.getHourBankMaxCompensableDays(debtSeconds, settings);
+    const requestedDays = Math.max(1, Number(selectedDays) || 1);
+    const days = Math.min(requestedDays, maxCompensableDays);
+    const rawDailyExtraSeconds = this.calculateExtraPerDay(debtSeconds, days);
+    const minimumValidDailyExtraSeconds = this.getMinimumValidDailyExtraSeconds(settings);
+
+    const suggestedDailyExtraSeconds = Math.max(
+      rawDailyExtraSeconds,
+      minimumValidDailyExtraSeconds
+    );
+    const estimatedRealDays =
+      suggestedDailyExtraSeconds > 0 ? Math.ceil(debtSeconds / suggestedDailyExtraSeconds) : 0;
+    const isDebtBelowMinimum = debtSeconds > 0 && debtSeconds < minimumValidDailyExtraSeconds;
+    const surplusAfterSafeExtraSeconds = isDebtBelowMinimum
+      ? minimumValidDailyExtraSeconds - debtSeconds
+      : 0;
+    const nextDayRawExtraSeconds = this.calculateExtraPerDay(
+      debtSeconds,
+      maxCompensableDays + 1
+    );
+    const isAtToleranceDayLimit =
+      !isDebtBelowMinimum &&
+      days >= maxCompensableDays &&
+      nextDayRawExtraSeconds < minimumValidDailyExtraSeconds;
+
+    return {
+      debtSeconds,
+      selectedDays: days,
+      maxCompensableDays,
+      rawDailyExtraSeconds,
+      minimumValidDailyExtraSeconds,
+      suggestedDailyExtraSeconds,
+      estimatedRealDays,
+      wasAdjustedByTolerance: rawDailyExtraSeconds < minimumValidDailyExtraSeconds,
+      isDebtBelowMinimum,
+      surplusAfterSafeExtraSeconds,
+      isAtToleranceDayLimit,
+    };
+  },
+
   getDayBalanceTooltip(records, settings) {
     if (!EEDSettings.isScheduleConfigured(settings)) {
       return t('contentDayBalanceTooltipNotConfigured');
@@ -1982,6 +2056,7 @@ const EASydots = {
     if (!table || typeof EEDSettings === 'undefined') return;
 
     const settings = await EEDSettings.load();
+    this.cachedSettings = settings;
     if (!this.isExtensionAlive()) return;
 
     const records = this.getRecords();
@@ -1995,6 +2070,7 @@ const EASydots = {
       await this.applyRecordColorsWithState(settings, table);
       this.lastViewState = nextState;
       this.syncBadge();
+      this.refreshHourBankPlannerIfFlipped();
     } finally {
       this.isUpdating = false;
     }
@@ -2543,10 +2619,25 @@ const EASydots = {
     return `+${this.formatSecondsToHHMMSS(balanceSeconds)}`;
   },
 
-  getHourBankSummaryText(days, extraText) {
-    const count = Number(days);
-    if (count === 1) return t('contentHourBankSummarySingular', [extraText]);
-    return t('contentHourBankSummaryPlural', [String(count), extraText]);
+  getHourBankSummaryText(plan) {
+    const extraText = this.formatSecondsToHHMMSS(plan.suggestedDailyExtraSeconds);
+
+    if (plan.isDebtBelowMinimum) {
+      return t('contentHourBankSummaryBelowMinimum', [extraText]);
+    }
+
+    if (plan.wasAdjustedByTolerance) {
+      if (plan.selectedDays === 1) {
+        return t('contentHourBankSummaryAdjustedSingular', [extraText]);
+      }
+      return t('contentHourBankSummaryAdjustedPlural', [String(plan.selectedDays), extraText]);
+    }
+
+    if (plan.selectedDays === 1) {
+      return t('contentHourBankSummarySingular', [extraText]);
+    }
+
+    return t('contentHourBankSummaryPlural', [String(plan.selectedDays), extraText]);
   },
 
   formatFriendlyDuration(totalSeconds) {
@@ -2565,24 +2656,80 @@ const EASydots = {
     return parts.length > 0 ? parts.join(' ') : '0s';
   },
 
-  getHourBankForecastText(extraPerDaySeconds, days) {
-    const count = Number(days);
-    const duration = this.formatFriendlyDuration(extraPerDaySeconds);
+  getHourBankForecastText(plan) {
+    if (plan.isDebtBelowMinimum) {
+      return t('contentHourBankForecastBelowMinimum', [
+        this.formatSecondsToHHMMSS(plan.minimumValidDailyExtraSeconds),
+        this.formatSecondsToHHMMSS(plan.surplusAfterSafeExtraSeconds),
+      ]);
+    }
 
-    if (count === 1) {
+    if (plan.isAtToleranceDayLimit) {
+      return t('contentHourBankForecastAtLimit', [
+        this.formatFriendlyDuration(plan.minimumValidDailyExtraSeconds),
+      ]);
+    }
+
+    if (plan.wasAdjustedByTolerance) {
+      if (plan.estimatedRealDays === 1) {
+        return t('contentHourBankForecastAdjustedSingular');
+      }
+      return t('contentHourBankForecastAdjustedPlural', [String(plan.estimatedRealDays)]);
+    }
+
+    const duration = this.formatFriendlyDuration(plan.suggestedDailyExtraSeconds);
+
+    if (plan.selectedDays === 1) {
       return t('contentHourBankForecastSingular', [duration]);
     }
 
-    return t('contentHourBankForecastPlural', [duration, String(count)]);
+    return t('contentHourBankForecastPlural', [duration, String(plan.selectedDays)]);
+  },
+
+  getHourBankPlanTooltip(plan) {
+    if (plan.isAtToleranceDayLimit) {
+      const plannerSettings = this.getPlannerSettings();
+      return t('contentHourBankTooltipAtLimit', [
+        this.formatFriendlyDuration(this.getToleranceSeconds(plannerSettings)),
+        this.formatFriendlyDuration(plan.minimumValidDailyExtraSeconds),
+      ]);
+    }
+
+    if (!plan.wasAdjustedByTolerance && !plan.isDebtBelowMinimum) return null;
+    return t('contentHourBankTooltipAdjusted', [
+      this.formatSecondsToHHMMSS(plan.rawDailyExtraSeconds),
+    ]);
+  },
+
+  applyHourBankPlanDisplay(back, plan) {
+    const summaryEl = back.querySelector('.eed-hour-bank-summary');
+    const forecastEl = back.querySelector('.eed-hour-bank-forecast');
+    const metaEl = back.querySelector('.eed-hour-bank-plan-meta');
+    const slider = back.querySelector('.eed-hour-bank-slider');
+
+    if (summaryEl) summaryEl.textContent = this.getHourBankSummaryText(plan);
+    if (forecastEl) forecastEl.textContent = this.getHourBankForecastText(plan);
+    this.setTooltipTarget(metaEl, this.getHourBankPlanTooltip(plan));
+
+    if (slider) {
+      const maxDays = plan.maxCompensableDays;
+      slider.max = String(maxDays);
+      slider.setAttribute('aria-valuemax', String(maxDays));
+      slider.value = String(plan.selectedDays);
+      slider.setAttribute('aria-valuenow', String(plan.selectedDays));
+      slider.disabled = maxDays <= 1;
+    }
   },
 
   renderNegativeBalancePlanner(back, flip, balanceSeconds) {
     this.setHourBankBackVariant(back, 'deficit');
 
-    const days = parseInt(flip.dataset.eedDays, 10) || 5;
+    const plan = this.calculateCompensationPlan(
+      balanceSeconds,
+      parseInt(flip.dataset.eedDays, 10) || 5
+    );
+    flip.dataset.eedDays = String(plan.selectedDays);
     const deficit = this.formatSecondsToHHMMSS(balanceSeconds);
-    const extraPerDay = this.calculateExtraPerDay(balanceSeconds, days);
-    const extraText = this.formatSecondsToHHMMSS(extraPerDay);
     const sliderId = flip.dataset.eedSliderId || `eed-hour-bank-days-${Date.now()}`;
     flip.dataset.eedSliderId = sliderId;
 
@@ -2601,17 +2748,22 @@ const EASydots = {
             id="${sliderId}"
             class="eed-hour-bank-slider"
             min="1"
-            max="${this.HOUR_BANK_MAX_DAYS}"
-            value="${days}"
+            max="${plan.maxCompensableDays}"
+            value="${plan.selectedDays}"
             aria-valuemin="1"
-            aria-valuemax="${this.HOUR_BANK_MAX_DAYS}"
-            aria-valuenow="${days}"
+            aria-valuemax="${plan.maxCompensableDays}"
+            aria-valuenow="${plan.selectedDays}"
+            ${plan.maxCompensableDays <= 1 ? 'disabled' : ''}
           >
         </div>
-        <p class="eed-hour-bank-summary">${this.getHourBankSummaryText(days, extraText)}</p>
-        <p class="eed-hour-bank-forecast">${this.getHourBankForecastText(extraPerDay, days)}</p>
+        <div class="eed-hour-bank-plan-meta">
+          <p class="eed-hour-bank-summary"></p>
+          <p class="eed-hour-bank-forecast"></p>
+        </div>
       </div>
     `;
+
+    this.applyHourBankPlanDisplay(back, plan);
   },
 
   renderPositiveBalanceState(back, balanceSeconds) {
@@ -2674,6 +2826,9 @@ const EASydots = {
     }
 
     document.removeEventListener('click', flip._eedHourBankOutsideClick, true);
+    if (card.contains(this.diffTooltipAnchor)) {
+      this.hideDiffTooltip();
+    }
     card.classList.remove(
       'eed-hour-bank-state-deficit',
       'eed-hour-bank-state-surplus',
@@ -2725,23 +2880,21 @@ const EASydots = {
 
     if (balanceSeconds >= 0) return;
 
-    const days = parseInt(flip.dataset.eedDays, 10) || 5;
-    const deficit = this.formatSecondsToHHMMSS(balanceSeconds);
-    const extraPerDay = this.calculateExtraPerDay(balanceSeconds, days);
-    const extraText = this.formatSecondsToHHMMSS(extraPerDay);
-
+    const plan = this.calculateCompensationPlan(
+      balanceSeconds,
+      parseInt(flip.dataset.eedDays, 10) || 5
+    );
+    flip.dataset.eedDays = String(plan.selectedDays);
     const deficitEl = back.querySelector('.eed-hour-bank-back-value');
-    const summaryEl = back.querySelector('.eed-hour-bank-summary');
-    const forecastEl = back.querySelector('.eed-hour-bank-forecast');
-    const slider = back.querySelector('.eed-hour-bank-slider');
 
-    if (deficitEl) deficitEl.textContent = deficit;
-    if (summaryEl) summaryEl.textContent = this.getHourBankSummaryText(days, extraText);
-    if (forecastEl) forecastEl.textContent = this.getHourBankForecastText(extraPerDay, days);
-    if (slider) {
-      slider.value = String(days);
-      slider.setAttribute('aria-valuenow', String(days));
-    }
+    if (deficitEl) deficitEl.textContent = this.formatSecondsToHHMMSS(balanceSeconds);
+    this.applyHourBankPlanDisplay(back, plan);
+  },
+
+  refreshHourBankPlannerIfFlipped() {
+    const flip = document.querySelector('.eed-hour-bank-flip');
+    if (!flip || flip.dataset.eedFlipped !== 'true') return;
+    this.updateHourBankBackValues(flip);
   },
 
   updateHourBankSliderDisplay(flip, slider) {
@@ -2754,16 +2907,9 @@ const EASydots = {
     const days = Number(slider.value);
     if (!Number.isFinite(days) || days <= 0) return;
 
-    flip.dataset.eedDays = String(days);
-    const extraPerDay = this.calculateExtraPerDay(balanceSeconds, days);
-    const extraText = this.formatSecondsToHHMMSS(extraPerDay);
-
-    const summaryEl = back.querySelector('.eed-hour-bank-summary');
-    const forecastEl = back.querySelector('.eed-hour-bank-forecast');
-
-    if (summaryEl) summaryEl.textContent = this.getHourBankSummaryText(days, extraText);
-    if (forecastEl) forecastEl.textContent = this.getHourBankForecastText(extraPerDay, days);
-    slider.setAttribute('aria-valuenow', String(days));
+    const plan = this.calculateCompensationPlan(balanceSeconds, days);
+    flip.dataset.eedDays = String(plan.selectedDays);
+    this.applyHourBankPlanDisplay(back, plan);
   },
 
   bindHourBankSlider(flip) {
@@ -2780,9 +2926,45 @@ const EASydots = {
     slider.addEventListener('pointerdown', (event) => event.stopPropagation());
   },
 
+  installHourBankTooltips(card) {
+    if (!card || card.dataset.eedHourBankTooltipsReady === 'true') return;
+    card.dataset.eedHourBankTooltipsReady = 'true';
+
+    card.addEventListener('mouseover', (event) => {
+      const target = event.target.closest('[data-eed-tooltip]');
+      if (!target || !card.contains(target)) return;
+      this.showDiffTooltip(target);
+    });
+
+    card.addEventListener('mouseout', (event) => {
+      const target = event.target.closest('[data-eed-tooltip]');
+      if (!target) return;
+
+      const related = event.relatedTarget;
+      if (related && target.contains(related)) return;
+
+      if (this.diffTooltipAnchor === target) {
+        this.hideDiffTooltip();
+      }
+    });
+  },
+
+  primeHourBankPlannerSettings() {
+    if (this.cachedSettings || typeof EEDSettings === 'undefined') return;
+
+    EEDSettings.load()
+      .then((settings) => {
+        if (!this.isExtensionAlive()) return;
+        this.cachedSettings = settings;
+        this.refreshHourBankPlannerIfFlipped();
+      })
+      .catch(() => {});
+  },
+
   bindHourBankEvents(flip, card) {
     if (card.dataset.eedEventsBound) return;
     card.dataset.eedEventsBound = 'true';
+    this.installHourBankTooltips(card);
 
     flip._eedHourBankOutsideClick = (event) => {
       if (flip.dataset.eedFlipped !== 'true') return;
@@ -2932,6 +3114,7 @@ const EASydots = {
       card.appendChild(flip);
       this.bindHourBankEvents(flip, card);
       this.observeHourBankBalance(flip);
+      this.primeHourBankPlannerSettings();
     } catch (error) {
       if (this.isContextInvalidatedError(error)) {
         this.markExtensionDead();

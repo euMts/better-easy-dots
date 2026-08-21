@@ -610,6 +610,69 @@
       "time": { "content": "$2", "example": "01:01:51" }
     }
   },
+  "contentHourBankSummaryAdjustedSingular": {
+    "message": "1 day · minimum valid +$TIME$/day",
+    "description": "Summary when daily extra was raised to the minimum valid amount (1 day selected)",
+    "placeholders": {
+      "time": { "content": "$1", "example": "00:11:00" }
+    }
+  },
+  "contentHourBankSummaryAdjustedPlural": {
+    "message": "$DAYS$ days · minimum valid +$TIME$/day",
+    "description": "Summary when daily extra was raised to the minimum valid amount",
+    "placeholders": {
+      "days": { "content": "$1", "example": "21" },
+      "time": { "content": "$2", "example": "00:11:00" }
+    }
+  },
+  "contentHourBankSummaryBelowMinimum": {
+    "message": "Minimum valid: +$TIME$",
+    "description": "Summary when the debt is smaller than one minimum valid extra",
+    "placeholders": {
+      "time": { "content": "$1", "example": "00:11:00" }
+    }
+  },
+  "contentHourBankForecastAdjustedSingular": {
+    "message": "Clears in at most 1 day",
+    "description": "Forecast with the safe suggestion when the debt clears in at most 1 day"
+  },
+  "contentHourBankForecastAdjustedPlural": {
+    "message": "Clears in at most $DAYS$ days",
+    "description": "Forecast with the safe suggestion and maximum real day count",
+    "placeholders": {
+      "days": { "content": "$1", "example": "4" }
+    }
+  },
+  "contentHourBankForecastBelowMinimum": {
+    "message": "Do at least +$MIN$ in one day for the extra to count. You will be +$SURPLUS$ positive.",
+    "description": "Forecast when the debt is smaller than the minimum valid overtime",
+    "placeholders": {
+      "min": { "content": "$1", "example": "00:11:00" },
+      "surplus": { "content": "$2", "example": "00:06:46" }
+    }
+  },
+  "contentHourBankForecastAtLimit": {
+    "message": "This is the minimum. You cannot do less than $MIN$/day: within tolerance, extra does not count.",
+    "description": "Forecast when the slider reaches the maximum days allowed by tolerance",
+    "placeholders": {
+      "min": { "content": "$1", "example": "11min" }
+    }
+  },
+  "contentHourBankTooltipAtLimit": {
+    "message": "Daily tolerance ignores extra of up to $TOLERANCE$. That is why the minimum valid extra is $MIN$/day, and you cannot split this into more days.",
+    "description": "Tooltip when the slider is at the maximum days allowed by tolerance",
+    "placeholders": {
+      "tolerance": { "content": "$1", "example": "10min" },
+      "min": { "content": "$2", "example": "11min" }
+    }
+  },
+  "contentHourBankTooltipAdjusted": {
+    "message": "The simple split would be +$TIME$/day, but that stays within daily tolerance and probably does not count as overtime. That is why the suggestion uses the minimum valid amount.",
+    "description": "Planner tooltip when daily extra was adjusted by tolerance",
+    "placeholders": {
+      "time": { "content": "$1", "example": "00:01:40" }
+    }
+  },
   "contentHourBankNoDeficit": {
     "message": "You do not have a negative balance to compensate.",
     "description": "Message when the hour bank is not negative"
@@ -1467,6 +1530,26 @@
   "contentPendingImpactTooltip": {
     "message": "This is an estimate based on the visible pending requests and available details. The time bank only changes after approval and processing by Easydots.",
     "description": "Custom tooltip explaining pending requests impact estimate"
+  },
+  "changelogV183Item1": {
+    "message": "Fixes the time bank compensation card to respect the daily tolerance rule",
+    "description": "Changelog v1.8.3 item"
+  },
+  "changelogV183Item2": {
+    "message": "The card no longer suggests overtime values lower than or equal to the tolerance as valid overtime",
+    "description": "Changelog v1.8.3 item"
+  },
+  "changelogV183Item3": {
+    "message": "When the debt is smaller than the minimum valid overtime, the extension suggests the configured safe minimum",
+    "description": "Changelog v1.8.3 item"
+  },
+  "changelogV183Item4": {
+    "message": "Adjusts the slider limit to avoid splits that would stay within tolerance",
+    "description": "Changelog v1.8.3 item"
+  },
+  "changelogV183Item5": {
+    "message": "When the safe minimum extra exceeds the debt, the card shows the leftover positive balance",
+    "description": "Changelog v1.8.3 item"
   },
   "changelogV182Item1": {
     "message": "Early \"safe\" exit now appears only on the simulator card, not on the day records balance",
