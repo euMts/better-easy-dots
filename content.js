@@ -296,8 +296,7 @@ const EASydots = {
 
     const analysis = this.buildDayBalanceAnalysis(records, settings);
     const overtimeView = this.buildDayBalanceOvertimeStartView(records, settings, analysis);
-    const safeExitView = this.buildDayBalanceSafeEarlyExitView(records, settings, analysis);
-    return this.buildDayBalanceTooltipText(analysis, settings, overtimeView, safeExitView);
+    return this.buildDayBalanceTooltipText(analysis, settings, overtimeView);
   },
 
   calculateExpectedDailyWork(settings) {
@@ -865,75 +864,6 @@ const EASydots = {
     return rawNow > analysis.toleranceSeconds ? rawNow : 0;
   },
 
-  isFinalWorkSegmentOpen(records, settings, analysis = null) {
-    if (!this.isCurrentlyClockedIn(records, settings, analysis)) return false;
-
-    const remaining = this.getRemainingExpectedPunches(records, settings);
-    return remaining.length === 1 && this.isFinalExitPunch(remaining[0], settings);
-  },
-
-  calculateDayBalanceSafeEarlyExitTime(records, settings, analysis) {
-    if (!records?.length || !settings || !analysis) return null;
-
-    const timeline = this.buildWorkdayTimeline(records);
-    const openEntrada = timeline.openEntrada;
-    if (!openEntrada) return null;
-
-    const configuredExitSeconds = this.timeToSeconds(settings.saida);
-    const safeLimitSeconds = analysis.safeLimitSeconds;
-
-    if (
-      !Number.isFinite(configuredExitSeconds) ||
-      !Number.isFinite(openEntrada.seconds) ||
-      !Number.isFinite(safeLimitSeconds)
-    ) {
-      return null;
-    }
-
-    const workedBeforeOpen = this.calculateWorkedSeconds(records, timeline);
-    const rawAtConfiguredExit =
-      workedBeforeOpen +
-      Math.max(0, configuredExitSeconds - openEntrada.seconds) -
-      this.calculateExpectedDailyWork(settings);
-    const secondsBeforeSchedule = rawAtConfiguredExit + safeLimitSeconds;
-
-    if (!Number.isFinite(secondsBeforeSchedule) || secondsBeforeSchedule <= 0) {
-      return null;
-    }
-
-    const safeExitSeconds = configuredExitSeconds - secondsBeforeSchedule;
-    if (
-      safeExitSeconds < 0 ||
-      safeExitSeconds >= 86400 ||
-      safeExitSeconds < openEntrada.seconds ||
-      safeExitSeconds >= configuredExitSeconds
-    ) {
-      return null;
-    }
-
-    return {
-      exitSeconds: safeExitSeconds,
-      exitTime: this.secondsToTimeString(safeExitSeconds),
-    };
-  },
-
-  buildDayBalanceSafeEarlyExitView(records, settings, analysis) {
-    if (!this.isFinalWorkSegmentOpen(records, settings, analysis)) return null;
-
-    const safeExit = this.calculateDayBalanceSafeEarlyExitTime(records, settings, analysis);
-    if (!safeExit) return null;
-
-    return {
-      text: t('contentSimSafeExitBeforeSchedule', [safeExit.exitTime]),
-      shortText: t('contentSimSafeExitBeforeScheduleShort', [safeExit.exitTime]),
-      tooltip: t('contentSimSafeExitBeforeScheduleTooltip', [safeExit.exitTime]),
-      status: this.getSafeExitClockStatus(safeExit.exitSeconds),
-      usesLocalClock: true,
-      exitSeconds: safeExit.exitSeconds,
-      exitTime: safeExit.exitTime,
-    };
-  },
-
   ensureDayBalanceOvertimeStartEl(balanceRow) {
     let overtimeEl = balanceRow?.querySelector('.eed-day-balance-overtime-start');
     if (overtimeEl) return overtimeEl;
@@ -946,20 +876,6 @@ const EASydots = {
     overtimeEl.hidden = true;
     left.appendChild(overtimeEl);
     return overtimeEl;
-  },
-
-  ensureDayBalanceSafeExitEl(balanceRow) {
-    let safeExitEl = balanceRow?.querySelector('.eed-day-balance-safe-exit');
-    if (safeExitEl) return safeExitEl;
-
-    const left = balanceRow?.querySelector('.eed-day-balance-left');
-    if (!left) return null;
-
-    safeExitEl = document.createElement('div');
-    safeExitEl.className = 'eed-day-balance-safe-exit';
-    safeExitEl.hidden = true;
-    left.appendChild(safeExitEl);
-    return safeExitEl;
   },
 
   updateDayBalanceOvertimeStartLabel(overtimeEl, overtimeView) {
@@ -982,25 +898,6 @@ const EASydots = {
       overtimeView.alreadyCounting
     );
     this.setTooltipTarget(overtimeEl, overtimeView.tooltip);
-  },
-
-  updateDayBalanceSafeExitLabel(safeExitEl, safeExitView) {
-    if (!safeExitEl) return;
-
-    if (!safeExitView) {
-      safeExitEl.hidden = true;
-      safeExitEl.textContent = '';
-      this.applySafeExitStatusClasses(safeExitEl, null);
-      this.setTooltipTarget(safeExitEl, null);
-      return;
-    }
-
-    safeExitEl.hidden = false;
-    if (safeExitEl.textContent !== safeExitView.text) {
-      safeExitEl.textContent = safeExitView.text;
-    }
-    this.applySafeExitStatusClasses(safeExitEl, safeExitView.status);
-    this.setTooltipTarget(safeExitEl, safeExitView.tooltip);
   },
 
   clearDayBalanceClockRefresh() {
@@ -1032,10 +929,6 @@ const EASydots = {
         this.ensureDayBalanceOvertimeStartEl(balanceRow),
         null
       );
-      this.updateDayBalanceSafeExitLabel(
-        this.ensureDayBalanceSafeExitEl(balanceRow),
-        null
-      );
       this.clearDayBalanceClockRefresh();
       return;
     }
@@ -1046,27 +939,18 @@ const EASydots = {
       settings,
       analysis
     );
-    const safeExitView = this.buildDayBalanceSafeEarlyExitView(
-      records,
-      settings,
-      analysis
-    );
 
     this.updateDayBalanceSummaryView(balanceRow, analysis);
     this.updateDayBalanceOvertimeStartLabel(
       this.ensureDayBalanceOvertimeStartEl(balanceRow),
       overtimeView
     );
-    this.updateDayBalanceSafeExitLabel(
-      this.ensureDayBalanceSafeExitEl(balanceRow),
-      safeExitView
-    );
     this.setTooltipTarget(
       card,
-      this.buildDayBalanceTooltipText(analysis, settings, overtimeView, safeExitView)
+      this.buildDayBalanceTooltipText(analysis, settings, overtimeView)
     );
 
-    if (overtimeView?.usesLocalClock || safeExitView?.usesLocalClock) {
+    if (overtimeView?.usesLocalClock) {
       this.scheduleDayBalanceClockRefresh(table, settings);
     } else {
       this.clearDayBalanceClockRefresh();
@@ -1123,8 +1007,7 @@ const EASydots = {
   buildDayBalanceTooltipText(
     analysis,
     settings,
-    overtimeView = null,
-    safeExitView = null
+    overtimeView = null
   ) {
     const parts = [t('contentDayBalanceTooltipExplain')];
 
@@ -1135,10 +1018,6 @@ const EASydots = {
 
     if (overtimeView?.text) {
       parts.push(overtimeView.text);
-    }
-
-    if (safeExitView?.text) {
-      parts.push(safeExitView.text);
     }
 
     if (settings) {
@@ -2018,7 +1897,6 @@ const EASydots = {
               </button>
               <div class="eed-day-balance-meta"></div>
               <div class="eed-day-balance-overtime-start" hidden></div>
-              <div class="eed-day-balance-safe-exit" hidden></div>
             </div>
             <div class="eed-day-balance-right">
               <div class="eed-day-balance-value"></div>
@@ -2035,12 +1913,13 @@ const EASydots = {
       table.appendChild(balanceRow);
     }
 
+    balanceRow.querySelector('.eed-day-balance-safe-exit')?.remove();
+
     const card = balanceRow.querySelector('.eed-day-balance-card');
     const valueEl = balanceRow.querySelector('.eed-day-balance-value');
     const consideredLabelEl = balanceRow.querySelector('.eed-day-balance-considered-label');
     const metaEl = balanceRow.querySelector('.eed-day-balance-meta');
     const overtimeEl = this.ensureDayBalanceOvertimeStartEl(balanceRow);
-    const safeExitEl = this.ensureDayBalanceSafeExitEl(balanceRow);
     const titleEl = balanceRow.querySelector('.eed-day-balance-title');
     const creditBtn = balanceRow.querySelector('.eed-day-balance-credit');
 
@@ -2063,7 +1942,6 @@ const EASydots = {
         metaEl.hidden = true;
       }
       this.updateDayBalanceOvertimeStartLabel(overtimeEl, null);
-      this.updateDayBalanceSafeExitLabel(safeExitEl, null);
       this.clearDayBalanceClockRefresh();
       this.renderScheduleHint(valueEl);
       this.setTooltipTarget(card || valueEl, t('contentDayBalanceTooltipNotConfigured'));
@@ -2080,16 +1958,10 @@ const EASydots = {
       loadedSettings,
       analysis
     );
-    const safeExitView = this.buildDayBalanceSafeEarlyExitView(
-      records,
-      loadedSettings,
-      analysis
-    );
 
     this.updateDayBalanceSummaryView(balanceRow, analysis);
     this.updateDayBalanceOvertimeStartLabel(overtimeEl, overtimeView);
-    this.updateDayBalanceSafeExitLabel(safeExitEl, safeExitView);
-    if (overtimeView?.usesLocalClock || safeExitView?.usesLocalClock) {
+    if (overtimeView?.usesLocalClock) {
       this.scheduleDayBalanceClockRefresh(table, loadedSettings);
     } else {
       this.clearDayBalanceClockRefresh();
@@ -2097,12 +1969,7 @@ const EASydots = {
 
     this.setTooltipTarget(
       card || valueEl,
-      this.buildDayBalanceTooltipText(
-        analysis,
-        loadedSettings,
-        overtimeView,
-        safeExitView
-      )
+      this.buildDayBalanceTooltipText(analysis, loadedSettings, overtimeView)
     );
 
     this.adjustRecordsContainer(scrollContainer, true);

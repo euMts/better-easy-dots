@@ -1012,14 +1012,14 @@
     }
   },
   "contentSimSafeExitBeforeSchedule": {
-    "message": "Pode sair tranquilo às $TIME$",
+    "message": "Saída \"segura\" às $TIME$",
     "description": "Label de saída segura antes do horário configurado no simulador",
     "placeholders": {
       "time": { "content": "$1", "example": "17:55:00" }
     }
   },
   "contentSimSafeExitBeforeScheduleShort": {
-    "message": "Saída tranquila: $TIME$",
+    "message": "Saída \"segura\": $TIME$",
     "description": "Label curta de saída segura antes do horário configurado no simulador",
     "placeholders": {
       "time": { "content": "$1", "example": "17:55:00" }
@@ -1467,6 +1467,10 @@
   "contentPendingImpactTooltip": {
     "message": "Esta é uma estimativa baseada nas solicitações pendentes visíveis e nos detalhes disponíveis. O banco de horas só muda após aprovação e processamento pelo Easydots.",
     "description": "Custom tooltip explaining pending requests impact estimate"
+  },
+  "changelogV182Item1": {
+    "message": "Saída \"segura\" antecipada aparece só no simulador, não no saldo dos registros do dia",
+    "description": "Item do changelog v1.8.2"
   },
   "changelogV181Item1": {
     "message": "Registros extras no mesmo dia são pareados corretamente sem encerrar a jornada antes da hora",

@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/README-Português_(BR)-green" alt="README in Portuguese"></a>
-  <img src="https://img.shields.io/badge/version-1.8.1-purple" alt="Version 1.8.1">
+  <img src="https://img.shields.io/badge/version-1.8.2-purple" alt="Version 1.8.2">
   <img src="https://img.shields.io/badge/Manifest-V3-blue" alt="Manifest V3">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="MIT License"></a>
 </p>
@@ -189,7 +189,7 @@ No data is sent to extension servers.
 
 - **Browser:** Google Chrome (Manifest V3)
 - **Sites:** `https://*.easydots.com.br/*` (default: `https://sys.easydots.com.br/`), `https://*.acspontodigital.com.br/*` (legacy)
-- **Current version:** `1.8.1`
+- **Current version:** `1.8.2`
 
 The extension depends on the current Easydots HTML structure (`#table_registro_horario`, `#btnRegister`, navbar). Site updates may require selector adjustments.
 
