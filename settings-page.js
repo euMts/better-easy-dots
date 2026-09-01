@@ -11,7 +11,7 @@
   try {
     versionEl.textContent = `v${EEDBrowser.runtime.getManifest().version}`;
   } catch {
-    versionEl.textContent = 'v1.7.2';
+    versionEl.textContent = 'v1.9.0';
   }
   versionEl.setAttribute('aria-label', t('changelogView'));
 
