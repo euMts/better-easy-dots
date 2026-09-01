@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="README.en.md"><img src="https://img.shields.io/badge/README-English-blue" alt="README in English"></a>
-  <img src="https://img.shields.io/badge/versão-1.7.2-purple" alt="Versão 1.7.2">
+  <img src="https://img.shields.io/badge/versão-1.9.0-purple" alt="Versão 1.9.0">
   <img src="https://img.shields.io/badge/Manifest-V3-blue" alt="Manifest V3">
   <img src="https://img.shields.io/badge/Chrome-supported-green" alt="Chrome">
   <img src="https://img.shields.io/badge/Firefox-supported-orange" alt="Firefox">
@@ -217,7 +217,7 @@ Nenhum dado é transmitido para servidores da extensão.
 
 - **Navegadores:** Google Chrome e Mozilla Firefox (Manifest V3)
 - **Sites:** `https://*.easydots.com.br/*` (padrão: `https://sys.easydots.com.br/`), `https://*.acspontodigital.com.br/*` (legado)
-- **Versão atual:** `1.7.2`
+- **Versão atual:** `1.9.0`
 - **Gecko ID:** `better-easy-dots@matheuspass.dev`
 
 A extensão depende da estrutura HTML atual do Easydots (`#table_registro_horario`, `#btnRegister`, navbar). Atualizações no site podem exigir ajustes nos seletores.

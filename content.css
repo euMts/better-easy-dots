@@ -122,7 +122,8 @@ table:has(#table_registro_horario) th.eed-diff-header,
 #table_registro_horario .eed-day-balance-value[data-eed-tooltip],
 #table_registro_horario .eed-day-balance-card[data-eed-tooltip],
 #table_registro_horario .eed-suggestion-time[data-eed-tooltip],
-.card-box.eed-employer-sim-card [data-eed-tooltip] {
+.card-box.eed-employer-sim-card [data-eed-tooltip],
+.card-box.eed-hour-bank-card [data-eed-tooltip] {
   cursor: help;
 }
 
@@ -969,6 +970,11 @@ table:has(#table_registro_horario) th.eed-diff-header,
   padding: 2px 0;
 }
 
+.card-box.eed-hour-bank-card .eed-hour-bank-slider:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
 .card-box.eed-hour-bank-card .eed-hour-bank-slider {
   -webkit-appearance: none;
   appearance: none;
@@ -1033,15 +1039,23 @@ table:has(#table_registro_horario) th.eed-diff-header,
   transform: scale(1.08);
 }
 
+.card-box.eed-hour-bank-card .eed-hour-bank-plan-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .card-box.eed-hour-bank-card .eed-hour-bank-summary {
   margin: 0;
   font-family: 'SF Mono', 'Courier New', monospace;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  line-height: 1.2;
+  line-height: 1.25;
   text-align: center;
   color: #fff;
+  overflow-wrap: anywhere;
 }
 
 .card-box.eed-hour-bank-card .eed-hour-bank-forecast {
@@ -1049,9 +1063,10 @@ table:has(#table_registro_horario) th.eed-diff-header,
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 9px;
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 1.35;
   color: rgba(255, 255, 255, 0.88);
   text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .card-box.eed-hour-bank-card .eed-hour-bank-back-surplus,
@@ -1485,6 +1500,7 @@ table:has(#table_registro_horario) th.eed-diff-header,
 .card-box.eed-employer-sim-card .eed-sim-result-meta,
 .card-box.eed-employer-sim-card .eed-sim-result-consequence,
 .card-box.eed-employer-sim-card .eed-sim-overtime-start,
+.card-box.eed-employer-sim-card .eed-sim-safe-exit,
 .card-box.eed-employer-sim-card .eed-sim-bank-line {
   font-size: 10px;
   font-weight: 500;
@@ -1500,20 +1516,40 @@ table:has(#table_registro_horario) th.eed-diff-header,
   display: none;
 }
 
-.card-box.eed-employer-sim-card .eed-sim-overtime-start {
+.card-box.eed-employer-sim-card .eed-sim-overtime-start,
+.card-box.eed-employer-sim-card .eed-sim-safe-exit {
   display: block;
   flex-shrink: 0;
   min-width: 0;
   cursor: help;
 }
 
-.card-box.eed-employer-sim-card .eed-sim-overtime-start[hidden] {
+.card-box.eed-employer-sim-card .eed-sim-overtime-start[hidden],
+.card-box.eed-employer-sim-card .eed-sim-safe-exit[hidden] {
   display: none;
 }
 
 .card-box.eed-employer-sim-card .eed-sim-overtime-start--counting {
   font-weight: 600;
   opacity: 0.92;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-safe-exit.eed-safe-exit--pending {
+  color: #ffe0e0;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-safe-exit.eed-safe-exit--near {
+  color: #ffe0a8;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.card-box.eed-employer-sim-card .eed-sim-safe-exit.eed-safe-exit--passed {
+  color: #d8ffe8;
+  font-weight: 600;
+  opacity: 0.95;
 }
 
 .card-box.eed-employer-sim-card .eed-sim-result-consequence {
@@ -1679,4 +1715,3 @@ table:has(#table_registro_horario) th.eed-diff-header,
 .eed-pending-requests-summary--ready .eed-pending-requests-summary__gain {
   color: #6b21c8;
 }
-

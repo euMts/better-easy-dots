@@ -1,16 +1,59 @@
 const EED_CHANGELOG_STORAGE_KEY = 'eedLastSeenChangelogVersion';
 
 /** Last version already live on both stores (CWS + AMO). Every newer entry gets the New badge. */
-const EED_CHANGELOG_LAST_SHIPPED_VERSION = '1.6.0';
+const EED_CHANGELOG_LAST_SHIPPED_VERSION = '1.8.2';
 
 const EED_CHANGELOG_ENTRIES = [
   {
-    version: '1.7.2',
-    date: '2026-08-17',
+    version: '1.9.0',
+    date: '2026-09-01',
     items: [
-      'changelogV172Item1',
-      'changelogV172Item2',
-      'changelogV172Item3',
+      'changelogV190Item1',
+      'changelogV190Item2',
+      'changelogV190Item3',
+      'changelogV190Item4',
+    ],
+  },
+  {
+    version: '1.8.3',
+    date: '2026-08-21',
+    items: [
+      'changelogV183Item1',
+      'changelogV183Item2',
+      'changelogV183Item3',
+      'changelogV183Item4',
+      'changelogV183Item5',
+    ],
+  },
+  {
+    version: '1.8.2',
+    date: '2026-08-20',
+    items: [
+      'changelogV182Item1',
+    ],
+  },
+  {
+    version: '1.8.1',
+    date: '2026-08-18',
+    items: [
+      'changelogV181Item1',
+      'changelogV181Item2',
+      'changelogV181Item3',
+    ],
+  },
+  {
+    version: '1.8.0',
+    date: '2026-08-18',
+    items: [
+      'changelogV180Item1',
+      'changelogV180Item2',
+      'changelogV180Item3',
+      'changelogV180Item4',
+      'changelogV180Item5',
+      'changelogV180Item6',
+      'changelogV180Item7',
+      'changelogV180Item8',
+      'changelogV180Item9',
     ],
   },
   {
@@ -148,9 +191,9 @@ const EED_CHANGELOG_ENTRIES = [
 
 function eedGetCurrentVersion() {
   try {
-    return EEDBrowser.runtime?.getManifest?.()?.version || '1.7.2';
+    return EEDBrowser.runtime?.getManifest?.()?.version || '1.9.0';
   } catch {
-    return '1.7.2';
+    return '1.9.0';
   }
 }
 

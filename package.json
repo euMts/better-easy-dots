@@ -1,6 +1,6 @@
 {
   "name": "better-easy-dots",
-  "version": "1.7.2",
+  "version": "1.9.0",
   "private": true,
   "description": "Browser extension that improves the Easydots time-clock experience (Chrome + Firefox)",
   "scripts": {
