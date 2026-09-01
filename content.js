@@ -2458,6 +2458,7 @@ const EASydots = {
       `;
 
       const front = flip.querySelector('.eed-hour-bank-front');
+      const back = flip.querySelector('.eed-hour-bank-back');
 
       front.appendChild(barWidget);
       this.mountCardFrontActionHint(
@@ -2465,6 +2466,16 @@ const EASydots = {
         'eed-hour-bank-hover-hint',
         t('contentHourBankHoverHint')
       );
+
+      // Match opaque back to the site card color (avoids front bleed-through on Firefox).
+      try {
+        const cardBg = getComputedStyle(card).backgroundColor;
+        if (cardBg && cardBg !== 'rgba(0, 0, 0, 0)' && cardBg !== 'transparent') {
+          back.style.backgroundColor = cardBg;
+        }
+      } catch {
+        /* keep CSS fallback */
+      }
 
       card.appendChild(flip);
       this.bindHourBankEvents(flip, card);
@@ -3308,6 +3319,7 @@ const EASydots = {
       `;
 
       const front = flip.querySelector('.eed-employer-sim-front');
+      const back = flip.querySelector('.eed-employer-sim-back');
       front.appendChild(barWidget);
 
       // Keep layout, but do not let the site's #btnLocal eat pointer events.
@@ -3321,6 +3333,15 @@ const EASydots = {
         'eed-employer-sim-hover-hint',
         t('contentSimHoverHint')
       );
+
+      try {
+        const cardBg = getComputedStyle(card).backgroundColor;
+        if (cardBg && cardBg !== 'rgba(0, 0, 0, 0)' && cardBg !== 'transparent') {
+          back.style.backgroundColor = cardBg;
+        }
+      } catch {
+        /* keep CSS fallback */
+      }
 
       card.appendChild(flip);
 
