@@ -1,9 +1,25 @@
 const EED_CHANGELOG_STORAGE_KEY = 'eedLastSeenChangelogVersion';
 
-/** Last version already on the Chrome Web Store. Every newer entry gets the New badge. */
+/** Last version already live on both stores (CWS + AMO). Does not control the “New” badge. */
 const EED_CHANGELOG_LAST_SHIPPED_VERSION = '1.8.2';
 
 const EED_CHANGELOG_ENTRIES = [
+  {
+    version: '1.9.0',
+    date: '2026-09-01',
+    items: [
+      'changelogV190Item1',
+      'changelogV190Item2',
+      'changelogV190Item3',
+      'changelogV190Item4',
+      'changelogV190Item5',
+      'changelogV190Item6',
+      'changelogV190Item7',
+      'changelogV190Item8',
+      'changelogV190Item9',
+      'changelogV190Item10',
+    ],
+  },
   {
     version: '1.8.3',
     date: '2026-08-21',
@@ -181,15 +197,15 @@ const EED_CHANGELOG_ENTRIES = [
 
 function eedGetCurrentVersion() {
   try {
-    return chrome.runtime?.getManifest?.()?.version || '1.8.3';
+    return EEDBrowser.runtime?.getManifest?.()?.version || '1.9.0';
   } catch {
-    return '1.8.3';
+    return '1.9.0';
   }
 }
 
 function eedGetChangelogUrl() {
   try {
-    return chrome.runtime.getURL('changelog.html');
+    return EEDBrowser.runtime.getURL('changelog.html');
   } catch {
     return 'changelog.html';
   }
@@ -197,7 +213,7 @@ function eedGetChangelogUrl() {
 
 async function eedGetLastSeenChangelogVersion() {
   try {
-    const result = await chrome.storage.local.get(EED_CHANGELOG_STORAGE_KEY);
+    const result = await EEDBrowser.storage.local.get(EED_CHANGELOG_STORAGE_KEY);
     return result[EED_CHANGELOG_STORAGE_KEY] ?? null;
   } catch {
     return null;
@@ -206,7 +222,7 @@ async function eedGetLastSeenChangelogVersion() {
 
 async function eedMarkChangelogSeen(version = eedGetCurrentVersion()) {
   try {
-    await chrome.storage.local.set({ [EED_CHANGELOG_STORAGE_KEY]: version });
+    await EEDBrowser.storage.local.set({ [EED_CHANGELOG_STORAGE_KEY]: version });
   } catch {
     /* storage unavailable */
   }
@@ -219,7 +235,7 @@ async function eedShouldOpenChangelog() {
 }
 
 function eedGetLatestChangelogEntry() {
-  return EED_CHANGELOG_ENTRIES[0] ?? null;
+  return eedGetOrderedChangelogEntries()[0] ?? null;
 }
 
 function eedGetLatestChangelogVersion() {
@@ -262,34 +278,45 @@ function eedCompareSemver(a, b) {
   return 0;
 }
 
-function eedIsChangelogVersionNew(version) {
-  return eedCompareSemver(version, EED_CHANGELOG_LAST_SHIPPED_VERSION) > 0;
+function eedSortChangelogEntriesDescending(entries) {
+  return [...(entries || [])].sort((left, right) =>
+    eedCompareSemver(right?.version, left?.version)
+  );
+}
+
+function eedGetOrderedChangelogEntries() {
+  return eedSortChangelogEntriesDescending(EED_CHANGELOG_ENTRIES);
+}
+
+function eedShouldShowChangelogNewBadge(index) {
+  return index === 0;
 }
 
 function eedRenderChangelogEntries(root) {
   if (!root) return;
 
-  const latestVersion = eedGetLatestChangelogVersion();
+  const entries = eedGetOrderedChangelogEntries();
   const newBadge = typeof t === 'function' ? t('changelogNewBadge') : 'New';
   const translate = typeof t === 'function' ? t : (key) => key;
 
-  root.innerHTML = EED_CHANGELOG_ENTRIES.map((entry) => {
-    const isLatest = entry.version === latestVersion;
-    const isNew = eedIsChangelogVersionNew(entry.version);
-    const items = entry.items
-      .map((itemKey) => `<li class="eed-changelog-item">${translate(itemKey)}</li>`)
-      .join('');
+  root.innerHTML = entries
+    .map((entry, index) => {
+      const isLatest = eedShouldShowChangelogNewBadge(index);
+      const items = (entry.items || [])
+        .map((itemKey) => `<li class="eed-changelog-item">${translate(itemKey)}</li>`)
+        .join('');
 
-    return `
-      <section class="eed-changelog-version${isLatest || isNew ? ' eed-changelog-version--latest' : ''}">
+      return `
+      <section class="eed-changelog-version${isLatest ? ' eed-changelog-version--latest' : ''}">
         <div class="eed-changelog-version-head">
           <h2 class="eed-changelog-version-label">v${entry.version}</h2>
-          ${isNew ? `<span class="eed-changelog-badge">${newBadge}</span>` : ''}
+          ${isLatest ? `<span class="eed-changelog-badge">${newBadge}</span>` : ''}
         </div>
         <ul class="eed-changelog-list">${items}</ul>
       </section>
     `;
-  }).join('');
+    })
+    .join('');
 }
 
 async function eedInitChangelogPage() {
@@ -325,14 +352,15 @@ async function eedInitChangelogPage() {
 
     reviewBtn?.addEventListener('click', () => {
       eedMarkChangelogSeen(currentVersion);
-      chrome.tabs.create({ url: EED_EXTENSION_URL });
+      EEDBrowser.tabs.create({ url: eedGetStoreUrl() }).catch(() => {});
     });
 
     settingsBtn?.addEventListener('click', () => {
       eedMarkChangelogSeen(currentVersion);
-      chrome.runtime.sendMessage({ action: 'openSettings' }, () => {
-        window.close();
-      });
+      EEDBrowser.runtime
+        .sendMessage({ action: 'openSettings' })
+        .catch(() => {})
+        .finally(() => window.close());
     });
   } catch {
     /* fail silently */
@@ -343,11 +371,14 @@ if (typeof document !== 'undefined' && document.getElementById('eed-changelog-en
   eedInitChangelogPage();
 }
 
-if (typeof self !== 'undefined') {
-  self.EED_CHANGELOG_STORAGE_KEY = EED_CHANGELOG_STORAGE_KEY;
-  self.eedGetCurrentVersion = eedGetCurrentVersion;
-  self.eedGetChangelogUrl = eedGetChangelogUrl;
-  self.eedGetLastSeenChangelogVersion = eedGetLastSeenChangelogVersion;
-  self.eedMarkChangelogSeen = eedMarkChangelogSeen;
-  self.eedShouldOpenChangelog = eedShouldOpenChangelog;
+if (typeof globalThis !== 'undefined') {
+  globalThis.EED_CHANGELOG_STORAGE_KEY = EED_CHANGELOG_STORAGE_KEY;
+  globalThis.eedGetCurrentVersion = eedGetCurrentVersion;
+  globalThis.eedGetChangelogUrl = eedGetChangelogUrl;
+  globalThis.eedGetLastSeenChangelogVersion = eedGetLastSeenChangelogVersion;
+  globalThis.eedMarkChangelogSeen = eedMarkChangelogSeen;
+  globalThis.eedShouldOpenChangelog = eedShouldOpenChangelog;
+  globalThis.eedCompareSemver = eedCompareSemver;
+  globalThis.eedShouldShowChangelogNewBadge = eedShouldShowChangelogNewBadge;
+  globalThis.eedGetOrderedChangelogEntries = eedGetOrderedChangelogEntries;
 }

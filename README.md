@@ -5,13 +5,15 @@
 <h1 align="center">Better Easy Dots</h1>
 
 <p align="center">
-  Extensão para Chrome que melhora a experiência de registro de ponto no <strong>Easydots</strong> (<code>sys.easydots.com.br</code>).
+  Extensão para <strong>Chrome</strong> e <strong>Firefox</strong> que melhora a experiência de registro de ponto no <strong>Easydots</strong> (<code>sys.easydots.com.br</code>).
 </p>
 
 <p align="center">
   <a href="README.en.md"><img src="https://img.shields.io/badge/README-English-blue" alt="README in English"></a>
-  <img src="https://img.shields.io/badge/versão-1.8.3-purple" alt="Versão 1.8.3">
+  <img src="https://img.shields.io/badge/versão-1.9.0-purple" alt="Versão 1.9.0">
   <img src="https://img.shields.io/badge/Manifest-V3-blue" alt="Manifest V3">
+  <img src="https://img.shields.io/badge/Chrome-supported-green" alt="Chrome">
+  <img src="https://img.shields.io/badge/Firefox-supported-orange" alt="Firefox">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licença-MIT-lightgrey" alt="Licença MIT"></a>
 </p>
 
@@ -19,7 +21,7 @@
 
 ## Sobre
 
-**Better Easy Dots** é uma extensão não oficial que adiciona recursos visuais e de produtividade à página de registro de horário do Easydots. Tudo roda no seu navegador: configurações e cálculos ficam em `chrome.storage.local`, sem envio de dados a servidores externos.
+**Better Easy Dots** é uma extensão não oficial que adiciona recursos visuais e de produtividade à página de registro de horário do Easydots. Tudo roda no seu navegador: configurações e cálculos ficam no storage local da extensão, sem envio de dados a servidores externos.
 
 > **Aviso:** esta extensão não é afiliada, endossada ou mantida pelo Easydots nem pela ACS Pontodigital.
 
@@ -53,7 +55,7 @@ Página dedicada (`settings.html`) acessível por:
 
 - Ícone de engrenagem na navbar do Easydots
 - Popup da extensão → **Configurações**
-- `chrome://extensions` → Detalhes → Opções
+- Página de opções do navegador (Chrome / Firefox)
 
 Campos configuráveis:
 
@@ -70,7 +72,7 @@ O endereço do Easydots é identificado pela página em que você usa o sistema 
 
 ### Badge no ícone
 
-O ícone da extensão na barra do Chrome mostra a quantidade de registros do dia quando uma aba do Easydots está aberta.
+O ícone da extensão na barra do navegador mostra a quantidade de registros do dia quando uma aba do Easydots está aberta.
 
 ---
 
@@ -104,25 +106,52 @@ Horários de trabalho, intervalo, tolerância diária, margem de segurança e id
 
 ## Instalação
 
-### Desenvolvimento (carregar sem compactação)
+### Desenvolvimento — Chrome
 
 1. Clone ou baixe este repositório
 2. Abra `chrome://extensions`
 3. Ative **Modo do desenvolvedor**
 4. Clique em **Carregar sem compactação**
-5. Selecione a pasta raiz do projeto (`easy-easy-dots`)
+5. Selecione a pasta raiz do projeto
+
+### Desenvolvimento — Firefox
+
+1. Clone ou baixe este repositório
+2. Rode `npm run firefox:dev`
+3. Abra `about:debugging#/runtime/this-firefox`
+4. Clique em **Carregar complemento temporário…**
+5. Selecione `load-in-firefox/manifest.json`
+
+> No Firefox, carregue sempre pela pasta `load-in-firefox/` — nunca pela raiz do repo (lá o `manifest.json` é o do Chrome).
 
 ### Chrome Web Store
 
 [Chrome Web Store](https://chromewebstore.google.com/detail/better-easy-dots/cfnehkkbmplomaianjpfiaoonmpekbbb)
 
-### Empacotar para a loja
+### Firefox Add-ons (AMO)
+
+Listagem em preparação. Após a primeira publicação, o link ficará em `config.js` (`EED_FIREFOX_STORE_URL`).
+
+### Empacotar para as lojas
 
 ```bash
+npm install
 npm run package
 ```
 
-Isso gera `builds/better-easy-dots-vX.Y.Z.zip` com `manifest.json` na raiz, valida arquivos citados no manifest e impede ZIP incompleto. Siga `RELEASE_CHECKLIST.md` antes de enviar.
+Gera:
+
+- `builds/better-easy-dots-chrome-vX.Y.Z.zip`
+- `builds/better-easy-dots-firefox-vX.Y.Z.zip`
+
+Cada ZIP tem `manifest.json` na raiz e passa pela validação automática. Siga [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) antes de enviar.
+
+```bash
+npm run package:chrome    # só Chrome
+npm run package:firefox   # só Firefox
+npm test                  # validate:json + package
+npm run lint:firefox      # package Firefox + web-ext lint
+```
 
 ---
 
@@ -139,27 +168,24 @@ Isso gera `builds/better-easy-dots-vX.Y.Z.zip` com `manifest.json` na raiz, vali
 ## Estrutura do projeto
 
 ```
-easy-easy-dots/
-├── manifest.json          # Manifest V3 da extensão
-├── config.js              # URL da loja e URL padrão do Easydots
-├── background.js          # Service worker (badge, abrir configurações)
-├── content.js             # Lógica na página do Easydots
-├── content.css            # Estilos injetados na página
-├── settings.js            # Persistência e normalização de configurações
-├── settings-ui.js         # Componente do formulário de configurações
-├── settings-ui.css
-├── settings.html            # Página de opções
-├── settings-page.js
-├── settings-page.css
-├── popup.html             # Popup da extensão
-├── popup.js
-├── popup.css
-├── icons/                 # Ícones da extensão
-└── docs/
-    └── to-do.md           # Checklist para publicação na loja
+better-easy-dots/
+├── manifest.json                 # Chrome (dev, com localhost)
+├── manifest.prod.json            # Chrome (loja)
+├── manifest.firefox.json         # Firefox (dev)
+├── manifest.firefox.prod.json    # Firefox (AMO)
+├── browser-compat.js             # Ponte única chrome/browser para Chrome + Firefox
+├── config.js                     # URLs das lojas + Easydots padrão
+├── background.js                 # Badge, abrir configurações/changelog
+├── content.js                    # Lógica na página do Easydots
+├── scripts/
+│   ├── package-extension.js
+│   └── validate-extension-package.js
+├── .github/workflows/            # CI + Release
+├── load-in-firefox/              # Gerado por npm run firefox:dev (temporário)
+└── …
 ```
 
-A pasta `website/` contém um espelho local da página do Easydots para testes com Live Server (`127.0.0.1:5500`) e **não** deve ser incluída no pacote de produção.
+A pasta `website/` contém um espelho local da página do Easydots para testes com Live Server (`127.0.0.1:5500`) e **não** deve ser incluída no pacote de produção. Pastas geradas `dist/` e `builds/` estão no `.gitignore`.
 
 ---
 
@@ -169,6 +195,7 @@ A pasta `website/` contém um espelho local da página do Easydots para testes c
 |-----------|--------|
 | `storage` | Salvar horários e URL do Easydots localmente |
 | `tabs` | Localizar aba aberta do Easydots para atualizar o badge |
+| `windows` | Focar a janela ao reabrir configurações/changelog (permissão Chrome; API sem permissão no Firefox) |
 | `*.easydots.com.br` | Injetar melhorias na página já aberta pelo usuário |
 | `*.acspontodigital.com.br` | Compatibilidade com domínio legado |
 
@@ -178,7 +205,7 @@ Nenhum dado é transmitido para servidores da extensão.
 
 ## Privacidade
 
-- Configurações armazenadas apenas em `chrome.storage.local` no seu dispositivo
+- Configurações armazenadas apenas no storage local da extensão no seu dispositivo
 - A extensão lê a tabela de registros **somente** na aba do Easydots que você abriu
 - Sem analytics, telemetria ou conta de usuário
 - Sem acesso a outros sites além dos domínios configurados no manifest
@@ -187,11 +214,14 @@ Nenhum dado é transmitido para servidores da extensão.
 
 ## Compatibilidade
 
-- **Navegador:** Google Chrome (Manifest V3)
+- **Navegadores:** Google Chrome e Mozilla Firefox (Manifest V3)
 - **Sites:** `https://*.easydots.com.br/*` (padrão: `https://sys.easydots.com.br/`), `https://*.acspontodigital.com.br/*` (legado)
-- **Versão atual:** `1.8.3`
+- **Versão atual:** `1.9.0`
+- **Gecko ID:** `better-easy-dots@matheuspass.dev`
 
 A extensão depende da estrutura HTML atual do Easydots (`#table_registro_horario`, `#btnRegister`, navbar). Atualizações no site podem exigir ajustes nos seletores.
+
+Toda implementação nova deve manter paridade entre Chrome e Firefox: mesma UI, mesmos estilos, mesmas funcionalidades e validação em ambos os pacotes. APIs assíncronas de navegador devem passar por `browser-compat.js`.
 
 ---
 
@@ -199,7 +229,7 @@ A extensão depende da estrutura HTML atual do Easydots (`#table_registro_horari
 
 1. Faça um fork do repositório
 2. Crie uma branch para sua alteração
-3. Teste no Easydots real ou no espelho local
+3. Teste no Easydots real ou no espelho local em Chrome e Firefox
 4. Abra um pull request descrevendo a mudança
 
 ---

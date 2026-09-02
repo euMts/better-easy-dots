@@ -32,8 +32,8 @@
     "description": "Texto antes do link da loja"
   },
   "popupReviewStoreLink": {
-    "message": "Chrome Web Store",
-    "description": "Texto do link da loja"
+    "message": "loja de extensões",
+    "description": "Texto do link da loja (Chrome ou Firefox)"
   },
   "popupReviewBodyAfter": {
     "message": ", leva menos de um minuto.",
@@ -58,6 +58,14 @@
   "popupOpenEasydots": {
     "message": "Abrir Easydots",
     "description": "Botão do popup para abrir o Easydots"
+  },
+  "popupStatusNeedsSiteAccess": {
+    "message": "O Firefox ainda não permitiu a extensão nesta página. Clique em Permitir e recarregue.",
+    "description": "Popup quando o content script não injeta por falta de permissão de host"
+  },
+  "popupGrantSiteAccess": {
+    "message": "Permitir nesta página",
+    "description": "Botão do popup para conceder host permission no Firefox"
   },
   "settingsPageTitle": {
     "message": "Configurações — Better Easy Dots",
@@ -1463,7 +1471,7 @@
     "description": "Linha auxiliar legada da página de changelog"
   },
   "changelogRateInStore": {
-    "message": "Avaliar na loja do Chrome",
+    "message": "Avaliar na loja",
     "description": "Botão principal da página de changelog para abrir avaliação na loja"
   },
   "changelogOpenSettings": {
@@ -1530,6 +1538,46 @@
   "contentPendingImpactTooltip": {
     "message": "Esta é uma estimativa baseada nas solicitações pendentes visíveis e nos detalhes disponíveis. O banco de horas só muda após aprovação e processamento pelo Easydots.",
     "description": "Custom tooltip explaining pending requests impact estimate"
+  },
+  "changelogV190Item1": {
+    "message": "Suporte ao Firefox com a mesma camada de APIs, abas, storage e badge do Chrome",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item2": {
+    "message": "Pacote Firefox com permissões, ícones e declaração de privacidade alinhados ao AMO",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item3": {
+    "message": "Validação e documentação deixam claro que toda mudança deve funcionar em Chrome e Firefox",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item4": {
+    "message": "Corrige o flip dos cards no Firefox para o texto original não ficar por cima do verso",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item5": {
+    "message": "Firefox passa a injetar os recursos na página (incluindo Live Server em localhost) mesmo com permissões de site opcionais",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item6": {
+    "message": "No Firefox, o popup pode liberar a página e o cálculo de solicitações pendentes usa o background quando o fetch da página é bloqueado",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item7": {
+    "message": "Corrige a injeção da feature de solicitações pendentes no Firefox.",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item8": {
+    "message": "Garante que a barra Better Easy Dots apareça na lista de solicitações mesmo quando o cálculo não puder ser concluído.",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item9": {
+    "message": "Melhora a compatibilidade de permissões e injeção manual via popup no Firefox.",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item10": {
+    "message": "Mantém paridade visual e funcional entre Chrome e Firefox na página de solicitações.",
+    "description": "Item do changelog v1.9.0"
   },
   "changelogV183Item1": {
     "message": "Corrige o card de compensação do banco de horas para respeitar a tolerância diária",

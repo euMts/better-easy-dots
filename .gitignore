@@ -6,4 +6,6 @@ website/
 *.sh
 builds/
 dist/
+load-in-firefox/
+web-ext-artifacts/
 node_modules/

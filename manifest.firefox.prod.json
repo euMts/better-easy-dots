@@ -5,7 +5,23 @@
   "description": "__MSG_extensionDescription__",
   "default_locale": "pt_BR",
 
-  "permissions": ["storage", "tabs", "windows"],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "better-easy-dots@matheuspass.dev",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+
+  "permissions": ["storage", "tabs", "scripting", "activeTab"],
+
+  "host_permissions": [
+    "https://sys.easydots.com.br/*",
+    "https://*.acspontodigital.com.br/*",
+    "https://*.easydots.com.br/*"
+  ],
 
   "action": {
     "default_popup": "popup.html",
@@ -26,17 +42,18 @@
   },
 
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["browser-compat.js", "i18n.js", "changelog.js", "background.js"]
   },
 
-  "options_page": "settings.html",
+  "options_ui": {
+    "page": "settings.html",
+    "open_in_tab": true
+  },
 
   "content_scripts": [
     {
       "matches": [
-        "http://localhost:5500/website/*",
-        "http://127.0.0.1:5500/website/*",
-        "http://192.168.0.104:5500/website/*",
+        "https://sys.easydots.com.br/*",
         "https://*.acspontodigital.com.br/*",
         "https://*.easydots.com.br/*"
       ],
@@ -62,9 +79,7 @@
         "icons/easy-easy-dots.png"
       ],
       "matches": [
-        "http://localhost:5500/*",
-        "http://127.0.0.1:5500/*",
-        "http://192.168.0.104:5500/*",
+        "https://sys.easydots.com.br/*",
         "https://*.acspontodigital.com.br/*",
         "https://*.easydots.com.br/*"
       ]

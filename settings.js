@@ -4,6 +4,7 @@ const EED_BUILTIN_HOST_SUFFIXES = ['acspontodigital.com.br', 'easydots.com.br'];
 
 const EED_LOCAL_DEV_WEBSITE_PREFIXES = [
   'http://127.0.0.1:5500/website/',
+  'http://localhost:5500/website/',
   'http://192.168.0.104:5500/website/',
 ];
 
@@ -188,9 +189,9 @@ const EEDSettings = {
   canUseStorage() {
     try {
       return (
-        typeof chrome !== 'undefined' &&
-        Boolean(chrome.runtime?.id) &&
-        Boolean(chrome.storage?.local)
+        typeof EEDBrowser !== 'undefined' &&
+        Boolean(EEDBrowser.runtime?.id) &&
+        Boolean(EEDBrowser.storage?.local)
       );
     } catch {
       return false;
@@ -203,7 +204,7 @@ const EEDSettings = {
     }
 
     try {
-      const result = await chrome.storage.local.get(EED_SETTINGS_KEY);
+      const result = await EEDBrowser.storage.local.get(EED_SETTINGS_KEY);
       return result[EED_SETTINGS_KEY] ?? null;
     } catch {
       return null;
@@ -216,7 +217,7 @@ const EEDSettings = {
     }
 
     try {
-      await chrome.storage.local.set({ [EED_SETTINGS_KEY]: settings });
+      await EEDBrowser.storage.local.set({ [EED_SETTINGS_KEY]: settings });
       return true;
     } catch {
       return false;
@@ -271,10 +272,7 @@ const EEDSettings = {
   },
 };
 
-if (typeof window !== 'undefined') {
-  window.EEDSettings = EEDSettings;
-}
-
-if (typeof self !== 'undefined') {
-  self.EEDSettings = EEDSettings;
+const eedSettingsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : null;
+if (eedSettingsGlobal) {
+  eedSettingsGlobal.EEDSettings = EEDSettings;
 }

@@ -9,14 +9,14 @@
   const changelogBtn = document.getElementById('eed-settings-page-changelog');
 
   try {
-    versionEl.textContent = `v${chrome.runtime.getManifest().version}`;
+    versionEl.textContent = `v${EEDBrowser.runtime.getManifest().version}`;
   } catch {
-    versionEl.textContent = 'v1.8.3';
+    versionEl.textContent = 'v1.9.0';
   }
   versionEl.setAttribute('aria-label', t('changelogView'));
 
   function openChangelogPage() {
-    chrome.runtime.sendMessage({ action: 'openChangelog' });
+    EEDBrowser.runtime.sendMessage({ action: 'openChangelog' }).catch(() => {});
   }
 
   changelogBtn.addEventListener('click', openChangelogPage);

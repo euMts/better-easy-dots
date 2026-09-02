@@ -1,12 +1,22 @@
 {
   "name": "better-easy-dots",
-  "version": "1.8.3",
+  "version": "1.9.0",
   "private": true,
-  "description": "Chrome extension that improves the Easydots time-clock experience",
+  "description": "Browser extension that improves the Easydots time-clock experience (Chrome + Firefox)",
   "scripts": {
     "validate": "node scripts/validate-extension-package.js",
-    "validate:dist": "node scripts/validate-extension-package.js dist",
+    "validate:chrome": "node scripts/validate-extension-package.js dist/chrome chrome",
+    "validate:firefox": "node scripts/validate-extension-package.js dist/firefox firefox",
+    "validate:firefox-dev": "node scripts/validate-extension-package.js load-in-firefox firefox",
+    "validate:json": "node -e \"JSON.parse(require('fs').readFileSync('_locales/en/messages.json'));JSON.parse(require('fs').readFileSync('_locales/pt_BR/messages.json'));JSON.parse(require('fs').readFileSync('manifest.json'));JSON.parse(require('fs').readFileSync('manifest.prod.json'));JSON.parse(require('fs').readFileSync('manifest.firefox.json'));JSON.parse(require('fs').readFileSync('manifest.firefox.prod.json'));console.log('OK');\"",
     "package": "node scripts/package-extension.js",
-    "validate:json": "node -e \"JSON.parse(require('fs').readFileSync('_locales/en/messages.json'));JSON.parse(require('fs').readFileSync('_locales/pt_BR/messages.json'));JSON.parse(require('fs').readFileSync('manifest.json'));JSON.parse(require('fs').readFileSync('manifest.prod.json'));console.log('OK');\""
+    "package:chrome": "node scripts/package-extension.js chrome",
+    "package:firefox": "node scripts/package-extension.js firefox",
+    "firefox:dev": "node scripts/prepare-firefox-dev.js",
+    "lint:firefox": "npm run package:firefox && web-ext lint --source-dir dist/firefox",
+    "test": "npm run validate:json && npm run package && npm run firefox:dev"
+  },
+  "devDependencies": {
+    "web-ext": "^8.4.0"
   }
 }

@@ -1,7 +1,37 @@
-const EED_EXTENSION_URL = 'https://chromewebstore.google.com/detail/better-easy-dots/cfnehkkbmplomaianjpfiaoonmpekbbb';
+const EED_CHROME_STORE_URL =
+  'https://chromewebstore.google.com/detail/better-easy-dots/cfnehkkbmplomaianjpfiaoonmpekbbb';
+/** Update after the first AMO listing is published. */
+const EED_FIREFOX_STORE_URL = 'https://addons.mozilla.org/firefox/addon/better-easy-dots/';
 const EED_DEFAULT_EASYDOTS_URL = 'https://sys.easydots.com.br/';
 
-if (typeof window !== 'undefined') {
-  window.EED_EXTENSION_URL = EED_EXTENSION_URL;
-  window.EED_DEFAULT_EASYDOTS_URL = EED_DEFAULT_EASYDOTS_URL;
+function eedIsFirefoxRuntime() {
+  try {
+    if (typeof browser !== 'undefined' && browser?.runtime?.id) {
+      const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
+      if (/firefox/i.test(ua)) return true;
+      // Firefox exposes both browser.* and chrome.*; InstallTrigger is gecko-only.
+      return typeof InstallTrigger !== 'undefined';
+    }
+  } catch {
+    /* ignore */
+  }
+  try {
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
+    return /firefox/i.test(ua);
+  } catch {
+    return false;
+  }
+}
+
+function eedGetStoreUrl() {
+  return eedIsFirefoxRuntime() ? EED_FIREFOX_STORE_URL : EED_CHROME_STORE_URL;
+}
+
+const eedConfigGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : null;
+if (eedConfigGlobal) {
+  eedConfigGlobal.EED_CHROME_STORE_URL = EED_CHROME_STORE_URL;
+  eedConfigGlobal.EED_FIREFOX_STORE_URL = EED_FIREFOX_STORE_URL;
+  eedConfigGlobal.EED_DEFAULT_EASYDOTS_URL = EED_DEFAULT_EASYDOTS_URL;
+  eedConfigGlobal.eedIsFirefoxRuntime = eedIsFirefoxRuntime;
+  eedConfigGlobal.eedGetStoreUrl = eedGetStoreUrl;
 }
