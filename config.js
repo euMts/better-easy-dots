@@ -27,10 +27,11 @@ function eedGetStoreUrl() {
   return eedIsFirefoxRuntime() ? EED_FIREFOX_STORE_URL : EED_CHROME_STORE_URL;
 }
 
-if (typeof window !== 'undefined') {
-  window.EED_CHROME_STORE_URL = EED_CHROME_STORE_URL;
-  window.EED_FIREFOX_STORE_URL = EED_FIREFOX_STORE_URL;
-  window.EED_DEFAULT_EASYDOTS_URL = EED_DEFAULT_EASYDOTS_URL;
-  window.eedIsFirefoxRuntime = eedIsFirefoxRuntime;
-  window.eedGetStoreUrl = eedGetStoreUrl;
+const eedConfigGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : null;
+if (eedConfigGlobal) {
+  eedConfigGlobal.EED_CHROME_STORE_URL = EED_CHROME_STORE_URL;
+  eedConfigGlobal.EED_FIREFOX_STORE_URL = EED_FIREFOX_STORE_URL;
+  eedConfigGlobal.EED_DEFAULT_EASYDOTS_URL = EED_DEFAULT_EASYDOTS_URL;
+  eedConfigGlobal.eedIsFirefoxRuntime = eedIsFirefoxRuntime;
+  eedConfigGlobal.eedGetStoreUrl = eedGetStoreUrl;
 }

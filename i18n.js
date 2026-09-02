@@ -185,25 +185,15 @@ function applyI18n(root = document) {
   });
 }
 
-if (typeof window !== 'undefined') {
-  window.t = t;
-  window.applyI18n = applyI18n;
-  window.initI18n = initI18n;
-  window.initI18nFromStorage = initI18nFromStorage;
-  window.getActiveDocumentLang = getActiveDocumentLang;
-  window.getLanguagePreference = getLanguagePreference;
-  window.EED_LANGUAGE_SYSTEM = EED_LANGUAGE_SYSTEM;
-  window.EED_SUPPORTED_LOCALES = EED_SUPPORTED_LOCALES;
-}
-
-if (typeof self !== 'undefined') {
-  self.t = t;
-  self.applyI18n = applyI18n;
-  self.initI18n = initI18n;
-  self.initI18nFromStorage = initI18nFromStorage;
-  self.getActiveDocumentLang = getActiveDocumentLang;
-  self.getLanguagePreference = getLanguagePreference;
-  self.EED_LANGUAGE_SYSTEM = EED_LANGUAGE_SYSTEM;
-  self.EED_SUPPORTED_LOCALES = EED_SUPPORTED_LOCALES;
-  self.eedFetchLocaleJson = eedFetchLocaleJson;
+const eedI18nGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : null;
+if (eedI18nGlobal) {
+  eedI18nGlobal.t = t;
+  eedI18nGlobal.applyI18n = applyI18n;
+  eedI18nGlobal.initI18n = initI18n;
+  eedI18nGlobal.initI18nFromStorage = initI18nFromStorage;
+  eedI18nGlobal.getActiveDocumentLang = getActiveDocumentLang;
+  eedI18nGlobal.getLanguagePreference = getLanguagePreference;
+  eedI18nGlobal.EED_LANGUAGE_SYSTEM = EED_LANGUAGE_SYSTEM;
+  eedI18nGlobal.EED_SUPPORTED_LOCALES = EED_SUPPORTED_LOCALES;
+  eedI18nGlobal.eedFetchLocaleJson = eedFetchLocaleJson;
 }

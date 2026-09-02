@@ -2,14 +2,21 @@
 
 Instruções para agentes de IA que alteram este repositório.
 
+**Escopo obrigatório:** este projeto é uma extensão **dual — Chrome e Firefox**. Qualquer trabalho (feature, bugfix, UI, CSS, i18n, packaging, testes, changelog, README) deve ser feito pensando nos **dois** navegadores. Entregar só em um browser não é aceitável.
+
 ## Regra obrigatória: paridade Chrome + Firefox
 
-Toda mudança de produto deve ser pensada, implementada e validada para **Chrome e Firefox**. A extensão deve entregar a mesma UI, os mesmos estilos, os mesmos padrões de interação e as mesmas funcionalidades nos dois navegadores.
+Antes de implementar, perguntar: “funciona igual no Chrome **e** no Firefox?”. Se a resposta não for sim, o trabalho não está completo.
 
-- Não implemente feature “só Chrome” ou “só Firefox” sem deixar isso explicitamente aprovado e documentado.
-- APIs assíncronas do navegador (`storage`, `tabs`, `runtime`, `action`, `windows`) devem passar por `browser-compat.js`; não espalhe chamadas diretas a `chrome.*`/`browser.*` para esses fluxos.
-- Se adicionar arquivo JS/CSS/HTML usado pela extensão, atualize os quatro manifests e os scripts de package/dev Firefox quando aplicável.
-- Sempre rode validação para os dois pacotes antes de encerrar (`npm test`; e `npm run lint:firefox` quando a mudança tocar manifest, permissões ou empacotamento Firefox).
+Toda mudança deve ser **pensada, implementada e validada** para Chrome **e** Firefox. A extensão deve entregar a mesma UI, os mesmos estilos, os mesmos padrões de interação e as mesmas funcionalidades nos dois navegadores.
+
+- **Default:** tudo é para ambos. Não existe “feature Chrome” ou “feature Firefox” por omissão.
+- Não implemente, não mergeie e não considere pronto algo que só funciona / só foi testado em um browser, salvo aprovação explícita do usuário **e** documentação clara da exceção.
+- APIs assíncronas do navegador (`storage`, `tabs`, `runtime`, `action`, `windows`) devem passar por `browser-compat.js` / `EEDBrowser`; não espalhe chamadas diretas a `chrome.*` / `browser.*` para esses fluxos.
+- Se adicionar arquivo JS/CSS/HTML usado pela extensão, atualize os **quatro** manifests e os scripts de package/dev Firefox quando aplicável.
+- Diferenças inevitáveis de plataforma (ex.: `service_worker` vs `background.scripts`, permissão `windows` só no Chrome, match patterns sem porta no Firefox, origins só em `host_permissions` / `content_scripts.matches` — Firefox MV3 rejeita URLs em `permissions`) ficam isoladas nos manifests / packaging — o comportamento do produto continua paritário.
+- Sempre valide os **dois** pacotes antes de encerrar (`npm test`; e `npm run lint:firefox` quando a mudança tocar manifest, permissões ou empacotamento Firefox).
+- Ao testar manualmente: recarregar no Chrome **e** no Firefox (`load-in-firefox/` via `npm run firefox:dev` — nunca o root do repo no Firefox).
 
 ## Regra obrigatória: versão + changelog
 
@@ -55,8 +62,7 @@ Se várias features da mesma sessão ainda não foram publicadas na loja e acaba
 6. **Atualizar READMEs**:
    - `README.md` — badge e linha “Versão atual”
    - `README.en.md` — badge e “Current version”
-7. **Conferir** `docs/firefox.md` se mencionar versão / gecko ID / empacote.
-8. **Validar** antes de encerrar:
+7. **Validar** antes de encerrar:
 
 ```bash
 npm run validate:json
@@ -67,11 +73,39 @@ Popup e settings leem a versão de `EEDBrowser.runtime.getManifest().version` �
 
 ### Chrome + Firefox
 
-- **Uma semver** para ambos os browsers.
+- Entrega sempre é **par**: mesmo código de produto, mesma semver, mesmos itens de changelog.
+- **Uma semver** para ambos os browsers (os quatro manifests com a mesma `version`).
 - Gecko ID fixo: `better-easy-dots@matheuspass.dev` (não mudar após a 1ª publicação AMO).
 - Packaging: `npm run package` → `builds/better-easy-dots-chrome-vX.Y.Z.zip` + `builds/better-easy-dots-firefox-vX.Y.Z.zip`.
-- `EED_CHANGELOG_LAST_SHIPPED_VERSION`: atualize quando a versão estiver ao vivo **nas duas lojas** (CWS + AMO).
-- Refactors só de packaging/docs/CI **sem** mudança de produto: não bumpam versão.
+- `EED_CHANGELOG_LAST_SHIPPED_VERSION`: atualize quando a versão estiver ao vivo **nas duas lojas** (CWS + AMO). **Não** use essa constante para o badge visual “Novo”/“New”.
+- Refactors só de packaging/CI **sem** mudança de produto: não bumpam versão.
+
+---
+
+## Changelog e badge “novo/new”
+
+Sempre que uma nova versão for adicionada ao changelog:
+
+- A versão mais recente deve ficar no topo de `EED_CHANGELOG_ENTRIES` (a renderização também ordena por semver decrescente: `1.10.0` > `1.9.9`).
+- **Apenas a versão mais recente** pode exibir a label **novo** (PT) / **new** (EN).
+- Versões anteriores **nunca** devem manter a label “novo”/“new”.
+- A label “novo”/“new” significa **última versão listada no changelog**, não “não lida pelo usuário”.
+- Não usar `localStorage`, `chrome.storage` / `EEDBrowser.storage` ou estado por usuário para decidir essa label.
+- `eedLastSeenChangelogVersion` controla **somente** a abertura automática da página de novidades — não o badge.
+- Se um dia for preciso indicar versões não lidas, criar **outro** estado/texto separado. Não reutilizar o badge “novo”/“new”.
+- A renderização deve usar lógica automática (`index === 0` via `eedShouldShowChangelogNewBadge`). Não marcar várias entradas com `isNew: true`.
+- Ao atualizar versão em manifest/package/changelog, conferir que **somente** a última entrada aparece como nova.
+
+## Atualização de versão
+
+Quando a tarefa exigir bump de versão:
+
+- Atualizar os quatro manifests (Chrome/Firefox, dev/prod).
+- Atualizar `package.json` e lockfile, se aplicável.
+- Atualizar changelog PT/EN (entrada no topo, ou itens na entrada da sessão).
+- Garantir que somente a entrada mais recente do changelog tenha badge “novo”/“new”.
+- Não deixar versões antigas marcadas como novas.
+- Não abrir uma versão nova no meio da sessão para cada feature — acumule na versão da entrega.
 
 ---
 
@@ -141,9 +175,9 @@ Atualizar fallback:
 return EEDBrowser.runtime?.getManifest?.()?.version || '1.2.0';
 ```
 
-- Qualquer versão **maior** que `EED_CHANGELOG_LAST_SHIPPED_VERSION` recebe o badge **Novo** / **New** (independente de `eedLastSeenChangelogVersion`).
-- `eedLastSeenChangelogVersion` controla só a abertura automática do changelog.
-- Após publicar **nas duas lojas** (Chrome Web Store + AMO), atualize `EED_CHANGELOG_LAST_SHIPPED_VERSION` para a versão publicada.
+- A **primeira** entrada do changelog (versão mais recente, após ordenação semver) recebe o badge **Novo** / **New**. As demais **nunca** recebem esse badge.
+- `eedLastSeenChangelogVersion` controla só a abertura automática do changelog — não a label “novo”/“new”.
+- Após publicar **nas duas lojas** (Chrome Web Store + AMO), atualize `EED_CHANGELOG_LAST_SHIPPED_VERSION` para a versão publicada (marcador interno de loja, não do badge).
 - A linha auxiliar da página usa `changelogUpdatedOn` com a `date` da entrada mais recente (não “Versão X · Veja o que mudou”).
 
 ### 2. `_locales/pt_BR/messages.json`
@@ -193,14 +227,18 @@ em `manifest.json`, `manifest.prod.json`, `manifest.firefox.json` e `manifest.fi
 
 ## O que não fazer
 
+- Implementar, validar ou “fechar” trabalho só no Chrome ou só no Firefox.
+- Assumir que “funcionou no Chrome” = pronto (o mesmo vale para Firefox).
 - Texto de changelog hardcoded em `changelog.js`, `changelog.html` ou CSS.
 - Só PT ou só EN.
 - Bump de versão no manifest sem entrada em `EED_CHANGELOG_ENTRIES`.
 - Abrir versão nova no meio da sessão para cada feature — acumule na versão da entrega.
 - Remover versões antigas do histórico (só adicionar no topo; consolidar só entradas ainda não publicadas na loja).
 - Abrir changelog dentro do popup.
+- Marcar mais de uma versão com badge “novo”/“new”, ou decidir esse badge por `EED_CHANGELOG_LAST_SHIPPED_VERSION` / storage.
 - Commitar sem validar que `_locales/en/messages.json` e `_locales/pt_BR/messages.json` são JSON válidos.
 - Bumpar só manifests Chrome e esquecer os Firefox (os quatro devem bater).
+- Carregar a extensão temporária no Firefox a partir da raiz do repo (use `load-in-firefox/`).
 
 ---
 
@@ -227,7 +265,7 @@ console.log('OK');
 
 Após recarregar a extensão em `chrome://extensions` (e no Firefox via `about:debugging`), conferir:
 
-- `changelog.html` mostra a nova versão com badge Novo/New
+- `changelog.html` mostra a versão mais recente com badge Novo/New **somente nessa entrada** (nenhuma versão anterior com a label)
 - a linha auxiliar mostra a data de atualização (não “Versão X · Veja o que mudou”)
 - `settings.html` e popup exibem `v<versão-do-manifest>`
 - README badges batem com o manifest

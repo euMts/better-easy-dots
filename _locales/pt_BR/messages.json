@@ -59,6 +59,14 @@
     "message": "Abrir Easydots",
     "description": "Botão do popup para abrir o Easydots"
   },
+  "popupStatusNeedsSiteAccess": {
+    "message": "O Firefox ainda não permitiu a extensão nesta página. Clique em Permitir e recarregue.",
+    "description": "Popup quando o content script não injeta por falta de permissão de host"
+  },
+  "popupGrantSiteAccess": {
+    "message": "Permitir nesta página",
+    "description": "Botão do popup para conceder host permission no Firefox"
+  },
   "settingsPageTitle": {
     "message": "Configurações — Better Easy Dots",
     "description": "Título da página de configurações"
@@ -1545,6 +1553,30 @@
   },
   "changelogV190Item4": {
     "message": "Corrige o flip dos cards no Firefox para o texto original não ficar por cima do verso",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item5": {
+    "message": "Firefox passa a injetar os recursos na página (incluindo Live Server em localhost) mesmo com permissões de site opcionais",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item6": {
+    "message": "No Firefox, o popup pode liberar a página e o cálculo de solicitações pendentes usa o background quando o fetch da página é bloqueado",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item7": {
+    "message": "Corrige a injeção da feature de solicitações pendentes no Firefox.",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item8": {
+    "message": "Garante que a barra Better Easy Dots apareça na lista de solicitações mesmo quando o cálculo não puder ser concluído.",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item9": {
+    "message": "Melhora a compatibilidade de permissões e injeção manual via popup no Firefox.",
+    "description": "Item do changelog v1.9.0"
+  },
+  "changelogV190Item10": {
+    "message": "Mantém paridade visual e funcional entre Chrome e Firefox na página de solicitações.",
     "description": "Item do changelog v1.9.0"
   },
   "changelogV183Item1": {

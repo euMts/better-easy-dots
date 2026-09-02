@@ -59,6 +59,14 @@
     "message": "Open Easydots",
     "description": "Popup button to open Easydots"
   },
+  "popupStatusNeedsSiteAccess": {
+    "message": "Firefox has not allowed the extension on this page yet. Click Allow and reload.",
+    "description": "Popup when the content script did not inject because host permission is missing"
+  },
+  "popupGrantSiteAccess": {
+    "message": "Allow on this page",
+    "description": "Popup button to grant host permission on Firefox"
+  },
   "settingsPageTitle": {
     "message": "Settings — Better Easy Dots",
     "description": "Settings page title"
@@ -1545,6 +1553,30 @@
   },
   "changelogV190Item4": {
     "message": "Fixes card flips in Firefox so original site text no longer shows over the back face",
+    "description": "Changelog v1.9.0 item"
+  },
+  "changelogV190Item5": {
+    "message": "Firefox now injects page features (including Live Server on localhost) even when site permissions are optional",
+    "description": "Changelog v1.9.0 item"
+  },
+  "changelogV190Item6": {
+    "message": "On Firefox, the popup can grant page access and pending-request impact falls back to background fetch when the page fetch is blocked",
+    "description": "Changelog v1.9.0 item"
+  },
+  "changelogV190Item7": {
+    "message": "Fixes pending requests feature injection on Firefox.",
+    "description": "Changelog v1.9.0 item"
+  },
+  "changelogV190Item8": {
+    "message": "Ensures the Better Easy Dots summary bar appears on the requests list even when impact calculation cannot be completed.",
+    "description": "Changelog v1.9.0 item"
+  },
+  "changelogV190Item9": {
+    "message": "Improves Firefox permission handling and manual injection through the popup.",
+    "description": "Changelog v1.9.0 item"
+  },
+  "changelogV190Item10": {
+    "message": "Keeps visual and functional parity between Chrome and Firefox on the requests page.",
     "description": "Changelog v1.9.0 item"
   },
   "changelogV183Item1": {

@@ -77,7 +77,16 @@
     },
     runtime: {
       get id() {
-        return api?.runtime?.id || '';
+        try {
+          return (
+            api?.runtime?.id ||
+            callbackApi?.runtime?.id ||
+            promiseApi?.runtime?.id ||
+            ''
+          );
+        } catch {
+          return '';
+        }
       },
       get onInstalled() {
         return api?.runtime?.onInstalled;
@@ -132,6 +141,30 @@
       sendMessage(tabId, message) {
         return callApi(['tabs', 'sendMessage'], [tabId, message]);
       },
+      get(tabId) {
+        return callApi(['tabs', 'get'], [tabId]);
+      },
+      reload(tabId, reloadProperties) {
+        return reloadProperties === undefined
+          ? callApi(['tabs', 'reload'], [tabId])
+          : callApi(['tabs', 'reload'], [tabId, reloadProperties]);
+      },
+    },
+    permissions: {
+      contains(permissions) {
+        return callApi(['permissions', 'contains'], [permissions]);
+      },
+      request(permissions) {
+        return callApi(['permissions', 'request'], [permissions]);
+      },
+    },
+    scripting: {
+      executeScript(details) {
+        return callApi(['scripting', 'executeScript'], [details]);
+      },
+      insertCSS(details) {
+        return callApi(['scripting', 'insertCSS'], [details]);
+      },
     },
     windows: {
       update(windowId, updateInfo) {
@@ -148,5 +181,72 @@
     },
   };
 
+  function isFirefoxRuntime() {
+    try {
+      const ua = typeof navigator !== 'undefined' ? String(navigator.userAgent || '') : '';
+      if (/firefox/i.test(ua)) return true;
+    } catch {
+      /* some workers omit navigator */
+    }
+    try {
+      return typeof global.browser !== 'undefined' && typeof global.browser.runtime?.getBrowserInfo === 'function';
+    } catch {
+      return false;
+    }
+  }
+
+  function isDevExtensionPackage() {
+    try {
+      const manifest = EEDBrowser.runtime.getManifest() || {};
+      const haystack = [
+        ...(manifest.content_scripts || []).flatMap((cs) => cs.matches || []),
+        ...(manifest.host_permissions || []),
+      ];
+      return haystack.some((item) => /localhost|127\.0\.0\.1/i.test(String(item)));
+    } catch {
+      return false;
+    }
+  }
+
+  function isFirefoxDebugEnabled() {
+    if (!isFirefoxRuntime()) return false;
+    if (isDevExtensionPackage()) return true;
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('eedDebug') === '1') {
+        return true;
+      }
+    } catch {
+      /* private mode / blocked storage */
+    }
+    try {
+      if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('eedDebug') === '1') {
+        return true;
+      }
+    } catch {
+      /* ignore */
+    }
+    return false;
+  }
+
+  function firefoxDebugLog(...args) {
+    if (!isFirefoxDebugEnabled()) return;
+    console.info('[Better Easy Dots][Firefox Debug]', ...args);
+  }
+
+  EEDBrowser.isFirefox = isFirefoxRuntime();
+  EEDBrowser.isDevPackage = isDevExtensionPackage();
+  EEDBrowser.firefoxDebugLog = firefoxDebugLog;
+
   global.EEDBrowser = EEDBrowser;
+  global.eedFirefoxDebugLog = firefoxDebugLog;
+
+  firefoxDebugLog('browser-compat loaded', {
+    browser: EEDBrowser.isFirefox ? 'firefox' : 'chrome',
+    runtimeId: EEDBrowser.runtime.id || '(none)',
+    version: EEDBrowser.runtime.getManifest()?.version || '',
+    geckoId: EEDBrowser.runtime.getManifest()?.browser_specific_settings?.gecko?.id || '',
+    href: typeof location !== 'undefined' ? String(location.href || '') : '(no location)',
+    origin: typeof location !== 'undefined' ? String(location.origin || '') : '',
+    pathname: typeof location !== 'undefined' ? String(location.pathname || '') : '',
+  });
 })(typeof globalThis !== 'undefined' ? globalThis : this);

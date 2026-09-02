@@ -122,7 +122,7 @@ Horários de trabalho, intervalo, tolerância diária, margem de segurança e id
 4. Clique em **Carregar complemento temporário…**
 5. Selecione `load-in-firefox/manifest.json`
 
-Detalhes: [`docs/firefox.md`](docs/firefox.md).
+> No Firefox, carregue sempre pela pasta `load-in-firefox/` — nunca pela raiz do repo (lá o `manifest.json` é o do Chrome).
 
 ### Chrome Web Store
 
@@ -181,8 +181,7 @@ better-easy-dots/
 │   ├── package-extension.js
 │   └── validate-extension-package.js
 ├── .github/workflows/            # CI + Release
-├── docs/
-│   └── firefox.md
+├── load-in-firefox/              # Gerado por npm run firefox:dev (temporário)
 └── …
 ```
 

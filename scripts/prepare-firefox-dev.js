@@ -11,6 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT_DIRS = [
@@ -102,6 +103,16 @@ function prepareOut(OUT) {
   }
   if (manifest.background?.service_worker) {
     console.error('ERRO pacote Firefox não deve ter background.service_worker');
+    process.exit(1);
+  }
+
+  const validate = spawnSync(
+    process.execPath,
+    [path.join(__dirname, 'validate-extension-package.js'), OUT, 'firefox'],
+    { stdio: 'inherit' }
+  );
+  if (validate.status !== 0) {
+    console.error(`ERRO validação falhou: ${OUT}`);
     process.exit(1);
   }
 
