@@ -52,8 +52,13 @@ const EASydots = {
     if (this.extensionDead) return false;
 
     try {
-      // Accessing extension APIs after reload throws in some browser versions.
-      if (typeof EEDBrowser === 'undefined' || !EEDBrowser.runtime?.id) {
+      // Firefox content scripts may expose id on chrome.* even when browser.* is the preferred API.
+      const runtimeId =
+        (typeof EEDBrowser !== 'undefined' && EEDBrowser.runtime?.id) ||
+        (typeof browser !== 'undefined' && browser.runtime?.id) ||
+        (typeof chrome !== 'undefined' && chrome.runtime?.id) ||
+        '';
+      if (!runtimeId) {
         this.markExtensionDead();
         return false;
       }
@@ -160,6 +165,19 @@ const EASydots = {
     this.pageObserver = null;
     this.pageObserverRoot = null;
     this.tableObserver = null;
+    try {
+      this.pendingPjaxObserver?.disconnect();
+    } catch {
+      /* ignore */
+    }
+    try {
+      this.pendingGridWaiter?.disconnect();
+    } catch {
+      /* ignore */
+    }
+    this.pendingPjaxObserver = null;
+    this.pendingPjaxObserverReady = false;
+    this.pendingGridWaiter = null;
   },
 
   getExtensionAssetUrl(path) {
@@ -170,6 +188,41 @@ const EASydots = {
       this.markExtensionDead();
       return '';
     }
+  },
+
+  getExtensionVersionLabel() {
+    try {
+      if (!this.isExtensionAlive()) return '';
+      const version =
+        EEDBrowser.runtime?.getManifest?.()?.version ||
+        (typeof browser !== 'undefined' && browser.runtime?.getManifest?.()?.version) ||
+        (typeof chrome !== 'undefined' && chrome.runtime?.getManifest?.()?.version) ||
+        '';
+      return version ? `v${version}` : '';
+    } catch {
+      return '';
+    }
+  },
+
+  ensureSidebarSettingsVersion(root = document) {
+    const item = root.querySelector?.(this.SELECTORS.settingsMenuItem) || null;
+    if (!item) return false;
+
+    const versionLabel = this.getExtensionVersionLabel();
+    if (!versionLabel) return Boolean(item);
+
+    let versionEl = item.querySelector('.eed-sidebar-settings-version');
+    if (!versionEl) {
+      versionEl = document.createElement('span');
+      versionEl.className = 'eed-sidebar-settings-version';
+      versionEl.setAttribute('aria-hidden', 'true');
+      const link = item.querySelector('a.eed-sidebar-settings-link, a');
+      if (!link) return Boolean(item);
+      link.appendChild(versionEl);
+    }
+
+    versionEl.textContent = versionLabel;
+    return true;
   },
 
   sendRuntimeMessage(message) {
@@ -4411,13 +4464,21 @@ const EASydots = {
 
     this.removeLegacyNavbarItem();
 
-    if (document.querySelector(this.SELECTORS.settingsMenuItem)) return;
+    if (document.querySelector(this.SELECTORS.settingsMenuItem)) {
+      this.ensureSidebarSettingsVersion();
+      return;
+    }
 
     const menuList = document.querySelector(this.SELECTORS.sidebarMenu);
     if (!menuList) return;
 
     const iconUrl = this.getExtensionAssetUrl('icons/easy-easy-dots.png');
     if (!iconUrl) return;
+
+    const versionLabel = this.getExtensionVersionLabel();
+    const versionHtml = versionLabel
+      ? `<span class="eed-sidebar-settings-version" aria-hidden="true">${versionLabel}</span>`
+      : '';
 
     const li = document.createElement('li');
     li.id = 'eed-sidebar-settings';
@@ -4428,6 +4489,7 @@ const EASydots = {
           <span class="eed-sidebar-settings-label">${t('contentSidebarSettingsLabel')}</span>
         </span>
         ${EXTERNAL_LINK_ICON_SVG}
+        ${versionHtml}
       </a>
     `;
 
@@ -4488,7 +4550,7 @@ const EASydots = {
       document.querySelector(this.SELECTORS.recordsTable) ||
         document.querySelector('.card-box--dashboard') ||
         document.querySelector(this.SELECTORS.sidebarMenu) ||
-        document.querySelector('#solicitacao .grid-view')
+        document.querySelector('#solicitacao .grid-view table, #solicitacao table, #solicitacao .grid-view')
     );
   },
 
@@ -4633,12 +4695,12 @@ const EASydots = {
     }
 
     try {
-      if (typeof this.schedulePendingRequestsSummary === 'function') {
+      if (globalThis.EEDPendingRequestsImpact?.init) {
+        globalThis.EEDPendingRequestsImpact.init(reason);
+      } else if (typeof this.schedulePendingRequestsSummary === 'function') {
         this.schedulePendingRequestsSummary(reason);
       } else {
-        console.warn(
-          '[Better Easy Dots] schedulePendingRequestsSummary ausente — pending-requests-impact.js não carregou?'
-        );
+        console.warn('[Better Easy Dots] Pending requests module not available');
       }
     } catch (error) {
       this.warnFeature('impacto solicitações pendentes', error);
@@ -4675,7 +4737,55 @@ function mutationOriginatesFromEnhancedCard(mutation) {
   );
 }
 
+function eedLogContentBootDiagnostics() {
+  const runtimeId =
+    (typeof EEDBrowser !== 'undefined' && EEDBrowser.runtime?.id) ||
+    (typeof browser !== 'undefined' && browser.runtime?.id) ||
+    (typeof chrome !== 'undefined' && chrome.runtime?.id) ||
+    '';
+  const manifest =
+    (typeof EEDBrowser !== 'undefined' && EEDBrowser.runtime?.getManifest?.()) || {};
+  const matches = (manifest.content_scripts || []).flatMap((cs) => cs.matches || []);
+  const browserName =
+    (typeof EEDBrowser !== 'undefined' && EEDBrowser.isFirefox) ||
+    (typeof eedIsFirefoxRuntime === 'function' && eedIsFirefoxRuntime())
+      ? 'firefox'
+      : 'chrome';
+
+  console.info('[Better Easy Dots] content script', String(location.href), runtimeId || '(sem runtime.id)');
+
+  const fxLog =
+    (typeof eedFirefoxDebugLog === 'function' && eedFirefoxDebugLog) ||
+    (typeof EEDBrowser !== 'undefined' && EEDBrowser.firefoxDebugLog) ||
+    null;
+  fxLog?.('content.js entered', {
+    browser: browserName,
+    runtimeId: runtimeId || '(none)',
+    href: String(location.href || ''),
+    origin: String(location.origin || ''),
+    pathname: String(location.pathname || ''),
+    decodedPath: (() => {
+      try {
+        return decodeURIComponent(location.pathname || '');
+      } catch {
+        return location.pathname;
+      }
+    })(),
+    version: manifest.version || '',
+    geckoId: manifest.browser_specific_settings?.gecko?.id || '',
+    matches,
+    hasEASydots: Boolean(globalThis.EASydots),
+    hasPendingModule: Boolean(globalThis.EEDPendingRequestsImpact?.init),
+    hasSolicitacao: Boolean(document.querySelector('#solicitacao')),
+    hasGrid: Boolean(document.querySelector('#solicitacao .grid-view table, #solicitacao table')),
+    tbodyRows: document.querySelectorAll('#solicitacao table tbody tr').length,
+    summaryBar: Boolean(document.querySelector('.eed-pending-requests-summary')),
+  });
+}
+
 async function init() {
+  eedLogContentBootDiagnostics();
+
   if (!EASydots.isExtensionAlive()) return;
 
   try {

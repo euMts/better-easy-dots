@@ -45,6 +45,27 @@ function isProductionPackage(dir) {
   );
 }
 
+function isFirefoxDevPackage(dir, manifest) {
+  if (isProductionPackage(dir)) return false;
+  const haystack = collectMatchPatterns(manifest);
+  return haystack.some((item) => /localhost|127\.0\.0\.1/i.test(String(item)));
+}
+
+function collectMatchPatterns(manifest) {
+  const matches = (manifest.content_scripts || []).flatMap((cs) => cs.matches || []);
+  const warMatches = (manifest.web_accessible_resources || []).flatMap((war) => war.matches || []);
+  const hostPerms = manifest.host_permissions || [];
+  return [...matches, ...warMatches, ...hostPerms];
+}
+
+function matchPatternHasPort(pattern) {
+  return /^https?:\/\/[^/\s]*:\d+/i.test(String(pattern || ''));
+}
+
+function jsOrderIndexes(js, files) {
+  return files.map((file) => (js || []).indexOf(file));
+}
+
 function existsFile(dir, rel) {
   const full = path.join(dir, rel);
   try {
@@ -242,16 +263,97 @@ function main() {
     }
   }
 
-  const sharedPermissions = target === 'firefox' ? ['storage', 'tabs'] : ['storage', 'tabs', 'windows'];
+  const sharedPermissions =
+    target === 'firefox' ? ['storage', 'tabs', 'scripting', 'activeTab'] : ['storage', 'tabs', 'windows'];
   for (const permission of sharedPermissions) {
     if (manifest.permissions?.includes(permission)) ok(`permission: ${permission}`);
     else err(`permissão compartilhada ausente: ${permission}`);
   }
 
+  if (target === 'firefox') {
+    const hostLikePerms = (manifest.permissions || []).filter((p) => /:\/\//.test(p) || p === '<all_urls>');
+    if (hostLikePerms.length) {
+      err(`Firefox MV3 rejeita origins em permissions (use host_permissions): ${hostLikePerms.join(', ')}`);
+    } else {
+      ok('Firefox permissions sem origins');
+    }
+
+    const hostPerms = manifest.host_permissions || [];
+    const matches = (manifest.content_scripts || []).flatMap((cs) => cs.matches || []);
+    const allPatterns = collectMatchPatterns(manifest);
+    const portPatterns = allPatterns.filter(matchPatternHasPort);
+    if (portPatterns.length) {
+      err(`Firefox não aceita match pattern com porta: ${portPatterns.join(', ')}`);
+    } else {
+      ok('Firefox matches/host_permissions sem porta');
+    }
+
+    const js = manifest.content_scripts?.[0]?.js || [];
+    const requiredJs = ['browser-compat.js', 'content.js', 'pending-requests-impact.js'];
+    const missingJs = requiredJs.filter((file) => !js.includes(file));
+    if (missingJs.length) {
+      err(`content_scripts.js deve incluir: ${missingJs.join(', ')}`);
+    } else {
+      const indexes = jsOrderIndexes(js, requiredJs);
+      if (indexes[0] < indexes[1] && indexes[1] < indexes[2]) {
+        ok('content_scripts.js ordem: browser-compat.js → content.js → pending-requests-impact.js');
+      } else {
+        err('content_scripts.js deve carregar browser-compat.js, depois content.js, depois pending-requests-impact.js');
+      }
+    }
+
+    const isDev = isFirefoxDevPackage(dir, manifest);
+    if (isDev) {
+      ok('pacote Firefox de desenvolvimento');
+      if (!hostPerms.includes('http://127.0.0.1/*')) {
+        err('Firefox dev host_permissions deve incluir http://127.0.0.1/*');
+      } else {
+        ok('host_permissions inclui http://127.0.0.1/*');
+      }
+      if (!hostPerms.includes('http://localhost/*')) {
+        err('Firefox dev host_permissions deve incluir http://localhost/*');
+      } else {
+        ok('host_permissions inclui http://localhost/*');
+      }
+      if (!matches.includes('http://127.0.0.1/*') || !matches.includes('http://localhost/*')) {
+        err('Firefox dev content_scripts.matches deve incluir http://127.0.0.1/* e http://localhost/*');
+      } else {
+        ok('content_scripts.matches inclui localhost e 127.0.0.1 sem porta');
+      }
+      if (hostPerms.includes('<all_urls>')) {
+        ok('Firefox dev pode ter <all_urls> em host_permissions');
+      }
+    } else if (isProductionPackage(dir) || !allPatterns.some((item) => /localhost|127\.0\.0\.1/i.test(item))) {
+      if (hostPerms.includes('<all_urls>')) {
+        err('<all_urls> não é permitido no pacote de produção Firefox');
+      }
+      const hasEasydotsHost =
+        hostPerms.includes('https://sys.easydots.com.br/*') ||
+        hostPerms.includes('https://*.easydots.com.br/*');
+      if (!hasEasydotsHost) {
+        err('Firefox prod host_permissions deve incluir https://sys.easydots.com.br/* ou https://*.easydots.com.br/*');
+      } else {
+        ok('host_permissions inclui Easydots');
+      }
+      const hasEasydotsMatch =
+        matches.includes('https://sys.easydots.com.br/*') ||
+        matches.includes('https://*.easydots.com.br/*');
+      if (!hasEasydotsMatch) {
+        err('Firefox prod content_scripts.matches deve incluir sys.easydots.com.br');
+      } else {
+        ok('content_scripts.matches inclui Easydots');
+      }
+    }
+  }
+
   if (isProductionPackage(dir)) {
     const matches = (manifest.content_scripts || []).flatMap((cs) => cs.matches || []);
     const hostPerms = manifest.host_permissions || [];
-    const localMatches = [...matches, ...hostPerms].filter((m) =>
+    const extraPerms = manifest.permissions || [];
+    if (target === 'firefox' && [...matches, ...hostPerms, ...extraPerms].includes('<all_urls>')) {
+      err('<all_urls> não é permitido no pacote de produção Firefox');
+    }
+    const localMatches = [...matches, ...hostPerms, ...extraPerms].filter((m) =>
       /localhost|127\.0\.0\.1|192\.168\./i.test(m)
     );
     if (localMatches.length) {

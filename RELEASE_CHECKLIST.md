@@ -108,7 +108,50 @@ unzip -q "builds/better-easy-dots-firefox-v${VERSION}.zip" -d /tmp/eed-store-tes
 4. Confirme que não há erros de background / content scripts
 5. Repita os smoke tests 7–12 no Firefox (mesmas checagens no Easydots)
 
-Detalhes: [`docs/firefox.md`](docs/firefox.md).
+Para desenvolvimento local no Firefox: `npm run firefox:dev` e carregue `load-in-firefox/manifest.json` (nunca o `manifest.json` da raiz).
+
+### Firefox local — página de solicitações (obrigatório)
+
+```bash
+npm run firefox:dev
+```
+
+1. Abra `about:debugging#/runtime/this-firefox`
+2. Remova qualquer Better Easy Dots temporário antigo
+3. Carregue `load-in-firefox/manifest.json`
+4. Abra o Live Server: `http://127.0.0.1:5500/website/Controle de Solicitação de Ajustes.html`
+5. Abra o popup da extensão
+6. Clique em **Permitir nesta página** se aparecer
+7. Dê F5
+8. No console da página, confirme:
+   - `[Better Easy Dots] content script`
+   - `[Better Easy Dots] pending requests`
+9. Confirme visualmente a barra Better Easy Dots abaixo da grid
+
+Resultado aceitável no Live Server (sem endpoints `/solicitacao/view/{id}`):
+
+- `Não foi possível calcular o impacto das solicitações pendentes agora.`
+- ou `3 pendentes encontradas · impacto não calculado.`
+
+O importante: a barra **precisa aparecer**, igual ao Chrome.
+
+Logs extras no Firefox dev usam o prefixo `[Better Easy Dots][Firefox Debug]`.
+
+### Firefox — site real logado
+
+1. Abra `https://sys.easydots.com.br/humanresources/solicitacao/index`
+2. Esteja logado
+3. Abra o popup e conceda permissão se necessário
+4. Dê F5
+5. Confirme que a barra aparece
+6. Confirme que a soma das pendentes bate com o Chrome
+
+### Chrome — regressão
+
+1. Carregue o pacote dev/prod do Chrome
+2. Abra a mesma página de solicitações
+3. Confirme que o comportamento não mudou
+4. Confirme que a barra aparece e calcula como antes
 
 ---
 
@@ -142,7 +185,7 @@ English (short):
 | Chrome Web Store | `builds/better-easy-dots-chrome-vX.Y.Z.zip` |
 | Firefox Add-ons (AMO) | `builds/better-easy-dots-firefox-vX.Y.Z.zip` |
 
-Não recompacte a pasta do repositório inteira (isso inclui `website/`, `docs/`, etc. e pode aninhar pastas).
+Não recompacte a pasta do repositório inteira (isso inclui `website/`, scripts, etc. e pode aninhar pastas).
 
 ### GitHub Release (opcional)
 
@@ -168,4 +211,9 @@ npm run lint:firefox        # web-ext lint no pacote Firefox
 npm test                    # validate:json + package
 ```
 
-Após publicar **nas duas lojas** com sucesso, atualize `EED_CHANGELOG_LAST_SHIPPED_VERSION` em `changelog.js`. Se só uma loja estiver ao vivo, espere a outra (ou documente o atraso) antes de avançar o shipped marker.
+Após publicar **nas duas lojas** com sucesso, atualize `EED_CHANGELOG_LAST_SHIPPED_VERSION` em `changelog.js`. Se só uma loja estiver ao vivo, espere a outra (ou documente o atraso) antes de avançar o shipped marker. Esse marcador **não** controla o badge “novo”/“new”.
+
+Verificar a página de novidades/changelog (`changelog.html`) no Chrome **e** no Firefox:
+
+- somente a versão mais recente possui label “novo”/“new”;
+- nenhuma versão anterior continua marcada como “novo”/“new”.

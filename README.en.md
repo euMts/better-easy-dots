@@ -122,7 +122,7 @@ Work hours, break times, daily tolerance, safety margin, and language:
 4. Click **Load Temporary Add-on…**
 5. Select `load-in-firefox/manifest.json`
 
-Details: [`docs/firefox.md`](docs/firefox.md).
+> In Firefox, always load from the `load-in-firefox/` folder — never from the repo root (the root `manifest.json` is the Chrome one).
 
 ### Chrome Web Store
 
@@ -181,8 +181,6 @@ better-easy-dots/
 │   ├── package-extension.js
 │   └── validate-extension-package.js
 ├── .github/workflows/            # CI + Release
-├── docs/
-│   └── firefox.md
 └── …
 ```
 

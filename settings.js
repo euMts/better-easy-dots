@@ -272,10 +272,7 @@ const EEDSettings = {
   },
 };
 
-if (typeof window !== 'undefined') {
-  window.EEDSettings = EEDSettings;
-}
-
-if (typeof self !== 'undefined') {
-  self.EEDSettings = EEDSettings;
+const eedSettingsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : null;
+if (eedSettingsGlobal) {
+  eedSettingsGlobal.EEDSettings = EEDSettings;
 }

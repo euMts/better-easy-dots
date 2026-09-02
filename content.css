@@ -35,6 +35,22 @@
   line-height: 18px;
 }
 
+#eed-sidebar-settings .eed-sidebar-settings-version {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto !important;
+  padding-right: 4px;
+  font-size: 10px !important;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0.55;
+  color: #98a6ad !important;
+  flex-shrink: 0;
+}
+
 #eed-sidebar-settings .eed-sidebar-settings-external {
   display: block;
   width: 14px;
@@ -60,6 +76,10 @@
 
 #wrapper.enlarged #eed-sidebar-settings .eed-sidebar-settings-icon {
   margin-right: 8px !important;
+}
+
+#wrapper.enlarged #eed-sidebar-settings .eed-sidebar-settings-version {
+  display: none;
 }
 
 #table_registro_horario td.eed-time-ok {

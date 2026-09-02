@@ -15,9 +15,10 @@
     }
   },
 
-  "permissions": ["storage", "tabs"],
+  "permissions": ["storage", "tabs", "scripting", "activeTab"],
 
   "host_permissions": [
+    "https://sys.easydots.com.br/*",
     "https://*.acspontodigital.com.br/*",
     "https://*.easydots.com.br/*"
   ],
@@ -52,6 +53,7 @@
   "content_scripts": [
     {
       "matches": [
+        "https://sys.easydots.com.br/*",
         "https://*.acspontodigital.com.br/*",
         "https://*.easydots.com.br/*"
       ],
@@ -77,6 +79,7 @@
         "icons/easy-easy-dots.png"
       ],
       "matches": [
+        "https://sys.easydots.com.br/*",
         "https://*.acspontodigital.com.br/*",
         "https://*.easydots.com.br/*"
       ]

@@ -15,12 +15,14 @@
     }
   },
 
-  "permissions": ["storage", "tabs"],
+  "permissions": ["storage", "tabs", "scripting", "activeTab"],
 
   "host_permissions": [
+    "<all_urls>",
     "http://localhost/*",
     "http://127.0.0.1/*",
     "http://192.168.0.104/*",
+    "https://sys.easydots.com.br/*",
     "https://*.acspontodigital.com.br/*",
     "https://*.easydots.com.br/*"
   ],
@@ -58,6 +60,7 @@
         "http://localhost/*",
         "http://127.0.0.1/*",
         "http://192.168.0.104/*",
+        "https://sys.easydots.com.br/*",
         "https://*.acspontodigital.com.br/*",
         "https://*.easydots.com.br/*"
       ],
@@ -86,6 +89,7 @@
         "http://localhost/*",
         "http://127.0.0.1/*",
         "http://192.168.0.104/*",
+        "https://sys.easydots.com.br/*",
         "https://*.acspontodigital.com.br/*",
         "https://*.easydots.com.br/*"
       ]

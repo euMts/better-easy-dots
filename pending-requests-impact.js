@@ -1,58 +1,114 @@
 /**
  * Pending requests impact summary for /humanresources/solicitacao/index
  * Loaded after content.js defines EASydots; patches methods onto it.
+ *
+ * Use globalThis (not window): Firefox content scripts have window === page window.
  */
 (function attachPendingRequestsImpact(global) {
+  const fxLog =
+    (typeof global.eedFirefoxDebugLog === 'function' && global.eedFirefoxDebugLog) ||
+    (typeof global.EEDBrowser !== 'undefined' && global.EEDBrowser.firefoxDebugLog) ||
+    (() => {});
+
   const host = global.EASydots;
   if (!host) {
     console.error(
       '[Better Easy Dots] pending-requests-impact: EASydots não encontrado. A barra de pendentes não será ativada.'
     );
+    fxLog('pending-requests-impact: EASydots missing', {
+      hasGlobalThisEASydots: Boolean(global.EASydots),
+      hasWindowEASydots: typeof window !== 'undefined' && Boolean(window.EASydots),
+      href: typeof location !== 'undefined' ? location.href : '',
+    });
     return;
   }
 
   const PENDING_STATUS = new Set(['pendente', 'pending']);
   const SUMMARY_CLASS = 'eed-pending-requests-summary';
   const SUMMARY_SELECTOR = `.${SUMMARY_CLASS}`;
+  const GRID_WAIT_MS = 12000;
+  const EASYDOTS_ORIGIN = 'https://sys.easydots.com.br';
 
   Object.assign(host, {
     pendingRequestImpactCache: host.pendingRequestImpactCache || new Map(),
     pendingImpactRunId: 0,
     pendingImpactTimer: null,
     pendingImpactBusy: false,
+    pendingGridWaiter: null,
+    pendingPjaxObserver: null,
+    pendingPjaxObserverReady: false,
     PENDING_IMPACT_DEBOUNCE_MS: 200,
     PENDING_IMPACT_CONCURRENCY: 3,
 
-    isSolicitacaoIndexPage() {
-      const path = String(window.location.pathname || '');
-      if (/\/humanresources\/solicitacao\/index\/?$/i.test(path)) return true;
-      // Local HTML mirrors / Live Server
-      if (/Controle de Solicita/i.test(path) || /Controle de Solicita/i.test(document.title || '')) {
-        return Boolean(document.querySelector('#solicitacao .grid-view, #solicitacao table.table'));
+    getDecodedPathname() {
+      const rawPath = String((typeof location !== 'undefined' && location.pathname) || '');
+      try {
+        return decodeURIComponent(rawPath);
+      } catch {
+        return rawPath;
       }
-      return Boolean(document.querySelector('#solicitacao[data-pjax-container] .grid-view'));
+    },
+
+    isLocalMirrorHost() {
+      const hostname = String((typeof location !== 'undefined' && location.hostname) || '').toLowerCase();
+      return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '192.168.0.104';
+    },
+
+    isSolicitacaoIndexPage() {
+      const path = this.getDecodedPathname();
+      if (/\/humanresources\/solicitacao\/index\/?$/i.test(path)) return true;
+      // Local HTML mirrors / Live Server (pathname may stay percent-encoded in Firefox)
+      if (/Controle de Solicita/i.test(path) || /Controle de Solicita/i.test(document.title || '')) {
+        return Boolean(document.querySelector('#solicitacao'));
+      }
+      if (document.querySelector('#solicitacao .grid-view table, #solicitacao table')) return true;
+      return Boolean(document.querySelector('#solicitacao[data-pjax-container], #solicitacao'));
     },
 
     getSolicitacaoGridRoot() {
-      return (
+      const fromGrid =
         document.querySelector('#solicitacao .grid-view') ||
         document.querySelector('#solicitacao table.table')?.closest('.grid-view') ||
-        null
-      );
+        document.querySelector('#solicitacao table')?.closest('.grid-view');
+      if (fromGrid) return fromGrid;
+
+      const table = document.querySelector('#solicitacao table.table, #solicitacao table');
+      if (table) return table.closest('.grid-view') || table.parentElement || table;
+
+      return null;
     },
 
     schedulePendingRequestsSummary(reason = 'mutation') {
       if (!this.isExtensionAlive()) return;
-      if (!this.isSolicitacaoIndexPage() && !this.getSolicitacaoGridRoot()) {
+
+      this.setupSolicitacaoPjaxObserverOnce();
+
+      const isPage = this.isSolicitacaoIndexPage();
+      const grid = this.getSolicitacaoGridRoot();
+      fxLog('schedulePendingRequestsSummary', {
+        reason,
+        isPage,
+        hasGrid: Boolean(grid),
+        path: this.getDecodedPathname(),
+        href: typeof location !== 'undefined' ? location.href : '',
+      });
+
+      if (!isPage && !grid) {
         this.removePendingRequestsSummary();
         this.debugLog('pending-impact skip: not solicitacao page');
         return;
       }
 
       this.debugLog('schedulePendingRequestsSummary', reason, {
-        path: window.location.pathname,
-        grid: Boolean(this.getSolicitacaoGridRoot()),
+        path: this.getDecodedPathname(),
+        grid: Boolean(grid),
       });
+
+      if (!grid) {
+        this.waitForSolicitacaoGridAndRender();
+        return;
+      }
+
       clearTimeout(this.pendingImpactTimer);
       this.pendingImpactTimer = setTimeout(() => {
         this.pendingImpactTimer = null;
@@ -62,6 +118,76 @@
       }, this.PENDING_IMPACT_DEBOUNCE_MS);
     },
 
+    waitForSolicitacaoGridAndRender() {
+      if (this.pendingGridWaiter || !this.isExtensionAlive()) return;
+
+      fxLog('waiting for #solicitacao grid', {
+        path: this.getDecodedPathname(),
+        hasSolicitacao: Boolean(document.querySelector('#solicitacao')),
+      });
+
+      const started = Date.now();
+      const tryRender = () => {
+        if (!this.isExtensionAlive()) return true;
+        if (!this.getSolicitacaoGridRoot()) return false;
+        this.ensurePendingRequestsSummary().catch((error) => {
+          this.warnFeature('impacto solicitações pendentes', error);
+        });
+        return true;
+      };
+
+      if (tryRender()) return;
+
+      const observer = new MutationObserver(() => {
+        if (tryRender() || Date.now() - started > GRID_WAIT_MS) {
+          observer.disconnect();
+          this.pendingGridWaiter = null;
+        }
+      });
+      observer.observe(document.documentElement || document.body, { childList: true, subtree: true });
+      this.pendingGridWaiter = observer;
+
+      setTimeout(() => {
+        if (this.pendingGridWaiter !== observer) return;
+        observer.disconnect();
+        this.pendingGridWaiter = null;
+        if (this.getSolicitacaoGridRoot()) {
+          this.ensurePendingRequestsSummary().catch((error) => {
+            this.warnFeature('impacto solicitações pendentes', error);
+          });
+        } else {
+          fxLog('grid wait timed out', { path: this.getDecodedPathname() });
+        }
+      }, GRID_WAIT_MS);
+    },
+
+    setupSolicitacaoPjaxObserverOnce() {
+      if (this.pendingPjaxObserver || !this.isExtensionAlive()) return;
+
+      const container = document.querySelector('#solicitacao[data-pjax-container], #solicitacao');
+      if (!container) return;
+      this.pendingPjaxObserverReady = true;
+
+      try {
+        this.pendingPjaxObserver?.disconnect();
+      } catch {
+        /* ignore */
+      }
+
+      const observer = new MutationObserver((mutations) => {
+        const relevant = mutations.some((mutation) => {
+          const target = mutation.target;
+          const element = target.nodeType === Node.TEXT_NODE ? target.parentElement : target;
+          return !element?.closest?.('.eed-pending-requests-summary');
+        });
+        if (!relevant) return;
+        this.schedulePendingRequestsSummary('pjax');
+      });
+      observer.observe(container, { childList: true, subtree: true });
+      this.pendingPjaxObserver = observer;
+      fxLog('PJAX observer attached on #solicitacao');
+    },
+
     removePendingRequestsSummary() {
       document.querySelectorAll(SUMMARY_SELECTOR).forEach((el) => el.remove());
     },
@@ -69,20 +195,29 @@
     extractPendingRequestsFromGrid(gridRoot = this.getSolicitacaoGridRoot()) {
       if (!gridRoot) return [];
 
-      const rows = gridRoot.querySelectorAll('table tbody tr[data-key]');
+      const table = gridRoot.matches?.('table') ? gridRoot : gridRoot.querySelector('table');
+      const rows = (table || gridRoot).querySelectorAll('tbody tr');
       const requests = [];
 
       rows.forEach((row) => {
         const cells = row.querySelectorAll('td');
-        if (cells.length < 7) return;
+        if (cells.length < 5) return;
 
-        const statusText = (cells[6]?.textContent || '').replace(/\s+/g, ' ').trim();
-        if (!PENDING_STATUS.has(statusText.toLowerCase())) return;
+        const cellText = (cell) => (cell?.textContent || '').replace(/\s+/g, ' ').trim();
+        let statusText = cellText(cells[6]);
+        if (!PENDING_STATUS.has(statusText.toLowerCase())) {
+          const statusCell = [...cells].find((td) =>
+            PENDING_STATUS.has(cellText(td).toLowerCase())
+          );
+          if (!statusCell) return;
+          statusText = cellText(statusCell);
+        }
 
         const id = String(row.getAttribute('data-key') || '').trim();
         const viewAnchor =
           row.querySelector('a[href*="/solicitacao/view/"]') ||
-          row.querySelector('a.loading[href*="/view/"]');
+          row.querySelector('a.loading[href*="/view/"]') ||
+          row.querySelector('a[href*="/view/"]');
         const href = viewAnchor?.getAttribute('href') || '';
         const idFromHref = (href.match(/\/solicitacao\/view\/(\d+)/i) ||
           href.match(/\/view\/(\d+)/i) ||
@@ -97,14 +232,20 @@
 
         requests.push({
           id: String(requestId),
-          reason: (cells[1]?.textContent || '').replace(/\s+/g, ' ').trim(),
+          reason: cellText(cells[1]),
           status: statusText,
-          date: (cells[2]?.textContent || '').replace(/\s+/g, ' ').trim(),
-          endDate: (cells[3]?.textContent || '').replace(/\s+/g, ' ').trim(),
+          date: cellText(cells[2]),
+          endDate: cellText(cells[3]),
           viewUrl,
           impactSeconds: null,
           confidence: 'unknown',
         });
+      });
+
+      fxLog('extractPendingRequestsFromGrid', {
+        table: Boolean(table),
+        rowCount: rows.length,
+        pendingCount: requests.length,
       });
 
       return requests;
@@ -239,32 +380,78 @@
       return result;
     },
 
-    async fetchRequestDetails(id, url) {
-      const cached = this.pendingRequestImpactCache.get(id);
-      if (cached?.promise) return cached.promise;
-      if (cached?.result) return cached.result;
+    resolveSolicitacaoViewUrl(href) {
+      if (!href) return null;
 
-      const absoluteUrl = (() => {
-        try {
-          return new URL(url, window.location.origin).href;
-        } catch {
-          return url;
+      const isLocalMirror = this.isLocalMirrorHost();
+      if (
+        href.startsWith('/humanresources/solicitacao/view/') ||
+        href.startsWith('/solicitacao/view/')
+      ) {
+        if (isLocalMirror) {
+          return `${EASYDOTS_ORIGIN}${href.startsWith('/humanresources/') ? href : `/humanresources${href}`}`;
         }
-      })();
+        try {
+          return new URL(href, location.origin).href;
+        } catch {
+          return href;
+        }
+      }
 
-      const promise = (async () => {
+      try {
+        const resolved = new URL(href, location.href);
+        if (
+          isLocalMirror &&
+          resolved.origin === location.origin &&
+          /\/solicitacao\/view\//i.test(resolved.pathname)
+        ) {
+          return `${EASYDOTS_ORIGIN}${resolved.pathname}${resolved.search}`;
+        }
+        return resolved.href;
+      } catch {
+        return href;
+      }
+    },
+
+    async fetchHtmlDocument(absoluteUrl) {
+      fxLog('fetchHtmlDocument', absoluteUrl);
+      try {
         const response = await fetch(absoluteUrl, {
           method: 'GET',
           credentials: 'include',
           cache: 'no-store',
           headers: { Accept: 'text/html' },
         });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.text();
+      } catch (pageError) {
+        fxLog('fetchHtmlDocument page fetch failed, trying background', {
+          url: absoluteUrl,
+          error: String(pageError?.message || pageError),
+        });
+        try {
+          const viaBg = await EEDBrowser.runtime.sendMessage({ action: 'fetchHtml', url: absoluteUrl });
+          if (viaBg?.ok && viaBg.html) {
+            fxLog('fetchHtmlDocument background fallback ok', absoluteUrl);
+            return viaBg.html;
+          }
+          fxLog('fetchHtmlDocument background fallback failed', viaBg);
+        } catch (bgError) {
+          fxLog('fetchHtmlDocument background error', String(bgError?.message || bgError));
         }
+        throw pageError;
+      }
+    },
 
-        const html = await response.text();
+    async fetchRequestDetails(id, url) {
+      const cached = this.pendingRequestImpactCache.get(id);
+      if (cached?.promise) return cached.promise;
+      if (cached?.result) return cached.result;
+
+      const absoluteUrl = this.resolveSolicitacaoViewUrl(url) || url;
+
+      const promise = (async () => {
+        const html = await this.fetchHtmlDocument(absoluteUrl);
         const doc = new DOMParser().parseFromString(html, 'text/html');
         return { html, doc };
       })();
@@ -532,14 +719,26 @@
       if (!this.isExtensionAlive()) return;
 
       const gridRoot = this.getSolicitacaoGridRoot();
+      const isPage = this.isSolicitacaoIndexPage();
       this.debugLog('ensurePendingRequestsSummary', {
         hasGrid: Boolean(gridRoot),
-        isPage: this.isSolicitacaoIndexPage(),
+        isPage,
+      });
+      fxLog('ensurePendingRequestsSummary', {
+        hasGrid: Boolean(gridRoot),
+        isPage,
+        solicitacao: Boolean(document.querySelector('#solicitacao')),
+        table: Boolean(document.querySelector('#solicitacao .grid-view table, #solicitacao table')),
+        existingBar: Boolean(document.querySelector(SUMMARY_SELECTOR)),
       });
 
       if (!gridRoot) {
-        this.removePendingRequestsSummary();
-        this.debugLog('pending-impact: grid not found');
+        if (isPage) {
+          this.waitForSolicitacaoGridAndRender();
+        } else {
+          this.removePendingRequestsSummary();
+          this.debugLog('pending-impact: grid not found');
+        }
         return;
       }
 
@@ -551,14 +750,17 @@
       const bar = this.ensurePendingRequestsSummaryBarElement(gridRoot);
       const requests = this.extractPendingRequestsFromGrid(gridRoot);
       this.debugLog('pending-impact requests', requests.map((r) => ({ id: r.id, status: r.status })));
+      fxLog('found pending rows', requests.map((r) => ({ id: r.id, status: r.status, viewUrl: r.viewUrl })));
 
       if (requests.length === 0) {
         this.renderPendingRequestsSummaryBar(bar, { mode: 'empty' });
+        fxLog('rendered summary bar', { state: 'empty', selector: SUMMARY_SELECTOR });
         return;
       }
 
       const runId = ++this.pendingImpactRunId;
       this.renderPendingRequestsSummaryBar(bar, { mode: 'loading' });
+      fxLog('rendered summary bar', { state: 'loading', pending: requests.length });
 
       try {
         const result = await this.calculatePendingRequestsImpact(requests, runId);
@@ -573,18 +775,47 @@
           failed: result.failed,
         });
         this.renderPendingRequestsSummaryBar(bar, { mode: 'ready', result });
+        fxLog('rendered summary bar', {
+          state: result.failed ? 'error' : result.complete ? 'ready' : 'unknown',
+          pendingCount: result.pendingCount,
+          calculatedCount: result.calculatedCount,
+          failed: result.failed,
+        });
       } catch (error) {
         if (runId !== this.pendingImpactRunId) return;
         this.warnFeature('impacto solicitações pendentes', error);
+        fxLog('calculatePendingRequestsImpact threw', String(error?.message || error));
         if (document.contains(bar)) {
           this.renderPendingRequestsSummaryBar(bar, { mode: 'error' });
+          fxLog('rendered summary bar', { state: 'error' });
         }
       }
     },
   });
 
+  global.EEDPendingRequestsImpact = {
+    init(reason = 'init') {
+      host.schedulePendingRequestsSummary(reason);
+    },
+    refresh(reason = 'refresh') {
+      host.schedulePendingRequestsSummary(reason);
+    },
+    renderSummaryBar(state = { mode: 'error' }) {
+      const gridRoot = host.getSolicitacaoGridRoot();
+      if (!gridRoot) return null;
+      const bar = host.ensurePendingRequestsSummaryBarElement(gridRoot);
+      host.renderPendingRequestsSummaryBar(bar, state);
+      return bar;
+    },
+  };
+
   console.info('[Better Easy Dots] pending-requests-impact ativo');
-})(typeof window !== 'undefined' ? window : globalThis);
+  console.info('[Better Easy Dots] pending requests');
+  fxLog('pending-requests-impact attached', {
+    hasInit: typeof global.EEDPendingRequestsImpact.init === 'function',
+    href: typeof location !== 'undefined' ? location.href : '',
+  });
+})(typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this);
 
 // Boot after EASydots methods from content.js + this patch are ready.
 globalThis.__eedBoot?.();
