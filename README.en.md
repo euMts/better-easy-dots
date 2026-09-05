@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/README-Português_(BR)-green" alt="README in Portuguese"></a>
-  <img src="https://img.shields.io/badge/version-1.9.0-purple" alt="Version 1.9.0">
+  <img src="https://img.shields.io/badge/version-1.9.1-purple" alt="Version 1.9.1">
   <img src="https://img.shields.io/badge/Manifest-V3-blue" alt="Manifest V3">
   <img src="https://img.shields.io/badge/Chrome-supported-green" alt="Chrome">
   <img src="https://img.shields.io/badge/Firefox-supported-orange" alt="Firefox">
@@ -215,7 +215,7 @@ No data is sent to extension servers.
 
 - **Browsers:** Google Chrome and Mozilla Firefox (Manifest V3)
 - **Sites:** `https://*.easydots.com.br/*` (default: `https://sys.easydots.com.br/`), `https://*.acspontodigital.com.br/*` (legacy)
-- **Current version:** `1.9.0`
+- **Current version:** `1.9.1`
 - **Gecko ID:** `better-easy-dots@matheuspass.dev`
 
 The extension depends on the current Easydots HTML structure (`#table_registro_horario`, `#btnRegister`, navbar). Site updates may require selector adjustments.

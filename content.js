@@ -1982,14 +1982,6 @@ const EASydots = {
 
     const records = this.getRecords();
     let balanceRow = table.querySelector('#eed-day-balance-row');
-
-    if (!records.length) {
-      this.clearDayBalanceClockRefresh();
-      balanceRow?.remove();
-      this.adjustRecordsContainer(scrollContainer, false);
-      return;
-    }
-
     const loadedSettings = settings || await EEDSettings.load();
     const scheduleConfigured = EEDSettings.isScheduleConfigured(loadedSettings);
 

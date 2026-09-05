@@ -1539,6 +1539,10 @@
     "message": "Esta é uma estimativa baseada nas solicitações pendentes visíveis e nos detalhes disponíveis. O banco de horas só muda após aprovação e processamento pelo Easydots.",
     "description": "Custom tooltip explaining pending requests impact estimate"
   },
+  "changelogV191Item1": {
+    "message": "Card de saldo do dia aparece mesmo sem registros de ponto, inclusive o aviso para configurar a jornada",
+    "description": "Item do changelog v1.9.1"
+  },
   "changelogV190Item1": {
     "message": "Suporte ao Firefox com a mesma camada de APIs, abas, storage e badge do Chrome",
     "description": "Item do changelog v1.9.0"

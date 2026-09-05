@@ -5,6 +5,13 @@ const EED_CHANGELOG_LAST_SHIPPED_VERSION = '1.8.2';
 
 const EED_CHANGELOG_ENTRIES = [
   {
+    version: '1.9.1',
+    date: '2026-09-05',
+    items: [
+      'changelogV191Item1',
+    ],
+  },
+  {
     version: '1.9.0',
     date: '2026-09-01',
     items: [
@@ -197,9 +204,9 @@ const EED_CHANGELOG_ENTRIES = [
 
 function eedGetCurrentVersion() {
   try {
-    return EEDBrowser.runtime?.getManifest?.()?.version || '1.9.0';
+    return EEDBrowser.runtime?.getManifest?.()?.version || '1.9.1';
   } catch {
-    return '1.9.0';
+    return '1.9.1';
   }
 }
 
