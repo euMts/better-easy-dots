@@ -4,7 +4,7 @@
     "description": "Nome da extensão"
   },
   "extensionDescription": {
-    "message": "Saldo do dia, cores, sugestões, banco de horas e impacto de solicitações no Easydots",
+    "message": "No Easydots: saldo do dia, cores, sugestões de horário, simulador, banco de horas e solicitações pendentes",
     "description": "Descrição da extensão"
   },
   "popupTitle": {
@@ -497,7 +497,7 @@
   },
   "contentDiffTooltipDailyNote": {
     "message": "Diferença do registro. A tolerância é aplicada no saldo total do dia.",
-    "description": "Nota nos tooltips de diferença por batida"
+    "description": "Nota nos tooltips de diferença por registro"
   },
   "contentDayBalanceTooltipNotConfigured": {
     "message": "Configure seus horários na extensão para ver o saldo do dia.",
@@ -1097,7 +1097,7 @@
     }
   },
   "contentSimSafeExitBeforeScheduleTooltip": {
-    "message": "Com estes horários, bater o ponto às $TIME$ ainda deixa o dia dentro da margem segura.",
+    "message": "Com estes horários, registrar a saída às $TIME$ ainda deixa o dia dentro da margem segura.",
     "description": "Tooltip explicando a saída segura antes do horário configurado no simulador",
     "placeholders": {
       "time": { "content": "$1", "example": "17:55:00" }
@@ -1539,6 +1539,14 @@
     "message": "Esta é uma estimativa baseada nas solicitações pendentes visíveis e nos detalhes disponíveis. O banco de horas só muda após aprovação e processamento pelo Easydots.",
     "description": "Custom tooltip explaining pending requests impact estimate"
   },
+  "changelogV192Item1": {
+    "message": "Descrição da extensão deixa claro que ela não registra o ponto automaticamente",
+    "description": "Item do changelog v1.9.2"
+  },
+  "changelogV192Item2": {
+    "message": "Textos alinhados para falar em sugestões de horário, sem linguagem de registro automático",
+    "description": "Item do changelog v1.9.2"
+  },
   "changelogV191Item1": {
     "message": "Card de saldo do dia aparece mesmo sem registros de ponto, inclusive o aviso para configurar a jornada",
     "description": "Item do changelog v1.9.1"
@@ -1616,7 +1624,7 @@
     "description": "Item do changelog v1.8.1"
   },
   "changelogV181Item3": {
-    "message": "Sugestão de saída final evita horários já passados quando a pessoa ainda está batida",
+    "message": "Sugestão de saída final evita horários já passados quando a pessoa ainda não registrou a saída",
     "description": "Item do changelog v1.8.1"
   },
   "changelogV180Item1": {
@@ -1636,7 +1644,7 @@
     "description": "Item do changelog v1.8.0"
   },
   "changelogV180Item5": {
-    "message": "Saldo do dia também mostra uma saída tranquila quando dá para bater antes do horário",
+    "message": "Saldo do dia também mostra uma saída tranquila quando dá para registrar a saída antes do horário",
     "description": "Item do changelog v1.8.0"
   },
   "changelogV180Item6": {

@@ -157,17 +157,7 @@ Logs extras no Firefox dev usam o prefixo `[Better Easy Dots][Firefox Debug]`.
 
 ## 13. Descrição das lojas
 
-Cole na listagem **apenas** o que a versão enviada entrega. Texto sugerido (PT):
-
-> Melhora o registro de ponto no Easydots (sys.easydots.com.br): saldo do dia, cores por tolerância, sugestões de batida, banco de horas, simulador de jornada e impacto estimado de solicitações pendentes. Configurações locais no navegador — sem enviar seus dados a servidores da extensão.
->
-> Como usar: instale, abra o Easydots da sua empresa, configure os horários na engrenagem Better Easy Dots e veja as melhorias na tabela de registros.
-
-English (short):
-
-> Improves the Easydots time clock: daily balance, tolerance colors, punch suggestions, hour bank, schedule simulator, and estimated impact of pending requests. Settings stay in your browser.
->
-> Open your company Easydots page after installing to use the features.
+Os textos oficiais das páginas de publicação estão em [`store/chrome.md`](store/chrome.md) e [`store/firefox.md`](store/firefox.md) (PT-BR e EN-US). Cole no dashboard **apenas** a descrição, e somente o que a versão enviada entrega.
 
 **Não prometer:**
 

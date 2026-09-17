@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extensionDescription": {
-    "message": "Daily balance, colors, suggestions, hour bank, and request impact on Easydots",
+    "message": "On Easydots: daily balance, colors, time suggestions, simulator, hour bank, and pending requests",
     "description": "Extension description"
   },
   "popupTitle": {
@@ -1539,8 +1539,16 @@
     "message": "This is an estimate based on the visible pending requests and available details. The time bank only changes after approval and processing by Easydots.",
     "description": "Custom tooltip explaining pending requests impact estimate"
   },
+  "changelogV192Item1": {
+    "message": "Extension description now makes it clear that it does not register time automatically",
+    "description": "Changelog v1.9.2 item"
+  },
+  "changelogV192Item2": {
+    "message": "Copy now talks about time suggestions, without automatic clock-in language",
+    "description": "Changelog v1.9.2 item"
+  },
   "changelogV191Item1": {
-    "message": "Day balance card now appears even with no punches, including the schedule setup reminder",
+    "message": "Day balance card now appears even with no records, including the schedule setup reminder",
     "description": "Changelog v1.9.1 item"
   },
   "changelogV190Item1": {
@@ -1608,7 +1616,7 @@
     "description": "Changelog v1.8.2 item"
   },
   "changelogV181Item1": {
-    "message": "Extra punches on the same day are paired correctly without closing the workday too early",
+    "message": "Extra records on the same day are paired correctly without closing the workday too early",
     "description": "Changelog v1.8.1 item"
   },
   "changelogV181Item2": {
@@ -1828,7 +1836,7 @@
     "description": "Changelog v0.1.0 item"
   },
   "changelogV010Item3": {
-    "message": "Next punch suggestions",
+    "message": "Next time suggestions",
     "description": "Changelog v0.1.0 item"
   },
   "changelogV010Item4": {
