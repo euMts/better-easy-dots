@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="README.en.md"><img src="https://img.shields.io/badge/README-English-blue" alt="README in English"></a>
-  <img src="https://img.shields.io/badge/versão-1.9.1-purple" alt="Versão 1.9.1">
+  <img src="https://img.shields.io/badge/versão-1.9.2-purple" alt="Versão 1.9.2">
   <img src="https://img.shields.io/badge/Manifest-V3-blue" alt="Manifest V3">
   <img src="https://img.shields.io/badge/Chrome-supported-green" alt="Chrome">
   <img src="https://img.shields.io/badge/Firefox-supported-orange" alt="Firefox">
@@ -21,9 +21,7 @@
 
 ## Sobre
 
-**Better Easy Dots** é uma extensão não oficial que adiciona recursos visuais e de produtividade à página de registro de horário do Easydots. Tudo roda no seu navegador: configurações e cálculos ficam no storage local da extensão, sem envio de dados a servidores externos.
-
-> **Aviso:** esta extensão não é afiliada, endossada ou mantida pelo Easydots nem pela ACS Pontodigital.
+**Better Easy Dots** é uma extensão que adiciona recursos visuais e de produtividade à página de registro de horário do Easydots. Tudo roda no seu navegador: configurações e cálculos ficam no storage local da extensão, sem envio de dados a servidores externos.
 
 ## Funcionalidades
 
@@ -32,7 +30,7 @@
 Exibe uma linha no final da tabela de registros com o saldo de horas do dia:
 
 - **Dia incompleto:** mostra quanto ainda falta trabalhar (ex.: só a entrada → `-09:00:00`)
-- **Dia completo:** considera horas trabalhadas, jornada esperada e pontualidade nas batidas
+- **Dia completo:** considera horas trabalhadas, jornada esperada e pontualidade nos registros
 - **Sem configuração:** exibe um lembrete para configurar horários na engrenagem
 
 ### Cores nos horários
@@ -45,9 +43,9 @@ Cada horário registrado recebe uma cor conforme a tolerância configurada:
 | Amarelo | Próximo do limite da tolerância |
 | Vermelho | Atraso além da tolerância |
 
-### Sugestões de batida
+### Sugestões de horário
 
-Enquanto o dia não está completo, linhas de **sugestão** mostram as próximas batidas esperadas (entrada, saída para intervalo, etc.), ajustadas pelo atraso da primeira entrada do dia.
+Enquanto o dia não está completo, linhas de **sugestão** mostram os próximos horários esperados (entrada, saída para intervalo, etc.), ajustados pelo atraso da primeira entrada do dia.
 
 ### Configurações
 
@@ -78,7 +76,7 @@ O ícone da extensão na barra do navegador mostra a quantidade de registros do 
 
 ## Capturas de tela
 
-### Sugestão de batida e saldo fora da tolerância
+### Sugestão de horário e saldo fora da tolerância
 
 Coluna **Diferença**, cores por status e sugestão de saída com saldo bruto fora da tolerância:
 
@@ -88,7 +86,7 @@ Coluna **Diferença**, cores por status e sugestão de saída com saldo bruto fo
 
 ### Dia completo dentro da tolerância
 
-Quatro batidas registradas e saldo do dia zerado após a tolerância diária:
+Quatro registros no dia e saldo zerado após a tolerância diária:
 
 <p align="center">
   <img src="screenshots/pt/2.jpg" alt="Tabela de registros com dia completo e saldo dentro da tolerância" width="720">
@@ -144,7 +142,7 @@ Gera:
 - `builds/better-easy-dots-chrome-vX.Y.Z.zip`
 - `builds/better-easy-dots-firefox-vX.Y.Z.zip`
 
-Cada ZIP tem `manifest.json` na raiz e passa pela validação automática. Siga [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) antes de enviar.
+Cada ZIP tem `manifest.json` na raiz e passa pela validação automática. Siga [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) antes de enviar. Descrição das lojas: [`store/chrome.md`](store/chrome.md) e [`store/firefox.md`](store/firefox.md).
 
 ```bash
 npm run package:chrome    # só Chrome
@@ -177,6 +175,7 @@ better-easy-dots/
 ├── config.js                     # URLs das lojas + Easydots padrão
 ├── background.js                 # Badge, abrir configurações/changelog
 ├── content.js                    # Lógica na página do Easydots
+├── store/                        # Descrição da Chrome Web Store e do AMO
 ├── scripts/
 │   ├── package-extension.js
 │   └── validate-extension-package.js
@@ -216,7 +215,7 @@ Nenhum dado é transmitido para servidores da extensão.
 
 - **Navegadores:** Google Chrome e Mozilla Firefox (Manifest V3)
 - **Sites:** `https://*.easydots.com.br/*` (padrão: `https://sys.easydots.com.br/`), `https://*.acspontodigital.com.br/*` (legado)
-- **Versão atual:** `1.9.1`
+- **Versão atual:** `1.9.2`
 - **Gecko ID:** `better-easy-dots@matheuspass.dev`
 
 A extensão depende da estrutura HTML atual do Easydots (`#table_registro_horario`, `#btnRegister`, navbar). Atualizações no site podem exigir ajustes nos seletores.

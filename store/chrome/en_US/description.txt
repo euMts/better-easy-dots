@@ -1,0 +1,33 @@
+Better Easy Dots is a Google Chrome extension that improves the time-clock experience on Easydots (sys.easydots.com.br).
+
+🚨 This extension does NOT clock in automatically and does NOT do anything improper or unethical. You keep registering your time in Easydots itself. The extension only calculates and displays visual information about what the page already shows.
+
+What it does:
+
+• Daily balance
+A card at the bottom of the table with the raw balance and the balance after the tolerance you configured, estimated overtime, and a safe clock-out hint.
+
+• Colors and Difference column
+Colors each recorded time against the expected time (green, yellow, or red) and shows the difference in HH:MM:SS.
+
+• Time suggestions
+While the day is still open, it shows the next expected times (clock-in, break, return, and clock-out), without registering anything for you.
+
+• Hour bank
+On the hour-bank card, a planner estimates how much overtime per day would be needed to offset a deficit, respecting your tolerance. It is only an estimate: the real hour bank does not change.
+
+• Workday simulator
+On the dashboard, it simulates clock-in, break, and clock-out so you can see the estimated impact on the day and the hour bank.
+
+• Pending requests
+On the requests list, it estimates the gain if pending items are approved. Easydots is what processes the approval.
+
+• Import schedule and settings
+You can save your Easydots schedule in the extension (“Use in the extension”) or configure clock-in, clock-out, break, tolerance, margin, language, and company URL. Access it from the sidebar, the popup, or Chrome options.
+
+• Icon badge
+With an Easydots tab open, the icon can show how many records you have for the day.
+
+How to use: install it, open your company’s Easydots, set your hours in the Better Easy Dots gear, and see the enhancements on the table and cards.
+
+Privacy: everything runs in the browser. Settings and calculations stay in local storage. No data is sent to extension servers. No analytics, telemetry, or account.

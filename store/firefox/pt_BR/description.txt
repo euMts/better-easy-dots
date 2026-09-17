@@ -1,0 +1,33 @@
+Better Easy Dots é uma extensão para Firefox que melhora a experiência de registro de ponto no Easydots (sys.easydots.com.br).
+
+🚨 Esta extensão NÃO registra o ponto automaticamente e NÃO faz nada incorreto ou imoral. Você continua registrando o horário no próprio Easydots. A extensão só calcula e mostra informações visuais sobre o que a página já exibe.
+
+O que ela faz:
+
+• Saldo do dia
+Card no final da tabela com o saldo bruto e o saldo após a tolerância que você configurou, extras estimadas e orientação de saída segura.
+
+• Cores e coluna Diferença
+Colore cada horário registrado em relação ao esperado (verde, amarelo ou vermelho) e mostra a diferença em HH:MM:SS.
+
+• Sugestões de horário
+Enquanto o dia não fechou, indica os próximos horários esperados (entrada, intervalo, retorno e saída), sem registrar nada por você.
+
+• Banco de horas
+No card de saldo do banco, um planejador estima quanta extra por dia seria necessária para compensar um débito, respeitando a tolerância. É só uma estimativa: o banco real não muda.
+
+• Simulador de jornada
+No dashboard, simula entrada, intervalo e saída para ver o impacto estimado no dia e no banco.
+
+• Solicitações pendentes
+Na lista de solicitações, estima o ganho se as pendentes forem aprovadas. O Easydots é quem processa a aprovação.
+
+• Importar jornada e configurações
+Dá para salvar na extensão os horários do próprio Easydots (“Usar na extensão”) ou configurar entrada, saída, intervalo, tolerância, margem, idioma e URL da empresa. Acesso pelo menu lateral, pelo popup ou pelas opções do Firefox.
+
+• Badge no ícone
+Com uma aba do Easydots aberta, o ícone pode mostrar a quantidade de registros do dia.
+
+Como usar: instale, abra o Easydots da sua empresa, conceda acesso ao site no popup se o Firefox pedir, configure seus horários e veja as melhorias na tabela e nos cards.
+
+Privacidade: tudo roda no navegador. Configurações e cálculos ficam no storage local. Nenhum dado é enviado a servidores da extensão. Sem analytics, telemetria ou conta.

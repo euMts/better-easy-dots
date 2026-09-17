@@ -66,8 +66,15 @@ const FILES = [
 const DIRS = ['_locales', 'icons'];
 
 function fail(message) {
-  console.error(`ERRO ${message}`);
-  process.exit(1);
+  throw new Error(message);
+}
+
+function readVersionSafe(prodManifestRel) {
+  try {
+    return readProdVersion(prodManifestRel);
+  } catch {
+    return '';
+  }
 }
 
 function resolveTargets() {
@@ -121,72 +128,117 @@ function listFiles(dir, base = dir, out = []) {
 
 function packageTarget(targetKey) {
   const target = TARGETS[targetKey];
-  const version = readProdVersion(target.prodManifest);
-  const dist = path.join(DIST_ROOT, target.name);
-  const outZip = path.join(BUILDS, `${target.zipPrefix}-v${version}.zip`);
+  let version = '';
 
-  console.log(`Empacotando Better Easy Dots (${target.name}) v${version}…`);
+  try {
+    version = readProdVersion(target.prodManifest);
+    const dist = path.join(DIST_ROOT, target.name);
+    const outZip = path.join(BUILDS, `${target.zipPrefix}-v${version}.zip`);
 
-  rmrf(dist);
-  fs.mkdirSync(dist, { recursive: true });
-  fs.mkdirSync(BUILDS, { recursive: true });
+    console.log(`Empacotando Better Easy Dots (${target.name}) v${version}…`);
 
-  copyFile(path.join(ROOT, target.prodManifest), path.join(dist, 'manifest.json'));
+    rmrf(dist);
+    fs.mkdirSync(dist, { recursive: true });
+    fs.mkdirSync(BUILDS, { recursive: true });
 
-  for (const file of FILES) {
-    const src = path.join(ROOT, file);
-    if (!fs.existsSync(src)) fail(`arquivo obrigatório ausente: ${file}`);
-    copyFile(src, path.join(dist, file));
+    copyFile(path.join(ROOT, target.prodManifest), path.join(dist, 'manifest.json'));
+
+    for (const file of FILES) {
+      const src = path.join(ROOT, file);
+      if (!fs.existsSync(src)) fail(`arquivo obrigatório ausente: ${file}`);
+      copyFile(src, path.join(dist, file));
+    }
+
+    for (const dir of DIRS) {
+      const src = path.join(ROOT, dir);
+      if (!fs.existsSync(src)) fail(`pasta obrigatória ausente: ${dir}`);
+      copyDir(src, path.join(dist, dir));
+    }
+
+    const validate = spawnSync(
+      process.execPath,
+      [path.join(__dirname, 'validate-extension-package.js'), dist, target.name],
+      { stdio: 'inherit' }
+    );
+    if (validate.status !== 0) {
+      fail(`validação falhou (${target.name}) — ZIP não gerado`);
+    }
+
+    if (fs.existsSync(outZip)) fs.unlinkSync(outZip);
+
+    const zip = spawnSync('zip', ['-r', outZip, '.', '-x', '*.DS_Store'], {
+      cwd: dist,
+      stdio: 'inherit',
+    });
+    if (zip.status !== 0) fail(`falha ao criar ZIP (${target.name})`);
+
+    const list = spawnSync('unzip', ['-Z1', outZip], { encoding: 'utf8' });
+    if (list.status !== 0) fail(`não foi possível listar o ZIP (${target.name})`);
+    const names = list.stdout.split('\n').filter(Boolean);
+    if (!names.includes('manifest.json')) {
+      fail(`ZIP inválido (${target.name}): manifest.json não está na raiz do arquivo`);
+    }
+    if (names.some((n) => n.startsWith('better-easy-dots/'))) {
+      fail(`ZIP inválido (${target.name}): conteúdo aninhado em better-easy-dots/`);
+    }
+    if (names.some((n) => n.startsWith('dist/'))) {
+      fail(`ZIP inválido (${target.name}): conteúdo aninhado em dist/`);
+    }
+
+    const included = listFiles(dist);
+    console.log('');
+    console.log(`ZIP criado: ${outZip}`);
+    console.log(`Arquivos incluídos (${included.length}):`);
+    for (const file of included) console.log(`  - ${file}`);
+    console.log('');
+
+    return { ok: true, version };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`ERRO ${message}`);
+    return {
+      ok: false,
+      version: version || readVersionSafe(target.prodManifest),
+    };
   }
+}
 
-  for (const dir of DIRS) {
-    const src = path.join(ROOT, dir);
-    if (!fs.existsSync(src)) fail(`pasta obrigatória ausente: ${dir}`);
-    copyDir(src, path.join(dist, dir));
+function formatSummaryLine(label, result, requested) {
+  if (!requested) {
+    return `⏭️ ${label} não solicitado`;
   }
-
-  const validate = spawnSync(
-    process.execPath,
-    [path.join(__dirname, 'validate-extension-package.js'), dist, target.name],
-    { stdio: 'inherit' }
-  );
-  if (validate.status !== 0) {
-    fail(`validação falhou (${target.name}) — ZIP não gerado`);
+  if (result?.ok) {
+    return `✅ ${label} v${result.version} gerado`;
   }
+  const version = result?.version ? ` v${result.version}` : '';
+  return `❌ ${label}${version} não gerado`;
+}
 
-  if (fs.existsSync(outZip)) fs.unlinkSync(outZip);
-
-  const zip = spawnSync('zip', ['-r', outZip, '.', '-x', '*.DS_Store'], {
-    cwd: dist,
-    stdio: 'inherit',
-  });
-  if (zip.status !== 0) fail(`falha ao criar ZIP (${target.name})`);
-
-  const list = spawnSync('unzip', ['-Z1', outZip], { encoding: 'utf8' });
-  if (list.status !== 0) fail(`não foi possível listar o ZIP (${target.name})`);
-  const names = list.stdout.split('\n').filter(Boolean);
-  if (!names.includes('manifest.json')) {
-    fail(`ZIP inválido (${target.name}): manifest.json não está na raiz do arquivo`);
-  }
-  if (names.some((n) => n.startsWith('better-easy-dots/'))) {
-    fail(`ZIP inválido (${target.name}): conteúdo aninhado em better-easy-dots/`);
-  }
-  if (names.some((n) => n.startsWith('dist/'))) {
-    fail(`ZIP inválido (${target.name}): conteúdo aninhado em dist/`);
-  }
-
-  const included = listFiles(dist);
-  console.log('');
-  console.log(`ZIP criado: ${outZip}`);
-  console.log(`Arquivos incluídos (${included.length}):`);
-  for (const file of included) console.log(`  - ${file}`);
-  console.log('');
+function printFinalSummary(results, requested) {
+  console.log(formatSummaryLine('Chrome', results.chrome, requested.includes('chrome')));
+  console.log(formatSummaryLine('Firefox', results.firefox, requested.includes('firefox')));
 }
 
 function main() {
-  const targets = resolveTargets();
-  for (const key of targets) {
-    packageTarget(key);
+  let requested;
+  try {
+    requested = resolveTargets();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`ERRO ${message}`);
+    printFinalSummary({}, []);
+    process.exit(1);
+  }
+
+  const results = {};
+  for (const key of requested) {
+    results[key] = packageTarget(key);
+  }
+
+  printFinalSummary(results, requested);
+
+  if (requested.some((key) => !results[key]?.ok)) {
+    process.exit(1);
   }
 }
 
