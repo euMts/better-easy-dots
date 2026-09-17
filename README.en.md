@@ -128,7 +128,7 @@ Work hours, break times, daily tolerance, safety margin, and language:
 
 ### Firefox Add-ons (AMO)
 
-Listing pending. After the first publish, the URL lives in `config.js` (`EED_FIREFOX_STORE_URL`).
+[Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/better-easy-dots/)
 
 ### Package for the stores
 
@@ -142,7 +142,7 @@ Creates:
 - `builds/better-easy-dots-chrome-vX.Y.Z.zip`
 - `builds/better-easy-dots-firefox-vX.Y.Z.zip`
 
-Each ZIP has `manifest.json` at the archive root and passes automatic validation. Follow [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) before uploading. Store descriptions: [`store/chrome.md`](store/chrome.md) and [`store/firefox.md`](store/firefox.md).
+Each ZIP has `manifest.json` at the archive root and passes automatic validation. Follow [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) before uploading. Store descriptions: [`store/chrome/`](store/chrome/) and [`store/firefox/`](store/firefox/).
 
 ```bash
 npm run package:chrome    # Chrome only

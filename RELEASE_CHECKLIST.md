@@ -157,7 +157,12 @@ Logs extras no Firefox dev usam o prefixo `[Better Easy Dots][Firefox Debug]`.
 
 ## 13. Descrição das lojas
 
-Os textos oficiais das páginas de publicação estão em [`store/chrome.md`](store/chrome.md) e [`store/firefox.md`](store/firefox.md) (PT-BR e EN-US). Cole no dashboard **apenas** a descrição, e somente o que a versão enviada entrega.
+Os textos oficiais das páginas de publicação estão em [`store/`](store/) (Chrome e Firefox, PT-BR e EN-US). Cole no dashboard **apenas** a descrição, e somente o que a versão enviada entrega.
+
+| Loja | Arquivos |
+|------|----------|
+| Chrome Web Store | `store/chrome/pt_BR/description.txt`, `store/chrome/en_US/description.txt` |
+| Firefox Add-ons | `store/firefox/pt_BR/summary.txt`, `store/firefox/pt_BR/description.txt` e os equivalentes em `en_US/` |
 
 **Não prometer:**
 

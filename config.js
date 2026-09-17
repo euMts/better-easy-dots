@@ -1,6 +1,5 @@
 const EED_CHROME_STORE_URL =
   'https://chromewebstore.google.com/detail/better-easy-dots/cfnehkkbmplomaianjpfiaoonmpekbbb';
-/** Update after the first AMO listing is published. */
 const EED_FIREFOX_STORE_URL = 'https://addons.mozilla.org/firefox/addon/better-easy-dots/';
 const EED_DEFAULT_EASYDOTS_URL = 'https://sys.easydots.com.br/';
 
